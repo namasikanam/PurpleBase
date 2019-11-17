@@ -151,7 +151,6 @@ public:
     RC CreateFile(const char *fileName, int recordSize);
     RC DestroyFile(const char *fileName);
     RC OpenFile(const char *fileName, RM_FileHandle &fileHandle);
-
     RC CloseFile(RM_FileHandle &fileHandle);
 
 private:
@@ -195,8 +194,15 @@ void RM_PrintError(RC rc);
 #define RM_SCAN_CLOSED (START_RM_WARN + 22)
 #define RM_SCAN_OPEN_CLOSED_FILE (START_RM_WARN + 23)
 #define RM_MANAGER_RECORDSIZE_TOO_LARGE (START_RM_WARN + 24)
-#define RM_CREATE_FAIL (START_RM_WARN + 25)
-#define RM_CREATE_FAIL_UNPIN_FAIL (START_RM_WARN + 26)
+#define RM_MANAGER_CREATE_FAIL (START_RM_WARN + 25)
+#define RM_MANAGER_CREATE_FAIL_UNPIN_FAIL (START_RM_WARN + 26)
+#define RM_MANAGER_DESTROY_FAIL (START_RM_WARN + 27)
+#define RM_MANAGER_OPEN_FAIL (START_RM_WARN + 28)
+#define RM_FILE_GET_BUT_UNPIN_FAIL (START_RM_WARN + 29)
+#define RM_MANAGER_OPEN_BUT_UNPIN_FAIL (START_RM_WARN + 30)
+#define RM_MANAGER_CLOSE_CLOSED_FILE (START_RM_WARN + 31)
+#define RM_MANAGER_CLOSE_FAIL (START_RM_WARN + 32)
+#define RM_MANAGER_CLOSE_FAIL_UNPIN_FAIL (START_RM_WARN + 33)
 #define RM_LASTWARN RM_EOF // Mark the last warn, to be updated
 
 // Errors
@@ -204,9 +210,10 @@ void RM_PrintError(RC rc);
 #define RM_ERROR_FILE_INSERT_BUT_UNPIN_FAIL (START_RM_ERR - 1)
 #define RM_FILE_DELETE_BUT_UNPIN_FAIL (START_RM_ERR - 2)
 #define RM_FILE_UPDATE_BUT_UNPIN_FAIL (START_RM_ERR - 3)
-#define RM_FILE_GET_BUT_UNPIN_FAIL (START_RM_ERR - 4)
-#define RM_UNKNOWN_SLOTNUM (START_RM_ERR - 5)
-#define RM_UNKNOWN_PAGENUM (START_RM_ERR - 6)
+#define RM_UNKNOWN_SLOTNUM (START_RM_ERR - 4)
+#define RM_UNKNOWN_PAGENUM (START_RM_ERR - 5)
+#define RM_MANAGER_CREATE_BUT_UNPIN_FAIL (START_RM_ERR - 6)
+#define RM_MANAGER_CLOSE_BUT_UNPIN_FAIL (START_RM_ERR - 7)
 #define RM_LASTERROR RM_FILE_GET_BUT_UNPIN_FAIL // Mark the last erro to be update.
 
 // Example:
