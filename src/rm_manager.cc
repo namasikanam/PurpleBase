@@ -45,6 +45,7 @@ RC RM_Manager::CreateFile(const char *fileName, int recordSize) {
 
         // Header page is written and being unpinned
         RM_ChangeRC(pFFileHandle.UnpinPage(0ll), RM_MANAGER_CREATE_BUT_UNPIN_FAIL);
+        RM_ChangeRC(pFManager.CloseFile(pFFileHandle), RM_MANAGER_CREATE_BUT_CLOSE_FAIL);
         throw RC{OK_RC};
     }
     catch (RC rc) {
@@ -65,37 +66,28 @@ RC RM_Manager::DestroyFile(const char *fileName) {
 RC RM_Manager::OpenFile(const char *fileName, RM_FileHandle &fileHandle) {
     try {
         // Open PF File
-        PF_FileHandle pFFileHandle;
-        RM_ChangeRC(pFManager.OpenFile(fileName, pFFileHandle), RM_MANAGER_OPEN_FAIL);
+        RM_ChangeRC(pFManager.OpenFile(fileName, fileHandle.pFFileHandle), RM_MANAGER_OPEN_FAIL);
         
         // Read header file
         PF_PageHandle headerPage;
         char *headerPageData;
-
-        puts("Before");
-
-        RM_ChangeRC(pFFileHandle.GetThisPage(0ll, headerPage), RM_MANAGER_OPEN_FAIL);
-
-        RM_ChangeRC(pFFileHandle.GetFirstPage(headerPage), RM_MANAGER_OPEN_FAIL);
-
-        puts("After");
-
+        RM_ChangeRC(fileHandle.pFFileHandle.GetFirstPage(headerPage), RM_MANAGER_OPEN_FAIL);
         RM_ChangeRC(headerPage.GetData(headerPageData), RM_MANAGER_OPEN_FAIL);
         
         // Read from data
         // Similar to the situation of output
         char *headerPageDataPtr = headerPageData + 4;
         sscanf(headerPageData, "%d", &fileHandle.recordSize);
-            sscanf(headerPageDataPtr + 4, "%d", &fileHandle.recordTot);
-            headerPageDataPtr += 4;
-            sprintf(headerPageDataPtr + 8, "%lld", &fileHandle.pageTot);
-            headerPageDataPtr += 8;
+        sscanf(headerPageDataPtr + 4, "%d", &fileHandle.recordTot);
+        headerPageDataPtr += 4;
+        sscanf(headerPageDataPtr + 8, "%lld", &fileHandle.pageTot);
+        headerPageDataPtr += 8;
         fileHandle.pageAvailable.clear();
         for (PageNum pageID = (fileHandle.pageTot + 7) / 8; pageID--; ++headerPageDataPtr)
             fileHandle.pageAvailable.push_back(*headerPageDataPtr);
 
         // After read, you need to unpin
-        RM_ChangeRC(pFFileHandle.UnpinPage(0ll), RM_MANAGER_OPEN_BUT_UNPIN_FAIL);
+        RM_ChangeRC(fileHandle.pFFileHandle.UnpinPage(0ll), RM_MANAGER_OPEN_BUT_UNPIN_FAIL);
 
         // Some information needed to be set or calculated
         fileHandle.open = true;
@@ -116,9 +108,6 @@ RC RM_Manager::CloseFile(RM_FileHandle &fileHandle) {
         // You can't close closed file.
         if (!fileHandle.open)
             throw RC{RM_MANAGER_CLOSE_CLOSED_FILE};
-        
-        // Close
-        RM_ChangeRC(pFManager.CloseFile(fileHandle.pFFileHandle), RM_MANAGER_CLOSE_FAIL);
 
         // If need, write back header page
         if (fileHandle.headerModified) {
@@ -142,6 +131,9 @@ RC RM_Manager::CloseFile(RM_FileHandle &fileHandle) {
             // Unpin after write
             RM_ChangeRC(fileHandle.pFFileHandle.UnpinPage(0ll), RM_MANAGER_CLOSE_BUT_UNPIN_FAIL);
         }
+
+        // Close
+        RM_ChangeRC(pFManager.CloseFile(fileHandle.pFFileHandle), RM_MANAGER_CLOSE_FAIL);
 
         // Do some destruction
         // For safety this is necessary

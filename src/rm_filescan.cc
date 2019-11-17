@@ -37,7 +37,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
     try{
         if (!open)
             throw RC{RM_SCAN_CLOSED};
-        for (RC tmp_rc; tmp_rc = rMFileHandle.GetRec(RID(curPageNum, curSlotNum), rec);)
+        for (RC tmp_rc; (tmp_rc = rMFileHandle.GetRec(RID(curPageNum, curSlotNum), rec));)
             switch(tmp_rc) {
                 case OK_RC:
                     throw RC{OK_RC};
@@ -56,6 +56,9 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
                     RM_PrintError(tmp_rc);
                     throw RC{RM_SCAN_NEXT_FAIL};
                 }
+        // Even though the following statement won't run
+        // if everything is right. I add it to prevent unnecessary warning.
+        throw RC{OK_RC};
     }
     catch (RC rc)
     { return rc; }

@@ -61,7 +61,8 @@ static char *RM_ErrorMsg[] = {
     (char *)"Having succeeded to update, failed to unpin unexpectedly.",                         // - 3: RM_FILE_UPDATE_BUT_UNPIN_FAIL
     (char *)"Succeed to create file but fail to unpin.",                                         // -4: RM_MANAGER_CREATE_BUT_UNPIN_FAIL
     (char *)"Succeed to close file but fail to unpin.",                                          // -5: RM_MANAGER_CLOSE_BUT_UNPIN_FAIL
-    (char *)"Succeed to open file but fail to unpin.",                                                                                  // -6: RM_MANAGER_OPEN_BUT_UNPIN_FAIL
+    (char *)"Succeed to open file but fail to unpin.",                                           // -6: RM_MANAGER_OPEN_BUT_UNPIN_FAIL
+    (char *)"Succeed to create file but fail to close.",                                         // -7: RM_MANAGER_CREATE_BUT_CLOSE_FAIL
 };
 
 //

@@ -212,7 +212,8 @@ void RM_PrintError(RC rc);
 #define RM_MANAGER_CREATE_BUT_UNPIN_FAIL (START_RM_ERR - 4)
 #define RM_MANAGER_CLOSE_BUT_UNPIN_FAIL (START_RM_ERR - 5)
 #define RM_MANAGER_OPEN_BUT_UNPIN_FAIL (START_RM_ERR - 6)
-#define RM_LASTERROR RM_MANAGER_CLOSE_BUT_UNPIN_FAIL // Mark the last error, to be update.
+#define RM_MANAGER_CREATE_BUT_CLOSE_FAIL (START_RM_ERR - 7)
+#define RM_LASTERROR RM_MANAGER_CREATE_BUT_CLOSE_FAIL // Mark the last error, to be update.
 
 // Example:
 // #define RM_INVALIDNAME          (START_RM_ERR - 0) // Invalid PC file name
