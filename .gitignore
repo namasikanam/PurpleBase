@@ -26,3 +26,4 @@ src/*
 !src/rm_filescan.cc
 !src/rm_filehandle.cc
 !src/rm_error.cc
+!src/rm_test.cc

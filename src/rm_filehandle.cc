@@ -59,8 +59,8 @@ RC RM_FileHandle::GetRec(const RID &rid, RM_Record &rec) const
         // Fetch the data of the destination page
         PF_PageHandle pFPageHandle;
         char *pageData;
-        RM_ChangeRC(pFFileHandle.GetThisPage(pageNum, pFPageHandle), RM_FILE_GET_FAIL);
-        RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_GET_FAIL_UNPIN_FAIL, RM_FILE_GET_FAIL, pFFileHandle, pageNum);
+        RM_ChangeRC(pFFileHandle.GetThisPage(pageNum + 1, pFPageHandle), RM_FILE_GET_FAIL);
+        RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_GET_FAIL_UNPIN_FAIL, RM_FILE_GET_FAIL, pFFileHandle, pageNum + 1);
         if (~pageData[slotNum / 8] >> slotNum % 8 & 1)
             throw RC{RM_FILE_GET_NOT_FOUND};
 
@@ -71,7 +71,7 @@ RC RM_FileHandle::GetRec(const RID &rid, RM_Record &rec) const
         rec.dataSize = recordSize;
         memcpy(rec.pData, pageData + (slotNumPerPage + 7) / 8 + slotNum * recordSize, recordSize);
 
-        RM_ChangeRC(pFFileHandle.UnpinPage(pageNum), RM_FILE_GET_SUCC_UNPIN_FAIL);
+        RM_ChangeRC(pFFileHandle.UnpinPage(pageNum + 1), RM_FILE_GET_BUT_UNPIN_FAIL);
         throw RC{OK_RC};
     }
     catch (RC rc)
@@ -125,7 +125,7 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
             headerModified = true;
 
             // Unpin the page after insertion
-            RM_ChangeRC(pFFileHandle.UnpinPage(pageNum), RM_ERROR_FILE_INSERT_BUT_UNPIN_FAIL);
+            RM_ChangeRC(pFFileHandle.UnpinPage(pageNum + 1), RM_ERROR_FILE_INSERT_BUT_UNPIN_FAIL);
 
             throw RC{OK_RC};
         };
@@ -140,13 +140,13 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
                 // I've managed to find an available page!
 
                 // Get the available page.
-                RM_ChangeRC(pFFileHandle.GetThisPage(pageNum, pFPageHandle), RM_FILE_INSERT_OLD_FAIL);
+                RM_ChangeRC(pFFileHandle.GetThisPage(pageNum + 1, pFPageHandle), RM_FILE_INSERT_OLD_FAIL);
 
                 // Get data from the availabe page.
-                RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL, RM_FILE_INSERT_OLD_FAIL, pFFileHandle, pageNum);
+                RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL, RM_FILE_INSERT_OLD_FAIL, pFFileHandle, pageNum + 1);
 
                 // Mark darty before any solid modification
-                RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum), RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL, RM_FILE_INSERT_OLD_FAIL, pFFileHandle, pageNum);
+                RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum + 1), RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL, RM_FILE_INSERT_OLD_FAIL, pFFileHandle, pageNum + 1);
 
                 for (SlotNum slotNum = 0; slotNum < slotNumPerPage; ++slotNum)
                     if (pageData[slotNum / 8] >> slotNum % 8 & 1)
@@ -160,7 +160,7 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
         // Allocate a new page, and get data from it!
         RM_ChangeRC(pFFileHandle.AllocatePage(pFPageHandle), RM_FILE_INSERT_NEW_PAGE_FAIL);
         RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_INSERT_NEW_FAIL_UNPIN_FAIL, RM_FILE_INSERT_NEW_PAGE_FAIL, pFFileHandle, pageNum);
-        RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum), RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL, RM_FILE_INSERT_OLD_FAIL, pFFileHandle, pageNum);
+        RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum + 1), RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL, RM_FILE_INSERT_OLD_FAIL, pFFileHandle, pageNum + 1);
 
         // Update the information of header page
         ++pageTot;
@@ -207,9 +207,9 @@ RC RM_FileHandle::DeleteRec(const RID &rid)
         // Fetch the data of the destination page
         PF_PageHandle pFPageHandle;
         char *pageData;
-        RM_ChangeRC(pFFileHandle.GetThisPage(pageNum, pFPageHandle), RM_FILE_DELETE_FAIL);
-        RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_DELETE_FAIL_UNPIN_FAIL, RM_FILE_DELETE_FAIL, pFFileHandle, pageNum);
-        RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum), RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL, RM_FILE_INSERT_OLD_FAIL, pFFileHandle, pageNum);
+        RM_ChangeRC(pFFileHandle.GetThisPage(pageNum + 1, pFPageHandle), RM_FILE_DELETE_FAIL);
+        RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_DELETE_FAIL_UNPIN_FAIL, RM_FILE_DELETE_FAIL, pFFileHandle, pageNum + 1);
+        RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum + 1), RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL, RM_FILE_INSERT_OLD_FAIL, pFFileHandle, pageNum + 1);
         if (~pageData[slotNum / 8] >> slotNum % 8 & 1)
             throw RC{RM_FILE_DELETE_NOT_FOUND};
 
@@ -222,7 +222,7 @@ RC RM_FileHandle::DeleteRec(const RID &rid)
         --recordTot;
         headerModified = true;
 
-        RM_ChangeRC(pFFileHandle.UnpinPage(pageNum), RM_FILE_DELETE_BUT_UNPIN_FAIL);
+        RM_ChangeRC(pFFileHandle.UnpinPage(pageNum + 1), RM_FILE_DELETE_BUT_UNPIN_FAIL);
 
         throw RC{OK_RC};
     }
@@ -262,9 +262,9 @@ RC RM_FileHandle::UpdateRec(const RM_Record &rec)
         // Get data from the page
         PF_PageHandle pFPageHandle;
         char *pageData;
-        RM_ChangeRC(pFFileHandle.GetThisPage(pageNum, pFPageHandle), RM_FILE_UPDATE_FAIL);
-        RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_UPDATE_FAIL_UNPIN_FAIL, RM_FILE_UPDATE_FAIL, pFFileHandle, pageNum);
-        RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum), RM_FILE_UPDATE_FAIL_UNPIN_FAIL, RM_FILE_UPDATE_FAIL, pFFileHandle, pageNum);
+        RM_ChangeRC(pFFileHandle.GetThisPage(pageNum + 1, pFPageHandle), RM_FILE_UPDATE_FAIL);
+        RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_UPDATE_FAIL_UNPIN_FAIL, RM_FILE_UPDATE_FAIL, pFFileHandle, pageNum + 1);
+        RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum + 1), RM_FILE_UPDATE_FAIL_UNPIN_FAIL, RM_FILE_UPDATE_FAIL, pFFileHandle, pageNum + 1);
         if (~pageData[slotNum / 8] >> slotNum % 8 & 1)
             throw RC{RM_FILE_UPDATE_NOT_FOUND};
 
@@ -272,7 +272,7 @@ RC RM_FileHandle::UpdateRec(const RM_Record &rec)
         memcpy(pageData + (slotNumPerPage + 7) / 8 + slotNum * recordSize, recData, recordSize);
 
         // Unpin and finish
-        RM_ChangeRC(pFFileHandle.UnpinPage(pageNum), RM_FILE_UPDATE_BUT_UNPIN_FAIL);
+        RM_ChangeRC(pFFileHandle.UnpinPage(pageNum + 1), RM_FILE_UPDATE_BUT_UNPIN_FAIL);
         throw RC{OK_RC};
     }
     catch (RC rc)

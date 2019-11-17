@@ -140,6 +140,8 @@ private:
 //
 // RM_Manager: provides RM file management
 //
+// Since it's supposed that there's only one element of RM_Manager,
+// copy constructor and the overload of = are not needed.
 class RM_Manager
 {
 public:
@@ -153,8 +155,7 @@ public:
     RC CloseFile(RM_FileHandle &fileHandle);
 
 private:
-    PF_Manager *pfManager; // PF_Manager object
-    int findNumberRecords(int recordSize);
+    PF_Manager& pFManager; // PF_Manager object
 };
 
 //
@@ -193,6 +194,9 @@ void RM_PrintError(RC rc);
 #define RM_FILE_UPDATE_SIZE_NEQ (START_RM_WARN + 21)
 #define RM_SCAN_CLOSED (START_RM_WARN + 22)
 #define RM_SCAN_OPEN_CLOSED_FILE (START_RM_WARN + 23)
+#define RM_MANAGER_RECORDSIZE_TOO_LARGE (START_RM_WARN + 24)
+#define RM_CREATE_FAIL (START_RM_WARN + 25)
+#define RM_CREATE_FAIL_UNPIN_FAIL (START_RM_WARN + 26)
 #define RM_LASTWARN RM_EOF // Mark the last warn, to be updated
 
 // Errors
@@ -201,7 +205,9 @@ void RM_PrintError(RC rc);
 #define RM_FILE_DELETE_BUT_UNPIN_FAIL (START_RM_ERR - 2)
 #define RM_FILE_UPDATE_BUT_UNPIN_FAIL (START_RM_ERR - 3)
 #define RM_FILE_GET_BUT_UNPIN_FAIL (START_RM_ERR - 4)
-#define RM_LASTERROR RM_EOF // Mark the last erro to be update.
+#define RM_UNKNOWN_SLOTNUM (START_RM_ERR - 5)
+#define RM_UNKNOWN_PAGENUM (START_RM_ERR - 6)
+#define RM_LASTERROR RM_FILE_GET_BUT_UNPIN_FAIL // Mark the last erro to be update.
 
 // Example:
 // #define RM_INVALIDNAME          (START_RM_ERR - 0) // Invalid PC file name
