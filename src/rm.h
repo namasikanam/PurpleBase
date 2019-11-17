@@ -65,7 +65,9 @@ private:
 // To remain the pages sequential, we choose not to dispose any pages.
 class RM_FileHandle
 {
-    friend class PF_Manager; // The situation is similar as PF.
+    friend class RM_Manager; // The situation is similar as PF.
+    friend class RM_FileScan;
+
 public:
     RM_FileHandle();
     ~RM_FileHandle();
@@ -108,6 +110,8 @@ class RM_FileScan
 public:
     RM_FileScan();
     ~RM_FileScan();
+    RM_FileScan(const RM_FileScan &rec);
+    RM_FileScan &operator=(const RM_FileScan &rec);
 
     RC OpenScan(const RM_FileHandle &fileHandle,
                 AttrType attrType,
@@ -120,24 +124,17 @@ public:
     RC CloseScan();                            // Close the scan
 
 private:
-    PageNum pageNum;          // Current page number
-    SlotNum slotNumber;       // Current slot number
-    RM_FileHandle fileHandle; // File handle for the file
-    AttrType attrType;        // Attribute type
-    int attrLength;           // Attribute length
-    int attrOffset;           // Attribute offset
-    CompOp compOp;            // Comparison operator
-    void *value;              // Value to be compared
-    bool viable;              // Viablity flag
+    RM_FileHandle rMFileHandle;
+    AttrType attrType;
+    int attrLength;
+    int attrOffset;
+    CompOp compOp;
+    void *value;
 
-    int getIntegerValue(char *recordData);         // Get integer attribute valuez
-    float getFloatValue(char *recordData);         // Get float attribute value
-    std::string getStringValue(char *recordData);  // Get string attribute value
-    bool isBitFilled(int bitNumber, char *bitmap); // Check whether a slot is filled
+    bool open;
 
-    template <typename T>
-    bool matchRecord(T recordValue, T givenValue); // Match the record value with
-                                                   // the given valuez
+    PageNum curPageNum;
+    SlotNum curSlotNum;
 };
 
 //
@@ -194,12 +191,18 @@ void RM_PrintError(RC rc);
 #define RM_FILE_UPDATE_FAIL_UNPIN_FAIL (START_RM_WARN + 19)
 #define RM_FILE_UPDATE_NOT_FOUND (START_RM_WARN + 20)
 #define RM_FILE_UPDATE_SIZE_NEQ (START_RM_WARN + 21)
+#define RM_SCAN_CLOSED (START_RM_WARN + 22)
+#define RM_SCAN_OPEN_CLOSED_FILE (START_RM_WARN + 23)
+#define RM_EOF (START_RM_WARN + 24)
+#define RM_SCAN_NEXT_FAIL (START_RM_WARN + 25)
+#define RM_LASTWARN RM_EOF // Mark the last warn, to be updated
 
 // Errors
 #define RM_FILE_INSERT_NO_AVAILABLE_SLOT_IN_AVAILABLE_PAGES (START_RM_ERR - 0) // When inserting some record to some file, find a available page without available slot, here makes a contradiction.
 #define RM_ERROR_FILE_INSERT_BUT_UNPIN_FAIL (START_RM_ERR - 1)
 #define RM_FILE_DELETE_BUT_UNPIN_FAIL (START_RM_WARN - 2)
 #define RM_FILE_UPDATE_BUT_UNPIN_FAIL (START_RM_WARN - 3)
+#define RM_LASTERROR RM_EOF // Mark the last erro to be updated
 
 // Example:
 // #define RM_INVALIDNAME          (START_RM_ERR - 0) // Invalid PC file name

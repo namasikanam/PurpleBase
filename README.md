@@ -2,6 +2,8 @@
 
 This is a developing simple DBMS for course *Introduction to Database Management System* at Tsinghua University, based on [RedBase](https://web.stanford.edu/class/cs346/2015/redbase.html). It's planned to follows both the specification of [CS346] and *Introduction to Database Management System*.
 
+Purple is the color of Tsinghua and also was my favorite color when I was in middle school. So, I use it to name my DBMS.
+
 ## Instructions
 
 * **Setup**: Install ``g++``, ``bison``, ``flex`` and ``valgrind``  
