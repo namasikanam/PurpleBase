@@ -13,29 +13,8 @@ RM_FileScan::RM_FileScan() : open(false) {}
 // Destructor
 RM_FileScan::~RM_FileScan() {}
 
-// RM_FileScan
-RM_FileScan::RM_FileScan(const RM_FileScan &rec) : rMFileHandle(rec.rMFileHandle), attrType(rec.attrType), attrLength(rec.attrLength), attrOffset(rec.attrOffset), compOp(rec.compOp), value(rec.value), open(rec.open), curPageNum(rec.curPageNum), curSlotNum(rec.curSlotNum) {}
-
-// Overloaded operator=
-RM_FileScan &RM_FileScan::operator=(const RM_FileScan &rec)
-{
-    rMFileHandle = rec.rMFileHandle;
-    attrType = rec.attrType;
-    attrLength = rec.attrLength;
-    attrOffset = rec.attrOffset;
-    compOp = rec.compOp;
-    value = rec.value;
-
-    open = rec.open;
-
-    rid = rec.rid;
-    curPageNum = rec.curPageNum;
-    curSlotNum = rec.curSlotNum;
-    return *this;
-}
-
 // Open a scan
-RC RM_FileScan::OpenScan(const RM_FileHandle &fileHandle, AttrType attrType, int attrLength, int attrOffset, CompOp compOp, void *value, ClientHint pinHint = NO_HINT)
+RC RM_FileScan::OpenScan(const RM_FileHandle &fileHandle, AttrType attrType, int attrLength, int attrOffset, CompOp compOp, void *value, ClientHint pinHint)
 {
     if (!fileHandle.open)
         return RM_SCAN_OPEN_CLOSED_FILE;

@@ -110,8 +110,7 @@ class RM_FileScan
 public:
     RM_FileScan();
     ~RM_FileScan();
-    RM_FileScan(const RM_FileScan &rec);
-    RM_FileScan &operator=(const RM_FileScan &rec);
+    // Copy of File Scan is weird, so here are no copy construction and overloaded =
 
     RC OpenScan(const RM_FileHandle &fileHandle,
                 AttrType attrType,
@@ -203,7 +202,8 @@ void RM_PrintError(RC rc);
 #define RM_MANAGER_CLOSE_CLOSED_FILE (START_RM_WARN + 31)
 #define RM_MANAGER_CLOSE_FAIL (START_RM_WARN + 32)
 #define RM_MANAGER_CLOSE_FAIL_UNPIN_FAIL (START_RM_WARN + 33)
-#define RM_LASTWARN RM_EOF // Mark the last warn, to be updated
+#define RM_FILE_FORCE_FAIL (START_RM_WARN + 34)
+#define RM_LASTWARN RM_FILE_FORCE_FAIL // Mark the last warn, to be updated
 
 // Errors
 #define RM_FILE_INSERT_NO_AVAILABLE_SLOT_IN_AVAILABLE_PAGES (START_RM_ERR - 0) // When inserting some record to some file, find a available page without available slot, here makes a contradiction.
@@ -214,13 +214,9 @@ void RM_PrintError(RC rc);
 #define RM_UNKNOWN_PAGENUM (START_RM_ERR - 5)
 #define RM_MANAGER_CREATE_BUT_UNPIN_FAIL (START_RM_ERR - 6)
 #define RM_MANAGER_CLOSE_BUT_UNPIN_FAIL (START_RM_ERR - 7)
-#define RM_LASTERROR RM_FILE_GET_BUT_UNPIN_FAIL // Mark the last erro to be update.
+#define RM_LASTERROR RM_MANAGER_CLOSE_BUT_UNPIN_FAIL // Mark the last error, to be update.
 
 // Example:
 // #define RM_INVALIDNAME          (START_RM_ERR - 0) // Invalid PC file name
-
-// Error in UNIX system call or library routine
-#define RM_UNIX (START_RM_ERR - 2) // Unix error
-#define RM_LASTERROR RM_UNIX
 
 #endif

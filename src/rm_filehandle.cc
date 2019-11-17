@@ -174,6 +174,8 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
 
         // Insert! Now!
         insertAt(0);
+
+        throw RC{OK_RC};
     }
     catch (RC rc)
     {
@@ -288,7 +290,12 @@ RC RM_FileHandle::UpdateRec(const RM_Record &rec)
 //              Just call the corresponding method at the underlying layer!
 // In:          The pagenum that needed to force.
 // Ret:         RM return code
-RC RM_FileHandle::ForcePages(PageNum pageNum = ALL_PAGES)
+RC RM_FileHandle::ForcePages(PageNum pageNum)
 {
-    pFFileHandle.ForcePages(pageNum);
+    try{
+        RM_ChangeRC(pFFileHandle.ForcePages(pageNum), RM_FILE_FORCE_FAIL);
+
+        throw RC{OK_RC};
+    }
+    catch (RC rc) {return rc;}
 }

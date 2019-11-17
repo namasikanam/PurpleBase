@@ -6,7 +6,6 @@
 # Improved by: Xingyu Xie (xiexy17@mails.tsinghua.edu.cn)
 #
 
-
 #
 # Global variables
 #
@@ -22,7 +21,7 @@ LEX            = flex
 # -g - Debugging information
 # -O1 - Basic optimization
 # -Wall - All warnings
-CFLAGS         = -g -O1 -Wall $(STATS_OPTION) $(INC_DIRS) --std=c++11
+CFLAGS         = -g -O2 -Wall $(STATS_OPTION) $(INC_DIRS) --std=c++11
 
 # The STATS_OPTION can be set to -DPF_STATS or to nothing to turn on and
 # off buffer manager statistics.  The student should not modify this
@@ -36,7 +35,7 @@ PF_SOURCES     = pf_buffermgr.cc pf_error.cc pf_filehandle.cc \
                  pf_pagehandle.cc pf_hashtable.cc pf_manager.cc \
                  pf_statistics.cc statistics.cc
 RM_SOURCES     = rm_manager.cc rm_error.cc rm_filehandle.cc \
-                 rm_filescan.cc rm_rid.cc rm_record.cc
+                 rm_filescan.cc rm_rid.cc rm_record.cc rm_internal.cc
 IX_SOURCES     = ix_manager.cc ix_indexhandle.cc ix_indexscan.cc \
 		 		 ix_error.cc
 SM_SOURCES     = sm_manager.cc sm_error.cc printer.cc
@@ -68,7 +67,8 @@ LIBRARY_QL     = $(LIB_DIR)libql.a
 LIBRARY_EX     = $(LIB_DIR)libex.a
 LIBRARY_PARSER = $(LIB_DIR)libparser.a
 LIBRARIES      = $(LIBRARY_PF) $(LIBRARY_RM) $(LIBRARY_IX) \
-                 $(LIBRARY_SM) $(LIBRARY_QL) $(LIBRARY_EX) $(LIBRARY_PARSER)
+                 $(LIBRARY_SM) $(LIBRARY_QL)
+# $(LIBRARY_EX) $(LIBRARY_PARSER)
 
 UTILS          = $(UTILS_SOURCES:.cc=)
 TESTS          = $(TESTER_SOURCES:.cc=)

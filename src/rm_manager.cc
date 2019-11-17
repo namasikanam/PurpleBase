@@ -126,6 +126,8 @@ RC RM_Manager::OpenFile(const char *fileName, RM_FileHandle &fileHandle) {
         fileHandle.slotNumPerPage = 1;
         while((fileHandle.slotNumPerPage + 1) * fileHandle.recordSize + (fileHandle.slotNumPerPage + 1 + 7) / 8 <= PF_PAGE_SIZE)
             ++fileHandle.slotNumPerPage;
+
+        throw RC{OK_RC};
     }
     catch (RC rc) {
         return rc;
@@ -184,6 +186,8 @@ RC RM_Manager::CloseFile(RM_FileHandle &fileHandle) {
         fileHandle.open = false;
         fileHandle.headerModified = false;
         fileHandle.pageAvailable.clear();
+
+        throw RC{OK_RC};
     }
     catch (RC rc) {
         return rc;
