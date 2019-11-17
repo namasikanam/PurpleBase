@@ -9,9 +9,8 @@
 
 #include "rm.h"
 
-//
-// A Wrapper of PF API
-//
+// Some wrappers for code-convenient
 void RM_ChangeRC(RC pf_rc, RC rm_rc);
+void RM_TryElseUnpin(RC pf_rc, RC unpin_rc, RC rm_rc, const PF_FileHandle &file, const PageNum &pageNum);
 
 #endif

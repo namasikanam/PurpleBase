@@ -4,7 +4,8 @@
 //   Record Manager component interface
 //
 // This file does not include the interface for the RID class.  This is
-// found in rm_rid.h
+// found in rm_rid.h.
+// All public interfaces are described in the requirement documentation.
 //
 
 #ifndef RM_H
@@ -21,14 +22,19 @@
 #include "redbase.h"
 #include "rm_rid.h"
 #include "pf.h"
-#include <bits/stdc++.h>
-using namespace std;
+#include <list>
+#include <algorithm>
+#include <string>
+#include <vector>
 
 //
 // RM_Record: RM Record interface
 //
+// When you set the viable true, you have to give data.
 class RM_Record
 {
+    friend class RM_FileHandle;
+
 public:
     RM_Record();
     ~RM_Record();
@@ -83,17 +89,15 @@ private:
     bool open;                  // File handle open flag
 
     // Information in header page
-    int recordSize;      // Size of record
-    int recordTot;       // Total number of records
-    int pageTot;         // Total number of pages
-    char *pageAvailable; // A bitmap of pages, which shows that if some page is available.
-    // This is suggested to be implemented as a linked list in the documentation, which I disagree.
-    // The length of this bitmap is [pageNum], equivalent to [(pageNum + 7) / 8].
+    int recordSize;                  // Size of record
+    SlotNum recordTot;               // Total number of records
+    PageNum pageTot;                 // Total number of pages
+    std::vector<char> pageAvailable; // The list of available pages
 
     bool headerModified; // Modified flag for the file header
 
     // Information that needs calculation
-    int slotNumPerPage;
+    SlotNum slotNumPerPage;
 };
 
 //
@@ -163,47 +167,42 @@ void RM_PrintError(RC rc);
 
 // Principles to design warnings and errors:
 //  1) Easily to detect where exactly the error happens at every layer.
+//  2) The order of the numbers are meaningless, the numbers are assigned by the order of the implementation.
+//  3) Warnings can be expected and will happen normal, but errors happen unexpectedly and confuse the programmer.
+//  4) When an error occurs, perhaps something've got unconsistent.
 
 // Warnings
 #define RM_RECORD_NOT_VIABLE (START_RM_WARN + 0)               // Record is not viable
 #define RM_FILE_HANDLE_CLOSED (START_RM_WARN + 1)              // File is not open when trying to read or write by a file handle.
 #define RM_FILE_INSERT_OLD_FAIL (START_RM_WARN + 2)            // Fail to insert record in old pages
 #define RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL (START_RM_WARN + 3) // Fail when inserting record in old pages and also when unpinning
-#define RM_FILE_INSERT_OLD_SUCC_UNPIN_FAIL (START_RM_WARN + 4) // Succeed when inserting record in old pages but fail when unpinning
+#define RM_FILE_INSERT_SUCC_UNPIN_FAIL (START_RM_WARN + 4)     // Succeed when inserting record in old pages but fail when unpinning
 #define RM_FILE_INSERT_NEW_PAGE_FAIL (START_RM_WARN + 5)       // Fail when trying to insert a new page into file
 #define RM_FILE_INSERT_NEW_FAIL_UNPIN_FAIL (START_RM_WARN + 6) // Fail when inserting a new record and fail when
 #define RM_FILE_INSERT_NEW_FAIL (START_RM_WARN + 7)            // Fail when inserting the record into a new-allocated page
-#define RM_FILE_INSERT_NEW_SUCC_UNPIN_FAIL (START_RM_WARN + 8) // Fail when inserting the record into a new-allocated page and also fail when unpinning
-#define RM_FILE_DELETE_FAIL (START_RM_WARN + 9)                // Fail when deleting the record from a file
-#define RM_FILE_DELETE_ILLEGAL_RID (START_RM_WARN + 10)        // It's detected that an illegal rid is passed in to delete
-#define RM_FILE_DELETE_NOT_FOUND (START_RM_WARN + 11)          // The record at rid is not found, maybe it has been deleted.
+#define RM_FILE_GET_SUCC_UNPIN_FAIL (START_RM_WARN + 8)
+#define RM_FILE_DELETE_FAIL (START_RM_WARN + 9)         // Fail when deleting the record from a file
+#define RM_FILE_DELETE_ILLEGAL_RID (START_RM_WARN + 10) // It's detected that an illegal rid is passed in to delete
+#define RM_FILE_DELETE_NOT_FOUND (START_RM_WARN + 11)   // The record at rid is not found, maybe it has been deleted.
+#define RM_FILE_GET_ILLEGAL_RID (START_RM_WARN + 12)    // Try to get some record by an illegal rid
+#define RM_FILE_GET_FAIL (START_RM_WARN + 13)           // Fail to get some record from the file
+#define RM_FILE_GET_NOT_FOUND (START_RM_WARN + 14)      // The record at rid is not found, maybe it has been deleted.
+#define RM_FILE_GET_FAIL_UNPIN_FAIL (START_RM_WARN + 15)
+#define RM_FILE_DELETE_FAIL_UNPIN_FAIL (START_RM_WARN + 16)
+#define RM_FILE_UPDATE_FAIL (START_RM_WARN + 17)
+#define RM_FILE_UPDATE_ILLEGAL_RID (START_RM_WARN + 18)
+#define RM_FILE_UPDATE_FAIL_UNPIN_FAIL (START_RM_WARN + 19)
+#define RM_FILE_UPDATE_NOT_FOUND (START_RM_WARN + 20)
+#define RM_FILE_UPDATE_SIZE_NEQ (START_RM_WARN + 21)
 
 // Errors
+#define RM_FILE_INSERT_NO_AVAILABLE_SLOT_IN_AVAILABLE_PAGES (START_RM_ERR - 0) // When inserting some record to some file, find a available page without available slot, here makes a contradiction.
+#define RM_ERROR_FILE_INSERT_BUT_UNPIN_FAIL (START_RM_ERR - 1)
+#define RM_FILE_DELETE_BUT_UNPIN_FAIL (START_RM_WARN - 2)
+#define RM_FILE_UPDATE_BUT_UNPIN_FAIL (START_RM_WARN - 3)
 
 // Example:
 // #define RM_INVALIDNAME          (START_RM_ERR - 0) // Invalid PC file name
-
-// // Warnings
-// #define RM_LARGE_RECORD (START_RM_WARN + 0)             // Record size is too large
-// #define RM_SMALL_RECORD (START_RM_WARN + 1)             // Record size is too small
-// #define RM_FILE_OPEN (START_RM_WARN + 2)                // File is already open
-// #define RM_FILE_CLOSED (START_RM_WARN + 3)              // File is closed
-// #define RM_RECORD_NOT_VALID (START_RM_WARN + 4)         // Record is not valid
-// #define RM_INVALID_SLOT_NUMBER (START_RM_WARN + 5)      // Slot number is not valid
-// #define RM_INVALID_PAGE_NUMBER (START_RM_WARN + 6)      // Page number is not valid
-// #define RM_ATTRIBUTE_NOT_CONSISTENT (START_RM_WARN + 7) // Attribute is not consistent
-// #define RM_SCAN_CLOSED (START_RM_WARN + 8)              // Scan is not open
-// #define RM_INVALID_FILENAME (START_RM_WARN + 9)         // Invalid filename
-// #define RM_INVALID_ATTRIBUTE (START_RM_WARN + 10)       // Invalid attribute
-// #define RM_INVALID_OFFSET (START_RM_WARN + 11)          // Invalid offset
-// #define RM_INVALID_OPERATOR (START_RM_WARN + 12)        // Invalid operator
-// #define RM_NULL_RECORD (START_RM_WARN + 13)             // Null record
-// #define RM_EOF (START_RM_WARN + 14)                     // End of file
-// #define RM_LASTWARN RM_EOF
-
-// // Errors
-// #define RM_INVALIDNAME (START_RM_ERR - 0)         // Invalid PC file name
-// #define RM_INCONSISTENT_BITMAP (START_RM_ERR - 1) // Inconsistent bitmap in page
 
 // Error in UNIX system call or library routine
 #define RM_UNIX (START_RM_ERR - 2) // Unix error

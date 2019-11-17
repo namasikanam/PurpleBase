@@ -35,7 +35,7 @@ RM_Record &RM_Record::operator=(const RM_Record &rec)
         copyData(rec);
 
         // Copy the rid, viability flag and record size
-        rid = rec.rid, viable = rec.viable, dataSize = rec.dataSize;
+        rid = rec.rid, dataSize = rec.dataSize;
     }
 
     // Return a reference to this
@@ -101,17 +101,22 @@ void RM_Record::releaseData()
     if (viable)
     {
         delete[] pData;
+        viable = false;
     }
 }
 
 //
 // reAllocatePData
 //
-// Desc:    Use rec teallocate
+// Desc:    Use rec to reallocate
 // In:      A RM_Record to be copied
 void RM_Record::copyData(const RM_Record &rec)
 {
-    this->releaseData();
-    this->pData = new char[rec.dataSize];
-    memcpy(pData, rec.pData, sizeof(char) * rec.dataSize);
+    if (rec.viable)
+    {
+        this->releaseData();
+        this->pData = new char[rec.dataSize];
+        memcpy(pData, rec.pData, sizeof(char) * rec.dataSize);
+        viable = true;
+    }
 }
