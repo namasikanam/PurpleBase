@@ -21,12 +21,14 @@ LEX            = flex
 # -g - Debugging information
 # -O1 - Basic optimization
 # -Wall - All warnings
-CFLAGS         = -g -O2 -Wall $(STATS_OPTION) $(INC_DIRS) --std=c++11
+CFLAGS         = -g -O2 -Wall $(STATS_OPTION) $(LOG_OPTION) $(INC_DIRS) --std=c++11
 
 # The STATS_OPTION can be set to -DPF_STATS or to nothing to turn on and
 # off buffer manager statistics.  The student should not modify this
 # flag at all!
 STATS_OPTION   = -DPF_STATS
+
+LOG_OPTION = -DPF_LOG
 
 #
 # Students: Please modify SOURCES variables as needed.

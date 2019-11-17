@@ -41,15 +41,27 @@ static char *RM_WarnMsg[] = {
     (char *)"The record to update is not found.",                                                        // + 20: RM_FILE_UPDATE_NOT_FOUND
     (char *)"The size of record to update doesn't fit the size of the file.",                            // + 21: RM_FILE_UPDATE_NOT_FOUND
     (char *)"The scan is closed.",                                                                       // + 22: RM_SCAN_CLOSED
-    (char *)"The file to scan is closed.",                                                                                          // + 23: RM_SCAN_OPEN_CLOSED_FILE
+    (char *)"The file to scan is closed.",                                                               // + 23: RM_SCAN_OPEN_CLOSED_FILE
+    (char *)"Recordsize is too large for a file.",                                                       // + 24: RM_MANAGER_RECORDSIZE_TOO_LARGE
+    (char *)"Fail to create file.",                                                                      // + 25: RM_MANAGER_CREATE_FAIL
+    (char *)"Fail to create file and unpin some (header) page.",                                         // + 26: RM_MANAGER_CREATE_FAIL_UNPIN_FAIL
+    (char *)"Fail to destroy file.",                                                                     // + 27: RM_MANAGER_DESTROY_FAIL
+    (char *)"Fail to open file.",                                                                        // + 28: RM_MANAGER_OPEN_FAIL
+    (char *)"Succeed to get a record but failed to unpin.",                                              // + 29: RM_FILE_GET_BUT_UNPIN_FAIL
+    (char *)"Fail to force pages of a file.",                                                            // + 30: RM_FILE_FORCE_FAIL
+    (char *)"Try to close a closed file.",                                                               // + 31: RM_MANAGER_CLOSE_CLOSED_FILE
+    (char *)"Fail to close some file.",                                                                  // + 32: RM_MANAGER_CLOSE_FAIL
+    (char *)"Fail to close some file and fail to unpin again.",                                          // + 33: RM_MANAGER_CLOSE_FAIL_UNPIN_FAIL
 };
 
 static char *RM_ErrorMsg[] = {
     (char *)"Here's an available page without available slot, which is found during insertion.", // - 0: RM_FILE_INSERT_NO_AVAILABLE_SLOT_IN_AVAILABLE_PAGES
-    (char *)"Having succeeded to insert, failed to unpin unexpectedly.",                                                                                  // - 1: RM_ERROR_FILE_INSERT_BUT_UNPIN_FAIL
-    (char *)"Having succeeded to deletion, failed to unpin unexpectedly.",                                                                                  // - 2: RM_FILE_DELETE_BUT_UNPIN_FAIL
-    (char *)"Having succeeded to update, failed to unpin unexpectedly.",                                                                                  // - 3: RM_FILE_UPDATE_BUT_UNPIN_FAIL
-    (char *)"Having succeeded to get some record, failed to unpin unexpectedly.",                                                                                  // - 4: RM_FILE_GET_BUT_UNPIN_FAIL
+    (char *)"Having succeeded to insert, failed to unpin unexpectedly.",                         // - 1: RM_ERROR_FILE_INSERT_BUT_UNPIN_FAIL
+    (char *)"Having succeeded to deletion, failed to unpin unexpectedly.",                       // - 2: RM_FILE_DELETE_BUT_UNPIN_FAIL
+    (char *)"Having succeeded to update, failed to unpin unexpectedly.",                         // - 3: RM_FILE_UPDATE_BUT_UNPIN_FAIL
+    (char *)"Succeed to create file but fail to unpin.",                                         // -4: RM_MANAGER_CREATE_BUT_UNPIN_FAIL
+    (char *)"Succeed to close file but fail to unpin.",                                          // -5: RM_MANAGER_CLOSE_BUT_UNPIN_FAIL
+    (char *)"Succeed to open file but fail to unpin.",                                                                                  // -6: RM_MANAGER_OPEN_BUT_UNPIN_FAIL
 };
 
 //

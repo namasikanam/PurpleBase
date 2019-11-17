@@ -37,23 +37,10 @@ RC RM_Manager::CreateFile(const char *fileName, int recordSize) {
         char *headerPageDataPtr = headerPageData + 4;
         sprintf(headerPageData, "%d", recordSize);
         // recordTot is equal to 1
-        if (sizeof(SlotNum) == 4) {
             sprintf(headerPageDataPtr + 4, "%d", 1);
             headerPageDataPtr += 4;
-        }
-        else if (sizeof(SlotNum) == 8) {
-            sprintf(headerPageDataPtr + 8, "%lld", 1ll);
-            headerPageDataPtr += 8;
-        }
-        else
-            throw RC{RM_UNKNOWN_SLOTNUM};
         // pageTot is equal to 0
-        if (sizeof(PageNum) == 4)
-            sprintf(headerPageDataPtr + 4, "%d", 0);
-        else if(sizeof(PageNum) == 8)
             sprintf(headerPageDataPtr + 8, "%lld", 0ll);
-        else
-            throw RC{RM_UNKNOWN_PAGENUM};
         // pageAvailable is just empty.
 
         // Header page is written and being unpinned
@@ -84,35 +71,25 @@ RC RM_Manager::OpenFile(const char *fileName, RM_FileHandle &fileHandle) {
         // Read header file
         PF_PageHandle headerPage;
         char *headerPageData;
+
+        puts("Before");
+
+        RM_ChangeRC(pFFileHandle.GetThisPage(0ll, headerPage), RM_MANAGER_OPEN_FAIL);
+
         RM_ChangeRC(pFFileHandle.GetFirstPage(headerPage), RM_MANAGER_OPEN_FAIL);
+
+        puts("After");
+
         RM_ChangeRC(headerPage.GetData(headerPageData), RM_MANAGER_OPEN_FAIL);
         
         // Read from data
         // Similar to the situation of output
         char *headerPageDataPtr = headerPageData + 4;
         sscanf(headerPageData, "%d", &fileHandle.recordSize);
-        if (sizeof(SlotNum) == 4)
-        {
             sscanf(headerPageDataPtr + 4, "%d", &fileHandle.recordTot);
             headerPageDataPtr += 4;
-        }
-        else if (sizeof(SlotNum) == 8)
-        {
-            sscanf(headerPageDataPtr + 8, "%lld", &fileHandle.recordTot);
-            headerPageDataPtr += 8;
-        }
-        else
-            throw RC{RM_UNKNOWN_SLOTNUM};
-        if (sizeof(PageNum) == 4) {
-            sscanf(headerPageDataPtr + 4, "%d", &fileHandle.pageTot);
-            headerPageDataPtr += 4;
-        }
-        else if (sizeof(PageNum) == 8) {
             sprintf(headerPageDataPtr + 8, "%lld", &fileHandle.pageTot);
             headerPageDataPtr += 8;
-        }
-        else
-            throw RC{RM_UNKNOWN_PAGENUM};
         fileHandle.pageAvailable.clear();
         for (PageNum pageID = (fileHandle.pageTot + 7) / 8; pageID--; ++headerPageDataPtr)
             fileHandle.pageAvailable.push_back(*headerPageDataPtr);
@@ -156,24 +133,9 @@ RC RM_Manager::CloseFile(RM_FileHandle &fileHandle) {
             // Write the information into data
             char *headerPageDataPtr = headerPageData + 4;
             sprintf(headerPageData, "%d", fileHandle.recordSize);
-            if (sizeof(SlotNum) == 4)
-            {
                 sprintf(headerPageDataPtr + 4, "%d", fileHandle.recordTot);
                 headerPageDataPtr += 4;
-            }
-            else if (sizeof(SlotNum) == 8)
-            {
-                sprintf(headerPageDataPtr + 8, "%lld", fileHandle.recordTot);
-                headerPageDataPtr += 8;
-            }
-            else
-                throw RC{RM_UNKNOWN_SLOTNUM};
-            if (sizeof(PageNum) == 4)
-                sprintf(headerPageDataPtr + 4, "%d", fileHandle.pageTot);
-            else if (sizeof(PageNum) == 8)
                 sprintf(headerPageDataPtr + 8, "%lld", fileHandle.pageTot);
-            else
-                throw RC{RM_UNKNOWN_PAGENUM};
             for (char pageID: fileHandle.pageAvailable)
                 *(headerPageDataPtr++) = pageID;
             

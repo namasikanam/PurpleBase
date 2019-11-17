@@ -18,8 +18,6 @@
 //       to long long and correct the output of it. Close the log file
 //       when destructing the pfBufferManager.
 
-#define PF_LOG
-
 #include <cstdio>
 #include <unistd.h>
 #include <iostream>
