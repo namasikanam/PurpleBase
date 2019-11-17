@@ -173,11 +173,11 @@ void RM_PrintError(RC rc);
 #define RM_FILE_HANDLE_CLOSED (START_RM_WARN + 1)              // File is not open when trying to read or write by a file handle.
 #define RM_FILE_INSERT_OLD_FAIL (START_RM_WARN + 2)            // Fail to insert record in old pages
 #define RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL (START_RM_WARN + 3) // Fail when inserting record in old pages and also when unpinning
-#define RM_FILE_INSERT_SUCC_UNPIN_FAIL (START_RM_WARN + 4)     // Succeed when inserting record in old pages but fail when unpinning
+#define RM_SCAN_NEXT_FAIL (START_RM_WARN + 4)
 #define RM_FILE_INSERT_NEW_PAGE_FAIL (START_RM_WARN + 5)       // Fail when trying to insert a new page into file
 #define RM_FILE_INSERT_NEW_FAIL_UNPIN_FAIL (START_RM_WARN + 6) // Fail when inserting a new record and fail when
 #define RM_FILE_INSERT_NEW_FAIL (START_RM_WARN + 7)            // Fail when inserting the record into a new-allocated page
-#define RM_FILE_GET_SUCC_UNPIN_FAIL (START_RM_WARN + 8)
+#define RM_EOF (START_RM_WARN + 8)
 #define RM_FILE_DELETE_FAIL (START_RM_WARN + 9)         // Fail when deleting the record from a file
 #define RM_FILE_DELETE_ILLEGAL_RID (START_RM_WARN + 10) // It's detected that an illegal rid is passed in to delete
 #define RM_FILE_DELETE_NOT_FOUND (START_RM_WARN + 11)   // The record at rid is not found, maybe it has been deleted.
@@ -193,16 +193,15 @@ void RM_PrintError(RC rc);
 #define RM_FILE_UPDATE_SIZE_NEQ (START_RM_WARN + 21)
 #define RM_SCAN_CLOSED (START_RM_WARN + 22)
 #define RM_SCAN_OPEN_CLOSED_FILE (START_RM_WARN + 23)
-#define RM_EOF (START_RM_WARN + 24)
-#define RM_SCAN_NEXT_FAIL (START_RM_WARN + 25)
 #define RM_LASTWARN RM_EOF // Mark the last warn, to be updated
 
 // Errors
 #define RM_FILE_INSERT_NO_AVAILABLE_SLOT_IN_AVAILABLE_PAGES (START_RM_ERR - 0) // When inserting some record to some file, find a available page without available slot, here makes a contradiction.
 #define RM_ERROR_FILE_INSERT_BUT_UNPIN_FAIL (START_RM_ERR - 1)
-#define RM_FILE_DELETE_BUT_UNPIN_FAIL (START_RM_WARN - 2)
-#define RM_FILE_UPDATE_BUT_UNPIN_FAIL (START_RM_WARN - 3)
-#define RM_LASTERROR RM_EOF // Mark the last erro to be updated
+#define RM_FILE_DELETE_BUT_UNPIN_FAIL (START_RM_ERR - 2)
+#define RM_FILE_UPDATE_BUT_UNPIN_FAIL (START_RM_ERR - 3)
+#define RM_FILE_GET_BUT_UNPIN_FAIL (START_RM_ERR - 4)
+#define RM_LASTERROR RM_EOF // Mark the last erro to be update.
 
 // Example:
 // #define RM_INVALIDNAME          (START_RM_ERR - 0) // Invalid PC file name
