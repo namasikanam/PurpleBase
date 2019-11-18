@@ -46,14 +46,31 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
         PF_PageHandle headerPageHandle;
         char *headerData;
         IX_Try(indexFileHandle.AllocatePage(headerPageHandle), IX_CREATE_HEAD_FAIL);
-        IX_Try(headerPageHandle.GetData(headerData), IX_CREATE_HEAD_FAIL);
-        IX_Try(indexFileHandle.MarkDirty(0ll), IX_CREATE_HEAD_FAIL);
+        IX_TryElseUnpin(headerPageHandle.GetData(headerData), IX_CREATE_HEAD_FAIL_UNPIN_FAIL, IX_CREATE_HEAD_FAIL, indexFileHandle, 0ll);
+        IX_TryElseUnpin(indexFileHandle.MarkDirty(0ll), IX_CREATE_HEAD_FAIL_UNPIN_FAIL, IX_CREATE_HEAD_FAIL, indexFileHandle, 0ll);
         // Store header information into the header page
         *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType)) = attrType;
-
-        // Step 3: Allocate and write root page
+        *(int *)(headerData + offsetof(IX_IndexHeader, attrLength)) = attrType;
+        *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage)) = 2ll;
+        *(PageNum *)(headerData + offsetof(IX_IndexHeader, bucketPage)) = 1ll;
+        *(int *)(headerData + offsetof(IX_IndexHeader, degree)) = IX_CalDegree(attrType, attrLength);
+        *(int *)(headerData + offsetof(IX_IndexHeader, bucketTot)) = 0ll;
+        IX_Try(indexFileHandle.UnpinPage(0ll), IX_CREATE_HEAD_BUT_UNPIN_FAIL);
 
         // Step 4: Allocate and write bucket page
+        // Bucket page is only one, so its [pageNum] won't ever change.
+        PF_PageHandle bucketPageHandle;
+        IX_Try(indexFileHandle.AllocatePage(bucketPageHandle), IX_CREATE_BUCKET_FAIL);
+        // Surprise! Bucket page is empty!
+        IX_Try(indexFileHandle.UnpinPage(1ll), IX_CREATE_BUCKET_BUT_UNPIN_FAIL);
+
+        // Step 3: Allocate and write root page
+        PF_PageHandle rootPageHandle;
+        char *rootData;
+        IX_Try(indexFileHandle.AllocatePage(rootPageHandle), IX_CREATE_ROOT_FAIL);
+        IX_TryElseUnpin(rootPageHandle.GetData(rootData), IX_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_CREATE_ROOT_FAIL, indexFileHandle, 2ll);
+        IX_TryElseUnpin(indexFileHandle.MarkDirty(2ll), IX_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_CREATE_ROOT_FAIL, indexFileHandle, 2ll);
+        *(int *)rootData = 0;
 
         // Everything is done.
         throw RC{OK_RC};

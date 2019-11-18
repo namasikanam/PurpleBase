@@ -20,7 +20,8 @@
     3) rootPage - Page number of the B+ Tree root - PageNum
     4) bucketPage - Page number of the bucket - PageNum
     5) degree - Degree of a node in the B+ Tree - integer
-    6) modified - Has the header modified since last read from the header page? - This shouldn't be stored in the header page. - Bool
+    6) bucketTot - How many rids are in the bucket now? - integer
+    7) modified - Has the header modified since last read from the header page? - This shouldn't be stored in the header page. - bool
 */
 struct IX_IndexHeader
 {
@@ -29,6 +30,7 @@ struct IX_IndexHeader
     PageNum rootPage;
     PageNum bucketPage;
     int degree;
+    int bucketTot;
     bool modified = false;
 };
 
@@ -39,6 +41,12 @@ struct IX_IndexHeader
 // 2) Different with traditional B+ tree,
 //    here we adopt a structure of left-inclusive right-exclusive intervals.
 //    The number of keys stored in the node is the same as children.
+// 3) In one page, i.e. one node of B+ tree, we store following things:
+//    3.1) The number of its children w.
+//    3.2) w ((someAttribute, pageNum, slotNum), childPtr)
+//         where childPtr is either the pageNum of its child or the id of rid in the bucket.
+// 4) We just simply assume that the rids won't reach out the capacity of one bucket page.
+// 5) Root page is possibily empty, which is a legal special case.
 class IX_IndexHandle
 {
     friend class IX_Manager;
@@ -141,6 +149,14 @@ void IX_PrintError(RC rc);
 // Errors
 #define IX_CREATE_OPEN_FILE_FAIL (START_IX_ERR - 0) // Invalid PC file name
 #define IX_CREATE_HEAD_FAIL (START_IX_ERR - 1)
+#define IX_CREATE_HEAD_FAIL_UNPIN_FAIL (START_IX_ERR - 2)
+#define IX_CREATE_HEAD_BUT_UNPIN_FAIL (START_IX_ERR - 3)
+#define IX_CREATE_BUCKET_FAIL (START_IX_ERR - 4)
+#define IX_CREATE_BUCKET_FAIL_UNPIN_FAIL (START_IX_ERR - 5)
+#define IX_CREATE_BUCKET_BUT_UNPIN_FAIL (START_IX_ERR - 6)
+#define IX_CREATE_ROOT_FAIL (START_IX_ERR - 7)
+#define IX_CREATE_ROOT_FAIL_UNPIN_FAIL (START_IX_ERR - 8)
+#define IX_CREATE_ROOT_BUT_UNPIN_FAIL (START_IX_ERR - 9)
 
 // The exact definition needs to be modified.
 // Error in UNIX system call or library routine
