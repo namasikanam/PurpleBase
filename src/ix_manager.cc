@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <sstream>
 #include <iostream>
+#include <stddef.h>
 using namespace std;
 
 // Constructor
@@ -47,6 +48,8 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
         IX_Try(indexFileHandle.AllocatePage(headerPageHandle), IX_CREATE_HEAD_FAIL);
         IX_Try(headerPageHandle.GetData(headerData), IX_CREATE_HEAD_FAIL);
         IX_Try(indexFileHandle.MarkDirty(0ll), IX_CREATE_HEAD_FAIL);
+        // Store header information into the header page
+        *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType)) = attrType;
 
         // Step 3: Allocate and write root page
 

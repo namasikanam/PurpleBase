@@ -9,7 +9,7 @@
 
 // Please do not include any other files than the ones below in this file.
 
-#include "redbase.h"  // Please don't change these lines
+#include "redbase.h" // Please don't change these lines
 #include "rm_rid.h"  // Please don't change these lines
 #include "pf.h"
 
@@ -22,7 +22,8 @@
     5) degree - Degree of a node in the B+ Tree - integer
     6) modified - Has the header modified since last read from the header page? - This shouldn't be stored in the header page. - Bool
 */
-struct IX_IndexHeader {
+struct IX_IndexHeader
+{
     AttrType attrType;
     int attrLength;
     PageNum rootPage;
@@ -38,11 +39,11 @@ struct IX_IndexHeader {
 // 2) Different with traditional B+ tree,
 //    here we adopt a structure of left-inclusive right-exclusive intervals.
 //    The number of keys stored in the node is the same as children.
-// 3) Rather than RM component, here we directly store information in the
-//    header page, which is stored by transformation to string in RM.
-class IX_IndexHandle {
+class IX_IndexHandle
+{
     friend class IX_Manager;
     friend class IX_IndexScan;
+
 public:
     IX_IndexHandle();
     ~IX_IndexHandle();
@@ -69,7 +70,8 @@ private:
 //
 // IX_IndexScan: condition-based scan of index entries
 //
-class IX_IndexScan {
+class IX_IndexScan
+{
 public:
     IX_IndexScan();
     ~IX_IndexScan();
@@ -78,7 +80,7 @@ public:
     RC OpenScan(const IX_IndexHandle &indexHandle,
                 CompOp compOp,
                 void *value,
-                ClientHint  pinHint = NO_HINT);
+                ClientHint pinHint = NO_HINT);
 
     // Get the next matching entry return IX_EOF if no more matching
     // entries.
@@ -94,7 +96,8 @@ private:
 // IX_Manager: provides IX index file management
 //
 // We have to assume that [fileName] doesn't contain '.'.
-class IX_Manager {
+class IX_Manager
+{
 public:
     IX_Manager(PF_Manager &pfm);
     ~IX_Manager();
@@ -114,7 +117,7 @@ public:
     RC CloseIndex(IX_IndexHandle &indexHandle);
 
 private:
-    PF_Manager& pfm;      // PF_Manager object
+    PF_Manager &pfm; // PF_Manager object
 };
 
 //
@@ -131,17 +134,17 @@ void IX_PrintError(RC rc);
 //  6) The first string after `IX` is the name of what class the warning or error happens.
 
 // Warnings
-#define IX_ILLEGAL_FILENAME             (START_IX_WARN + 0) // Index number is negative
-#define IX_CREATE_FAIL                   (START_IX_WARN + 1)
+#define IX_ILLEGAL_FILENAME (START_IX_WARN + 0) // Index number is negative
+#define IX_CREATE_FAIL (START_IX_WARN + 1)
 #define IX_LASTWARN IX_CREAT_FAIL
 
 // Errors
-#define IX_CREATE_OPEN_FILE_FAIL         (START_IX_ERR - 0) // Invalid PC file name
+#define IX_CREATE_OPEN_FILE_FAIL (START_IX_ERR - 0) // Invalid PC file name
 #define IX_CREATE_HEAD_FAIL (START_IX_ERR - 1)
 
 // The exact definition needs to be modified.
 // Error in UNIX system call or library routine
-#define IX_UNIX            (START_IX_ERR - 10) // Unix error
-#define IX_LASTERROR       IX_UNIX
+#define IX_UNIX (START_IX_ERR - 10) // Unix error
+#define IX_LASTERROR IX_UNIX
 
 #endif

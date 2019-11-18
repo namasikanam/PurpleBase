@@ -6,6 +6,7 @@
 
 #include "rm_internal.h"
 #include "rm.h"
+#include <stddef.h>
 using namespace std;
 
 RM_Manager::RM_Manager(PF_Manager &pfm): pFManager(pfm) {}
@@ -35,13 +36,14 @@ RC RM_Manager::CreateFile(const char *fileName, int recordSize) {
 
         // There're four variables to write into the header page.
         // recordSize is an input argument
-        char *headerPageDataPtr = headerPageData + 4;
-        sprintf(headerPageData, "%d", recordSize);
+        char *headerPageDataPtr = headerPageData;
+        *(int *)(headerPageDataPtr) = recordSize;
         // recordTot is equal to 1
-            sprintf(headerPageDataPtr + 4, "%d", 1);
-            headerPageDataPtr += 4;
+        headerPageDataPtr += sizeof(int);
+        *(SlotNum *)headerPageDataPtr = 1;
         // pageTot is equal to 0
-            sprintf(headerPageDataPtr + 8, "%lld", 0ll);
+        headerPageDataPtr += sizeof(SlotNum);
+        *(PageNum *)headerPageDataPtr = 0ll;
         // pageAvailable is just empty.
 
         // Header page is written and being unpinned
@@ -76,12 +78,13 @@ RC RM_Manager::OpenFile(const char *fileName, RM_FileHandle &fileHandle) {
         
         // Read from data
         // Similar to the situation of output
-        char *headerPageDataPtr = headerPageData + 4;
-        sscanf(headerPageData, "%d", &fileHandle.recordSize);
-        sscanf(headerPageDataPtr + 4, "%d", &fileHandle.recordTot);
-        headerPageDataPtr += 4;
-        sscanf(headerPageDataPtr + 8, "%lld", &fileHandle.pageTot);
-        headerPageDataPtr += 8;
+        char *headerPageDataPtr = headerPageData;
+        fileHandle.recordSize = *(int *)headerPageDataPtr;
+        headerPageDataPtr += sizeof(int);
+        fileHandle.recordTot = *(SlotNum *)headerPageDataPtr;
+        headerPageDataPtr += sizeof(SlotNum);
+        fileHandle.pageTot = *(PageNum *)headerPageDataPtr;
+        headerPageDataPtr += sizeof(PageNum);
         fileHandle.pageAvailable.clear();
         for (PageNum pageID = (fileHandle.pageTot + 7) / 8; pageID--; ++headerPageDataPtr)
             fileHandle.pageAvailable.push_back(*headerPageDataPtr);
@@ -119,12 +122,13 @@ RC RM_Manager::CloseFile(RM_FileHandle &fileHandle) {
             RM_TryElseUnpin(fileHandle.pFFileHandle.MarkDirty(0ll), RM_MANAGER_CLOSE_FAIL_UNPIN_FAIL, RM_MANAGER_CLOSE_FAIL, fileHandle.pFFileHandle, 0ll);
 
             // Write the information into data
-            char *headerPageDataPtr = headerPageData + 4;
-            sprintf(headerPageData, "%d", fileHandle.recordSize);
-            sprintf(headerPageDataPtr + 4, "%d", fileHandle.recordTot);
-            headerPageDataPtr += 4;
-            sprintf(headerPageDataPtr + 8, "%lld", fileHandle.pageTot);
-            headerPageDataPtr += 8;
+            char *headerPageDataPtr = headerPageData;
+            *(int *)(headerPageDataPtr) = fileHandle.recordSize;
+            headerPageDataPtr += sizeof(int);
+            *(SlotNum *)headerPageDataPtr = fileHandle.recordTot;
+            headerPageDataPtr += sizeof(SlotNum);
+            *(PageNum *)headerPageDataPtr = fileHandle.pageTot;
+            headerPageDataPtr += sizeof(PageNum);
             for (char pageID : fileHandle.pageAvailable)
                 *(headerPageDataPtr++) = pageID;
             
