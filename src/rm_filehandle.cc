@@ -94,6 +94,10 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
 {
     try
     {
+#ifdef RM_LOG
+        // puts("----- Try insert ------");
+#endif
+
         // Check if open, which is a general enter condition of all functions
         if (!open)
             throw RC{RM_FILE_HANDLE_CLOSED};
@@ -139,6 +143,10 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
                     ++pageNum;
                 // I've managed to find an available page!
 
+#ifdef RM_LOG
+                // printf("Find available page: %lld\n", pageNum);
+#endif
+
                 // Get the available page.
                 RM_ChangeRC(pFFileHandle.GetThisPage(pageNum + 1, pFPageHandle), RM_FILE_INSERT_OLD_FAIL);
 
@@ -150,9 +158,19 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
 
                 for (SlotNum slotNum = 0; slotNum < slotNumPerPage; ++slotNum)
                     if (pageData[slotNum / 8] >> slotNum % 8 & 1)
+                    {
+#ifdef RM_LOG
+                        // puts("Find available old page!");
+#endif
+
                         insertAt(slotNum);
+                    }
                 throw RC{RM_FILE_INSERT_NO_AVAILABLE_SLOT_IN_AVAILABLE_PAGES};
             }
+
+#ifdef RM_LOG
+        // printf("No, we have to insert a new page at %lld\n", pageTot);
+#endif
 
         // If there's no available page.
         pageNum = pageTot;
@@ -162,15 +180,26 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
         RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_INSERT_NEW_FAIL_UNPIN_FAIL, RM_FILE_INSERT_NEW_PAGE_FAIL, pFFileHandle, pageNum);
         RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum + 1), RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL, RM_FILE_INSERT_OLD_FAIL, pFFileHandle, pageNum + 1);
 
+#ifdef RM_LOG
+        // puts("A new page is allocated.");
+#endif
+
         // Update the information of header page
-        ++pageTot;
         headerModified = true;
-        if (pageTot % 8 == 0)
-            pageAvailable.push_back(char(0));
+        if (pageTot++ % 8 == 0)
+        {
+            // The page is available after just insertion.
+            pageAvailable.push_back(char(255));
+        }
+
         pageAvailableIterator = --pageAvailable.end();
 
         // Initialize the bitmap at the head of the page
         memset(pageData, 0, (slotNumPerPage + 7) / 8);
+
+#ifdef RM_LOG
+        // puts("Insert to a new page!");
+#endif
 
         // Insert! Now!
         insertAt(0);
@@ -292,10 +321,14 @@ RC RM_FileHandle::UpdateRec(const RM_Record &rec)
 // Ret:         RM return code
 RC RM_FileHandle::ForcePages(PageNum pageNum)
 {
-    try{
+    try
+    {
         RM_ChangeRC(pFFileHandle.ForcePages(pageNum), RM_FILE_FORCE_FAIL);
 
         throw RC{OK_RC};
     }
-    catch (RC rc) {return rc;}
+    catch (RC rc)
+    {
+        return rc;
+    }
 }

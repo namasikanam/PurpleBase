@@ -301,14 +301,27 @@ RC AddRecs(RM_FileHandle &fh, int numRecs)
 
     printf("\nadding %d records\n", numRecs);
     for (i = 0; i < numRecs; i++) {
+#ifdef RM_LOG
+        // printf("--- record %d ---\n", i);
+#endif
+
         memset(recBuf.str, ' ', STRLEN);
         sprintf(recBuf.str, "a%d", i);
         recBuf.num = i;
         recBuf.r = (float)i;
+
+#ifdef RM_LOG
+        // puts("Before Insertion");
+#endif
+
         if ((rc = InsertRec(fh, (char *)&recBuf, rid)) ||
             (rc = rid.GetPageNum(pageNum)) ||
             (rc = rid.GetSlotNum(slotNum)))
             return (rc);
+
+#ifdef RM_LOG
+        // puts("After Insertion");
+#endif
 
         if ((i + 1) % PROG_UNIT == 0){
             printf("%d  ", i + 1);
