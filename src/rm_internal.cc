@@ -32,3 +32,27 @@ void RM_TryElseUnpin(RC pf_rc, RC unpin_rc, RC rm_rc, const PF_FileHandle &file,
         throw RC{rm_rc};
     }
 }
+
+//
+// Calculate next slot
+// Availibility doesn't count here
+//
+void nextSlot(PageNum &pageNum, SlotNum &slotNum, SlotNum slotNumPerPage) {
+    if (slotNum + 1 == slotNumPerPage) {
+        ++pageNum;
+        slotNum = 0;
+    }
+    else
+        ++slotNum;
+}
+
+//
+// A imitater of strcmp
+// the limitation of length is added
+//
+int strcmp(int length, char *s1, char *s2) {
+    for (int i = 0; i < length; ++i)
+        if (s1[i] != s2[i])
+            return s1[i] < s2[i] ? -1 : 1;
+    return 0;
+}

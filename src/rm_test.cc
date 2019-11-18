@@ -300,6 +300,7 @@ RC AddRecs(RM_FileHandle &fh, int numRecs)
     memset((void *)&recBuf, 0, sizeof(recBuf));
 
     printf("\nadding %d records\n", numRecs);
+    // Record is added by the order of its [num]
     for (i = 0; i < numRecs; i++) {
 #ifdef RM_LOG
         // printf("--- record %d ---\n", i);
@@ -311,7 +312,7 @@ RC AddRecs(RM_FileHandle &fh, int numRecs)
         recBuf.r = (float)i;
 
 #ifdef RM_LOG
-        // puts("Before Insertion");
+        // printf("Insert %d\n", i);
 #endif
 
         if ((rc = InsertRec(fh, (char *)&recBuf, rid)) ||
@@ -386,6 +387,8 @@ RC VerifyFile(RM_FileHandle &fh, int numRecs, CompOp op)
         //            pRecBuf->str, pRecBuf->num, pRecBuf->r);
         //     exit(1);
         // }
+
+        printf("Scan finds %d\n", pRecBuf->num);
 
         if (found[pRecBuf->num]) {
             printf("VerifyFile: duplicate record = [%s, %d, %f]\n",
