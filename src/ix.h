@@ -34,10 +34,12 @@ struct IX_IndexHeader {
 //
 // IX_IndexHandle: IX Index File interface
 //
-// The key of B+ tree is (someAttribute, pageNum, slotNum).
-// Different with traditional B+ tree,
-// here we adopt a structure of left-inclusive right-exclusive intervals.
-// The number of keys stored in the node is the same as children.
+// 1) The key of B+ tree is (someAttribute, pageNum, slotNum).
+// 2) Different with traditional B+ tree,
+//    here we adopt a structure of left-inclusive right-exclusive intervals.
+//    The number of keys stored in the node is the same as children.
+// 3) Rather than RM component, here we directly store information in the
+//    header page, which is stored by transformation to string in RM.
 class IX_IndexHandle {
     friend class IX_Manager;
     friend class IX_IndexScan;
@@ -134,7 +136,8 @@ void IX_PrintError(RC rc);
 #define IX_LASTWARN IX_CREAT_FAIL
 
 // Errors
-#define IX_CREATE_FILE_CREATED_BUT_FAIL          (START_IX_ERR - 0) // Invalid PC file name
+#define IX_CREATE_OPEN_FILE_FAIL         (START_IX_ERR - 0) // Invalid PC file name
+#define IX_CREATE_HEAD_FAIL (START_IX_ERR - 1)
 
 // The exact definition needs to be modified.
 // Error in UNIX system call or library routine

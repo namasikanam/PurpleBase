@@ -13,7 +13,6 @@ RM_Manager::RM_Manager(PF_Manager &pfm): pFManager(pfm) {}
 RM_Manager::~RM_Manager() {}
 
 RC RM_Manager::CreateFile(const char *fileName, int recordSize) {
-    char *headerPageData = nullptr;
     try
     {
         // Is my size too large?
@@ -30,6 +29,7 @@ RC RM_Manager::CreateFile(const char *fileName, int recordSize) {
         RM_ChangeRC(pFFileHandle.AllocatePage(headerPage), RM_MANAGER_CREATE_FAIL);
 
         // Write header page
+        char *headerPageData;
         RM_TryElseUnpin(headerPage.GetData(headerPageData), RM_MANAGER_CREATE_FAIL_UNPIN_FAIL, RM_MANAGER_CREATE_FAIL, pFFileHandle, 0ll);
         RM_TryElseUnpin(pFFileHandle.MarkDirty(0ll), RM_MANAGER_CREATE_FAIL_UNPIN_FAIL, RM_MANAGER_CREATE_FAIL, pFFileHandle, 0ll);
 
@@ -49,11 +49,7 @@ RC RM_Manager::CreateFile(const char *fileName, int recordSize) {
         RM_ChangeRC(pFManager.CloseFile(pFFileHandle), RM_MANAGER_CREATE_BUT_CLOSE_FAIL);
         throw RC{OK_RC};
     }
-    catch (RC rc) {
-        if (headerPageData != nullptr)
-            delete[] headerPageData;
-        return rc;
-    }
+    catch (RC rc) { return rc; }
 }
 
 RC RM_Manager::DestroyFile(const char *fileName) {
@@ -67,7 +63,6 @@ RC RM_Manager::DestroyFile(const char *fileName) {
 }
 
 RC RM_Manager::OpenFile(const char *fileName, RM_FileHandle &fileHandle) {
-    char *headerPageData = nullptr;
     try
     {
         // Open PF File
@@ -75,6 +70,7 @@ RC RM_Manager::OpenFile(const char *fileName, RM_FileHandle &fileHandle) {
         
         // Read header file
         PF_PageHandle headerPage;
+        char *headerPageData;
         RM_ChangeRC(fileHandle.pFFileHandle.GetFirstPage(headerPage), RM_MANAGER_OPEN_FAIL);
         RM_ChangeRC(headerPage.GetData(headerPageData), RM_MANAGER_OPEN_FAIL);
         
@@ -102,15 +98,10 @@ RC RM_Manager::OpenFile(const char *fileName, RM_FileHandle &fileHandle) {
 
         throw RC{OK_RC};
     }
-    catch (RC rc) {
-        if (headerPageData != nullptr)
-            delete[] headerPageData;
-        return rc;
-    }
+    catch (RC rc) { return rc; }
 }
 
 RC RM_Manager::CloseFile(RM_FileHandle &fileHandle) {
-    char *headerPageData = nullptr;
     try
     {
         // You can't close closed file.
@@ -121,6 +112,7 @@ RC RM_Manager::CloseFile(RM_FileHandle &fileHandle) {
         if (fileHandle.headerModified) {
             // Get Data
             PF_PageHandle headerPage;
+            char *headerPageData;
             RM_ChangeRC(fileHandle.pFFileHandle.GetFirstPage(headerPage), RM_MANAGER_CLOSE_FAIL);
             RM_TryElseUnpin(headerPage.GetData(headerPageData), RM_MANAGER_CLOSE_FAIL_UNPIN_FAIL, RM_MANAGER_CLOSE_FAIL, fileHandle.pFFileHandle, 0ll);
             // Differently, dirty mark is needed here
@@ -151,9 +143,5 @@ RC RM_Manager::CloseFile(RM_FileHandle &fileHandle) {
 
         throw RC{OK_RC};
     }
-    catch (RC rc) {
-        if (headerPageData!=nullptr)
-            delete[] headerPageData;
-        return rc;
-    }
+    catch (RC rc) { return rc; }
 }

@@ -36,7 +36,6 @@ RC RM_FileScan::OpenScan(const RM_FileHandle &fileHandle, AttrType attrType, int
 
 // This is the core of the File Scan
 RC RM_FileScan::GetNextRec(RM_Record &rec) {
-    char *pData = nullptr;
     try{
         if (!open)
             throw RC{RM_SCAN_CLOSED};
@@ -55,10 +54,8 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
 #endif
 
                 // Check if this record is satisfied.
-                if ([this, &rec, &pData]() -> bool {
-                        if (pData != nullptr)
-                            delete[] pData;
-                        pData = nullptr;
+                if ([this, &rec]() -> bool {
+                        char *pData;
                         RM_ChangeRC(rec.GetData(pData), RM_SCAN_NEXT_FAIL);
 
                         switch (attrType)
@@ -154,12 +151,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
         // if everything is right. I add it to prevent unnecessary warning.
         throw RC{OK_RC};
     }
-    catch (RC rc)
-    {
-        if (pData != nullptr)
-            delete[] pData;
-        return rc;
-    }
+    catch (RC rc) { return rc; }
 }
 
 // I think that deleting [value] is not my responsibility.
