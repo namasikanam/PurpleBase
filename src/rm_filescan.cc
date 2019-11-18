@@ -22,6 +22,7 @@ RC RM_FileScan::OpenScan(const RM_FileHandle &fileHandle, AttrType attrType, int
     this->rMFileHandle = fileHandle;
     this->attrType = attrType;
     this->attrLength = attrLength;
+    this->attrOffset = attrOffset;
     this->compOp = compOp;
     this->value = value;
 
@@ -48,7 +49,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
                 nextSlot(curPageNum, curSlotNum, rMFileHandle.slotNumPerPage);
 
 #ifdef RM_LOG
-                // puts("Goto next slot!");
+                // puts("Gone to next slot!");
 #endif
 
                 // Check if this record is satisfied.
@@ -66,19 +67,15 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
                         {
 #ifdef RM_LOG
                             // puts("A INT!");
+                            // printf("attrOffset = %d\n", attrOffset);
+                            // printf("recordSize = %d\n", rec.dataSize);
 #endif
 
-                            int recData, scanData;
-                            sscanf(pData + attrOffset, "%d", &recData);
-
-#ifdef RM_LOG
-                            // printf("recData = %d\n", recData);
-#endif
-
-                            sscanf((char *)value, "%d", &scanData);
+                            int recData = *(int *)(pData + attrOffset), scanData = *(int *)value;
 
 #ifdef RM_LOG
                             // printf("scanData = %d\n", scanData);
+                            // printf("recData = %d\n", recData);
 #endif
                             switch (compOp)
                             {
@@ -101,9 +98,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
                         }
                         case FLOAT:
                         {
-                            float recData, scanData;
-                            sscanf(pData + attrOffset, "%f", &recData);
-                            sscanf((char *)value, "%f", &scanData);
+                            float recData = *(float *)(pData + attrOffset), scanData = *(float *)value;
                             switch (compOp)
                             {
                             case NO_OP:
@@ -125,8 +120,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
                         }
                         case STRING:
                         {
-                            char recData[attrLength], *scanData = (char *)value;
-                            sscanf(pData + attrOffset, "%s", recData);
+                            char *recData = pData + attrOffset, *scanData = (char *)value;
                             switch (compOp)
                             {
                             case NO_OP:
@@ -157,7 +151,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
                     throw RC{OK_RC};
                     }
 #ifdef RM_LOG
-                        // puts("Check fail!");
+                        // puts("Fail to pass the satisfication condition!");
 #endif
                 break;
             case RM_FILE_GET_NOT_FOUND:
