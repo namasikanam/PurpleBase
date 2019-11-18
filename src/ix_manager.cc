@@ -36,18 +36,18 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
         char indexFileName[strlen(fileName) + 20] = "";
         strcat(indexFileName, fileName);
         sprintf(indexFileName + strlen(fileName), ".%d", indexNo);
-        IX_Try(pfm.CreateFile(indexFileName), IX_CREATE_FAIL);
+        IX_Try(pfm.CreateFile(indexFileName), IX_MANAGER_CREATE_FAIL);
         // Open index file
         PF_FileHandle indexFileHandle;
-        IX_Try(pfm.OpenFile(indexFileName, indexFileHandle), IX_CREATE_OPEN_FILE_FAIL);
+        IX_Try(pfm.OpenFile(indexFileName, indexFileHandle), IX_MANAGER_CREATE_OPEN_FILE_FAIL);
 
         // Step 2: Allocate and write head page
         // If everything runs right, the pagenum of head page should be 0.
         PF_PageHandle headerPageHandle;
         char *headerData;
-        IX_Try(indexFileHandle.AllocatePage(headerPageHandle), IX_CREATE_HEAD_FAIL);
-        IX_TryElseUnpin(headerPageHandle.GetData(headerData), IX_CREATE_HEAD_FAIL_UNPIN_FAIL, IX_CREATE_HEAD_FAIL, indexFileHandle, 0ll);
-        IX_TryElseUnpin(indexFileHandle.MarkDirty(0ll), IX_CREATE_HEAD_FAIL_UNPIN_FAIL, IX_CREATE_HEAD_FAIL, indexFileHandle, 0ll);
+        IX_Try(indexFileHandle.AllocatePage(headerPageHandle), IX_MANAGER_CREATE_HEAD_FAIL);
+        IX_TryElseUnpin(headerPageHandle.GetData(headerData), IX_MANAGER_CREATE_HEAD_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_HEAD_FAIL, indexFileHandle, 0ll);
+        IX_TryElseUnpin(indexFileHandle.MarkDirty(0ll), IX_MANAGER_CREATE_HEAD_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_HEAD_FAIL, indexFileHandle, 0ll);
         // Store header information into the header page
         *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType)) = attrType;
         *(int *)(headerData + offsetof(IX_IndexHeader, attrLength)) = attrType;
@@ -55,21 +55,21 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
         *(PageNum *)(headerData + offsetof(IX_IndexHeader, bucketPage)) = 1ll;
         *(int *)(headerData + offsetof(IX_IndexHeader, degree)) = IX_CalDegree(attrType, attrLength);
         *(int *)(headerData + offsetof(IX_IndexHeader, bucketTot)) = 0ll;
-        IX_Try(indexFileHandle.UnpinPage(0ll), IX_CREATE_HEAD_BUT_UNPIN_FAIL);
+        IX_Try(indexFileHandle.UnpinPage(0ll), IX_MANAGER_CREATE_HEAD_BUT_UNPIN_FAIL);
 
         // Step 4: Allocate and write bucket page
         // Bucket page is only one, so its [pageNum] won't ever change.
         PF_PageHandle bucketPageHandle;
-        IX_Try(indexFileHandle.AllocatePage(bucketPageHandle), IX_CREATE_BUCKET_FAIL);
+        IX_Try(indexFileHandle.AllocatePage(bucketPageHandle), IX_MANAGER_CREATE_BUCKET_FAIL);
         // Surprise! Bucket page is empty!
-        IX_Try(indexFileHandle.UnpinPage(1ll), IX_CREATE_BUCKET_BUT_UNPIN_FAIL);
+        IX_Try(indexFileHandle.UnpinPage(1ll), IX_MANAGER_CREATE_BUCKET_BUT_UNPIN_FAIL);
 
         // Step 3: Allocate and write root page
         PF_PageHandle rootPageHandle;
         char *rootData;
-        IX_Try(indexFileHandle.AllocatePage(rootPageHandle), IX_CREATE_ROOT_FAIL);
-        IX_TryElseUnpin(rootPageHandle.GetData(rootData), IX_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_CREATE_ROOT_FAIL, indexFileHandle, 2ll);
-        IX_TryElseUnpin(indexFileHandle.MarkDirty(2ll), IX_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_CREATE_ROOT_FAIL, indexFileHandle, 2ll);
+        IX_Try(indexFileHandle.AllocatePage(rootPageHandle), IX_MANAGER_CREATE_ROOT_FAIL);
+        IX_TryElseUnpin(rootPageHandle.GetData(rootData), IX_MANAGER_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_ROOT_FAIL, indexFileHandle, 2ll);
+        IX_TryElseUnpin(indexFileHandle.MarkDirty(2ll), IX_MANAGER_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_ROOT_FAIL, indexFileHandle, 2ll);
         *(int *)rootData = 0;
 
         // Everything is done.
@@ -81,10 +81,96 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 }
 
 RC IX_Manager::DestroyIndex(const char *fileName, int indexNo) {
+    try{
+        // Check legality
+        if (strchr(fileName, '.') != nullptr)
+            throw RC{IX_ILLEGAL_FILENAME};
+
+        // Calculate [indexFileName]
+        char indexFileName[strlen(fileName) + 20] = "";
+        strcat(indexFileName, fileName);
+        sprintf(indexFileName + strlen(fileName), ".%d", indexNo);
+        IX_Try(pfm.DestroyFile(indexFileName), IX_MANAGER_DESTROY_FAIL);
+
+        throw RC{OK_RC};
+    }
+    catch (RC rc) {
+        return rc;
+    }
 }
 
 RC IX_Manager::OpenIndex(const char *fileName, int indexNo, IX_IndexHandle &indexHandle) {
+    try{
+        // Check legality
+        if (strchr(fileName, '.') != nullptr)
+            throw RC{IX_ILLEGAL_FILENAME};
+        
+        // Calculate [indexFileName]
+        char indexFileName[strlen(fileName) + 20] = "";
+        strcat(indexFileName, fileName);
+        sprintf(indexFileName + strlen(fileName), ".%d", indexNo);
+
+        // Open index file
+        IX_Try(pfm.OpenFile(indexFileName, indexHandle.pFFileHandle), IX_MANAGER_OPEN_FAIL);
+
+        // Read header page
+        PF_PageHandle headerPageHandle;
+        char *headerData;
+        IX_Try(indexHandle.pFFileHandle.GetThisPage(0ll, headerPageHandle), IX_MANAGER_OPEN_FAIL);
+        IX_TryElseUnpin(headerPageHandle.GetData(headerData), IX_MANAGER_OPEN_FAIL_UNPIN_FAIL, IX_MANAGER_OPEN_FAIL, indexHandle.pFFileHandle, 0ll);
+        indexHandle.header = {
+            *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType)),
+            *(int *)(headerData + offsetof(IX_IndexHeader, attrLength)),
+            *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage)),
+            *(PageNum *)(headerData + offsetof(IX_IndexHeader, bucketPage)),
+            *(int *)(headerData + offsetof(IX_IndexHeader, degree)),
+            *(int *)(headerData + offsetof(IX_IndexHeader, bucketTot)),
+            false // modified
+        };
+        IX_Try(indexHandle.pFFileHandle.UnpinPage(0ll), IX_MANAGER_OPEN_BUT_UNPIN_FAIL);
+
+        indexHandle.open = true;
+
+        throw RC{OK_RC};
+    }
+    catch (RC rc) {
+        return rc;
+    }
 }
 
 RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle) {
+    try{
+        // Check legality
+        if (!indexHandle.open)
+            throw RC{IX_MANAGER_CLOSE_CLOSED_FILE_HANDLE};
+        
+        // Write back header
+        if (indexHandle.header.modified) {
+            PF_PageHandle headerPage;
+            char* headerData;
+            IX_Try(indexHandle.pFFileHandle.GetThisPage(0ll, headerPage), IX_MANAGER_CLOSE_FAIL);
+            IX_TryElseUnpin(headerPage.GetData(headerData), IX_MANAGER_CLOSE_FAIL_UNPIN_FAIL, IX_MANAGER_CLOSE_FAIL, indexHandle.pFFileHandle, 0ll);
+            IX_TryElseUnpin(indexHandle.pFFileHandle.MarkDirty(0ll), IX_MANAGER_CLOSE_FAIL_UNPIN_FAIL, IX_MANAGER_CLOSE_FAIL, indexHandle.pFFileHandle, 0ll);
+
+            indexHandle.header.attrType = *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType));
+            indexHandle.header.attrLength = *(int *)(headerData + offsetof(IX_IndexHeader, attrLength));
+            indexHandle.header.rootPage = *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage));
+            indexHandle.header.bucketPage = *(PageNum *)(headerData + offsetof(IX_IndexHeader, bucketPage));
+            indexHandle.header.degree = *(int *)(headerData + offsetof(IX_IndexHeader, degree));
+            indexHandle.header.bucketTot = *(int *)(headerData + offsetof(IX_IndexHeader, bucketTot));
+            
+            IX_Try(indexHandle.pFFileHandle.UnpinPage(0ll), IX_MANAGER_CLOSE_HEAD_BUT_UNPIN_FAIL);
+
+            indexHandle.header.modified = false;
+        }
+
+        // Close
+        IX_Try(pfm.CloseFile(indexHandle.pFFileHandle), IX_MANAGER_CLOSE_FAIL);
+        indexHandle.open = false;
+
+        throw RC{OK_RC};
+    }
+    catch (RC rc) {
+        return rc;
+    }
 }
