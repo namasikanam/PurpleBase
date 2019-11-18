@@ -27,3 +27,10 @@ src/*
 !src/rm_filehandle.cc
 !src/rm_error.cc
 !src/rm_test.cc
+!src/ix.h
+!src/ix_test.cc
+!src/ix_manager.cc
+!src/ix_internal.h
+!src/ix_indexscan.cc
+!src/ix_indexhandle.cc
+!src/ix_error.cc

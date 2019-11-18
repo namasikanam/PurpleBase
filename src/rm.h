@@ -208,7 +208,7 @@ void RM_PrintError(RC rc);
 #define RM_FILE_GET_NOT_FOUND_UNPIN_FAIL (START_RM_WARN + 34)
 #define RM_FILE_DELETE_NOT_FOUND_UNPIN_FAIL (START_RM_WARN + 35)
 #define RM_FILE_UPDATE_NOT_FOUND_UNPIN_FAIL (START_RM_WARN + 36)
-#define RM_LASTWARN RM_MANAGER_CLOSE_FAIL_UNPIN_FAIL // Mark the last warn, to be updated
+#define RM_LASTWARN RM_FILE_UPDATE_NOT_FOUND_UNPIN_FAIL // Mark the last warn, to be updated
 
 // Errors
 #define RM_FILE_INSERT_NO_AVAILABLE_SLOT_IN_AVAILABLE_PAGES (START_RM_ERR - 0) // When inserting some record to some file, find a available page without available slot, here makes a contradiction.
@@ -219,9 +219,8 @@ void RM_PrintError(RC rc);
 #define RM_MANAGER_CLOSE_BUT_UNPIN_FAIL (START_RM_ERR - 5)
 #define RM_MANAGER_OPEN_BUT_UNPIN_FAIL (START_RM_ERR - 6)
 #define RM_MANAGER_CREATE_BUT_CLOSE_FAIL (START_RM_ERR - 7)
-#define RM_LASTERROR RM_MANAGER_CREATE_BUT_CLOSE_FAIL // Mark the last error, to be update.
 
-// Example:
-// #define RM_INVALIDNAME          (START_RM_ERR - 0) // Invalid PC file name
+#define RM_UNIX (START_IX_ERR - 8)                    // Unix error
+#define RM_LASTERROR RM_UNIX // Mark the last error, to be update.
 
 #endif
