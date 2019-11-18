@@ -28,7 +28,8 @@ CFLAGS         = -g -O2 -Wall $(STATS_OPTION) $(LOG_OPTION) $(INC_DIRS) --std=c+
 # flag at all!
 STATS_OPTION   = -DPF_STATS
 
-LOG_OPTION = -DPF_LOG -DRM_LOG
+LOG_OPTION = 
+# -DPF_LOG -DRM_LOG
 
 #
 # Students: Please modify SOURCES variables as needed.
