@@ -21,6 +21,8 @@ IX_IndexScan::~IX_IndexScan() {
     // Nothing to free
 }
 
+// Rather than similar things to OpenScan in RM component,
+// here we get all satisfied rids when opening.
 RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle, CompOp compOp,
                           void *value, ClientHint  pinHint) {
 }

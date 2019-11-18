@@ -11,13 +11,10 @@
 using namespace std;
 
 // Constructor
-IX_IndexHandle::IX_IndexHandle() {
-}
+IX_IndexHandle::IX_IndexHandle() : open(false) {}
 
 // Destructor
-IX_IndexHandle::~IX_IndexHandle() {
-    // Nothing to free
-}
+IX_IndexHandle::~IX_IndexHandle() {}
 
 RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid) {
 }

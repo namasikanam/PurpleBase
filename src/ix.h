@@ -18,28 +18,26 @@
     1) attrType - Attribute type for the index - AttrType
     2) attrLength - Attribute length - integer
     3) rootPage - Page number of the B+ Tree root - PageNum
-    4) degree - Degree of a node in the B+ Tree - integer
+    4) bucketPage - Page number of the bucket - PageNum
+    5) degree - Degree of a node in the B+ Tree - integer
+    6) modified - Has the header modified since last read from the header page? - This shouldn't be stored in the header page. - Bool
 */
 struct IX_IndexHeader {
     AttrType attrType;
     int attrLength;
     PageNum rootPage;
+    PageNum bucketPage;
     int degree;
-};
-
-// IX_Entry: Struct for the index entry
-/* Stores the following:
-    1) keyValue - Value of the key - void*
-    2) rid - RID
-*/
-struct IX_Entry {
-    void* keyValue;
-    RID rid;
+    bool modified = false;
 };
 
 //
 // IX_IndexHandle: IX Index File interface
 //
+// The key of B+ tree is (someAttribute, pageNum, slotNum).
+// Different with traditional B+ tree,
+// here we adopt a structure of left-inclusive right-exclusive intervals.
+// The number of keys stored in the node is the same as children.
 class IX_IndexHandle {
     friend class IX_Manager;
     friend class IX_IndexScan;
@@ -57,25 +55,13 @@ public:
     RC ForcePages();
 
 private:
-    PF_FileHandle pfFH;                 // PF file handle
-    IX_IndexHeader indexHeader;         // Index file header
-    int isOpen;                         // index handle open flag
-    int headerModified;                 // Modified flag for the index header
-    IX_Entry lastDeletedEntry;               // Last deleted entry
+    PF_FileHandle pFFileHandle; // Underlying file handle
 
-    RC InsertEntryRecursive(void *pData, const RID &rid, PageNum node);
-    RC pushKeyUp(void* pData, PageNum node, PageNum left, PageNum right);
+    bool open;
 
-    RC SearchEntry(void* pData, PageNum node, PageNum &pageNumber);
-    RC DeleteFromLeaf(void* pData, const RID &rid, PageNum node);
-    RC pushDeletionUp(PageNum node, PageNum child);
-    bool compareRIDs(const RID &rid1, const RID &rid2);
-
-    template<typename T>
-    bool satisfiesInterval(T key1, T key2, T value);
-
-    // template<typename T>
-    // RC InsertInRootLeaf(void* pData, RID &rid, char* keyData, char* valueData, int numberKeys, int keyCapacity);
+    // As in the RM component,
+    // a header page of the file is needed.
+    IX_IndexHeader header;
 };
 
 //
@@ -100,33 +86,12 @@ public:
     RC CloseScan();
 
 private:
-    PageNum pageNumber;                     // Current page number
-    int keyPosition;                        // Current key position
-    int bucketPosition;                     // Current bucket position
-    const IX_IndexHandle* indexHandle;      // Index handle for the index
-    AttrType attrType;                      // Attribute type
-    int attrLength;                         // Attribute length
-    CompOp compOp;                          // Comparison operator
-    void* value;                            // Value to be compared
-    ClientHint pinHint;                     // Pinning hint
-    int scanOpen;                           // Flag to track if scan open
-    int degree;                             // Degree of the nodes
-    int inBucket;                           // Flag whether currently in bucket
-    IX_Entry lastScannedEntry;                   // Last scanned entry
-
-    RC SearchEntry(PageNum node, PageNum &pageNumber, int &keyPosition);
-
-    template<typename T>
-    bool satisfiesCondition(T key, T value);
-    template<typename T>
-    bool satisfiesInterval(T key1, T key2, T value);
-    bool compareRIDs(const RID &rid1, const RID &rid2);
-    bool compareEntries(const IX_Entry &e1, const IX_Entry &e2);
 };
 
 //
 // IX_Manager: provides IX index file management
 //
+// We have to assume that [fileName] doesn't contain '.'.
 class IX_Manager {
 public:
     IX_Manager(PF_Manager &pfm);
@@ -147,10 +112,7 @@ public:
     RC CloseIndex(IX_IndexHandle &indexHandle);
 
 private:
-    PF_Manager* pfManager;      // PF_Manager object
-
-    std::string generateIndexFileName(const char* fileName, int indexNo);
-    int findDegreeOfNode(int attrLength);
+    PF_Manager& pfm;      // PF_Manager object
 };
 
 //
@@ -158,15 +120,25 @@ private:
 //
 void IX_PrintError(RC rc);
 
+// Principles to design warnings and errors:
+//  1) Easily to detect where exactly the error happens at every layer.
+//  2) The order of the numbers are meaningless, the numbers are assigned by the order of the implementation.
+//  3) Warnings can be expected and will happen normal, but errors happen unexpectedly and confuse the programmer.
+//  4) When an error occurs, perhaps something've got unconsistent.
+//  5) The name needs to identify where the error or warning happen uniquely.
+//  6) The first string after `IX` is the name of what class the warning or error happens.
+
 // Warnings
-#define IX_NEGATIVE_INDEX_DEPRECIATED           (START_IX_WARN + 0) // Index number is negative
-#define IX_LASTWARN                 IX_DELETE_ENTRY_NOT_FOUND
+#define IX_ILLEGAL_FILENAME             (START_IX_WARN + 0) // Index number is negative
+#define IX_CREATE_FAIL                   (START_IX_WARN + 1)
+#define IX_LASTWARN IX_CREAT_FAIL
 
 // Errors
-#define IX_INVALIDNAME_OBSOLETE          (START_IX_ERR - 0) // Invalid PC file name
+#define IX_CREATE_FILE_CREATED_BUT_FAIL          (START_IX_ERR - 0) // Invalid PC file name
 
+// The exact definition needs to be modified.
 // Error in UNIX system call or library routine
-#define IX_UNIX            (START_IX_ERR - 2) // Unix error
+#define IX_UNIX            (START_IX_ERR - 10) // Unix error
 #define IX_LASTERROR       IX_UNIX
 
 #endif

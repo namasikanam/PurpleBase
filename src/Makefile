@@ -69,9 +69,9 @@ LIBRARY_SM     = $(LIB_DIR)libsm.a
 LIBRARY_QL     = $(LIB_DIR)libql.a
 LIBRARY_EX     = $(LIB_DIR)libex.a
 LIBRARY_PARSER = $(LIB_DIR)libparser.a
-LIBRARIES      = $(LIBRARY_PF) $(LIBRARY_RM) $(LIBRARY_IX) \
-                 $(LIBRARY_SM) $(LIBRARY_QL)
-# $(LIBRARY_EX) $(LIBRARY_PARSER)
+LIBRARIES      = $(LIBRARY_PF) $(LIBRARY_RM)
+
+# $(LIBRARY_IX) $(LIBRARY_SM) $(LIBRARY_QL) $(LIBRARY_EX) $(LIBRARY_PARSER)
 
 UTILS          = $(UTILS_SOURCES:.cc=)
 TESTS          = $(TESTER_SOURCES:.cc=)

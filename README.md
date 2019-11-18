@@ -15,6 +15,14 @@ Purple is the color of Tsinghua and also was my favorite color when I was in mid
 * **Run tests**: Run the tests under valgrind.
 For example, ``$ valgrind ./rm_test``
 
+## To-Do Extension
+
+Here're some options to implement for extra credits. (Now they're all from the document of CS346).
+- Let `IX` module be able to accommodate any number of `RID`s for an attribute value.
+  - Maybe through bucket chaining.
+- Implement fully correct (e.g. rebalancing) deletion of B+ tree.
+  - Maybe throught the way specified by [this paper](https://web.stanford.edu/class/cs346/2015/notes/jannink.pdf).
+
 ## References
 
 * [Aditya Bhandari's RedBase](https://github.com/adityabhandari1992/cs346-redbase) (adityasb@stanford.edu)
