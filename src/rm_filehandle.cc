@@ -385,6 +385,9 @@ RC RM_FileHandle::ForcePages(PageNum pageNum)
 {
     try
     {
+        if (!open)
+            throw RC{RM_FILE_HANDLE_CLOSED};
+
         RM_ChangeRC(pFFileHandle.ForcePages(pageNum), RM_FILE_FORCE_FAIL);
 
         throw RC{OK_RC};

@@ -17,10 +17,27 @@ IX_IndexHandle::IX_IndexHandle() : open(false) {}
 IX_IndexHandle::~IX_IndexHandle() {}
 
 RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid) {
+    try {
+        if (!open) throw RC{IX_HANDLE_CLOSED};
+    } catch (RC rc)
+    { return rc; }
 }
 
 RC IX_IndexHandle::DeleteEntry(void *pData, const RID &rid) {
+    try {
+        if (!open) throw RC{IX_HANDLE_CLOSED};
+    } catch (RC rc)
+    { return rc; }
 }
 
 RC IX_IndexHandle::ForcePages() {
+    try
+    {
+        if (!open)
+            throw RC{IX_HANDLE_CLOSED};
+    }
+    catch (RC rc)
+    {
+        return rc;
+    }
 }

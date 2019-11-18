@@ -13,7 +13,6 @@ using namespace std;
 // Constructor
 IX_IndexScan::IX_IndexScan() {
     // Set open scan flag to false
-    scanOpen = FALSE;
 }
 
 // Destructor

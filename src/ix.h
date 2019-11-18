@@ -165,6 +165,7 @@ void IX_PrintError(RC rc);
 #define IX_MANAGER_OPEN_BUT_UNPIN_FAIL (START_IX_ERR - 10)
 #define IX_MANAGER_CLOSE_FAIL_UNPIN_FAIL (START_IX_ERR - 11)
 #define IX_MANAGER_CLOSE_HEAD_BUT_UNPIN_FAIL (START_IX_ERR - 12)
+#define IX_HANDLE_CLOSED (START_IX_ERR - 13)
 
 // The exact definition needs to be modified.
 // Error in UNIX system call or library routine
