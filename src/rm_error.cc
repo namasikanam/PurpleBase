@@ -52,6 +52,9 @@ static char *RM_WarnMsg[] = {
     (char *)"Try to close a closed file.",                                                               // + 31: RM_MANAGER_CLOSE_CLOSED_FILE
     (char *)"Fail to close some file.",                                                                  // + 32: RM_MANAGER_CLOSE_FAIL
     (char *)"Fail to close some file and fail to unpin again.",                                          // + 33: RM_MANAGER_CLOSE_FAIL_UNPIN_FAIL
+    (char *)"The record to get is not found in the file and also fail to unpin.",                        // + 34: RM_FILE_GET_NOT_FOUND_UNPIN_FAIL
+    (char *)"The record to delete is not found in the file and also fail to unpin.",                        // + 35: RM_FILE_DELETE_NOT_FOUND_UNPIN_FAIL
+    (char *)"The record to update is not found in the file and also fail to unpin.",                        // + 36: RM_FILE_UPDATE_NOT_FOUND_UNPIN_FAIL
 };
 
 static char *RM_ErrorMsg[] = {

@@ -30,17 +30,18 @@ using namespace std;
 //
 // Defines
 //
-#define FILENAME   "testrel"         // test file name
-#define STRLEN      29               // length of string in testrec
-#define PROG_UNIT   50               // how frequently to give progress
-                                      //   reports when adding lots of recs
+#define FILENAME "testrel" // test file name
+#define STRLEN 29          // length of string in testrec
+#define PROG_UNIT 50       // how frequently to give progress \
+                           //   reports when adding lots of recs
 #define FEW_RECS   1200                // number of records added in
+// #define FEW_RECS 10
 
 //
 // Computes the offset of a field in a record (should be in <stddef.h>)
 //
 #ifndef offsetof
-#       define offsetof(type, field)   ((size_t)&(((type *)0) -> field))
+#define offsetof(type, field) ((size_t) & (((type *)0)->field))
 #endif
 
 #ifdef PF_STATS
@@ -64,69 +65,73 @@ extern void PF_Statistics();
 //
 void PF_ConfirmStatistics()
 {
-   // Must remember to delete the memory returned from StatisticsMgr::Get
-   cout << "Verifying the statistics for buffer manager: ";
-   int *piGP = pStatisticsMgr->Get("GetPage");
-   int *piPF = pStatisticsMgr->Get("PageFound");
-   int *piPNF = pStatisticsMgr->Get("PageNotFound");
-   int *piWP = pStatisticsMgr->Get("WritePage");
-   int *piRP = pStatisticsMgr->Get("ReadPage");
-   int *piFP = pStatisticsMgr->Get("FlushPage");
+    // Must remember to delete the memory returned from StatisticsMgr::Get
+    cout << "Verifying the statistics for buffer manager: ";
+    int *piGP = pStatisticsMgr->Get("GetPage");
+    int *piPF = pStatisticsMgr->Get("PageFound");
+    int *piPNF = pStatisticsMgr->Get("PageNotFound");
+    int *piWP = pStatisticsMgr->Get("WritePage");
+    int *piRP = pStatisticsMgr->Get("ReadPage");
+    int *piFP = pStatisticsMgr->Get("FlushPage");
 
-   if (piGP && (*piGP != 702)) {
-      cout << "Number of GetPages is incorrect! (" << *piGP << ")\n";
-      // No built in error code for this
-      exit(1);
-   }
-   if (piPF && (*piPF != 23)) {
-      cout << "Number of pages found in the buffer is incorrect! (" <<
-        *piPF << ")\n";
-      // No built in error code for this
-      exit(1);
-   }
-   if (piPNF && (*piPNF != 679)) {
-      cout << "Number of pages not found in the buffer is incorrect! (" <<
-        *piPNF << ")\n";
-      // No built in error code for this
-      exit(1);
-   }
-   if (piRP && (*piRP != 679)) {
-      cout << "Number of read requests to the Unix file system is " <<
-         "incorrect! (" << *piPNF << ")\n";
-      // No built in error code for this
-      exit(1);
-   }
-   if (piWP && (*piWP != 339)) {
-      cout << "Number of write requests to the Unix file system is "<<
-         "incorrect! (" << *piPNF << ")\n";
-      // No built in error code for this
-      exit(1);
-   }
-   if (piFP && (*piFP != 16)) {
-      cout << "Number of requests to flush the buffer is "<<
-         "incorrect! (" << *piPNF << ")\n";
-      // No built in error code for this
-      exit(1);
-   }
-   cout << " Correct!\n";
+    if (piGP && (*piGP != 702))
+    {
+        cout << "Number of GetPages is incorrect! (" << *piGP << ")\n";
+        // No built in error code for this
+        exit(1);
+    }
+    if (piPF && (*piPF != 23))
+    {
+        cout << "Number of pages found in the buffer is incorrect! (" << *piPF << ")\n";
+        // No built in error code for this
+        exit(1);
+    }
+    if (piPNF && (*piPNF != 679))
+    {
+        cout << "Number of pages not found in the buffer is incorrect! (" << *piPNF << ")\n";
+        // No built in error code for this
+        exit(1);
+    }
+    if (piRP && (*piRP != 679))
+    {
+        cout << "Number of read requests to the Unix file system is "
+             << "incorrect! (" << *piPNF << ")\n";
+        // No built in error code for this
+        exit(1);
+    }
+    if (piWP && (*piWP != 339))
+    {
+        cout << "Number of write requests to the Unix file system is "
+             << "incorrect! (" << *piPNF << ")\n";
+        // No built in error code for this
+        exit(1);
+    }
+    if (piFP && (*piFP != 16))
+    {
+        cout << "Number of requests to flush the buffer is "
+             << "incorrect! (" << *piPNF << ")\n";
+        // No built in error code for this
+        exit(1);
+    }
+    cout << " Correct!\n";
 
-   // Delete the memory returned from StatisticsMgr::Get
-   delete piGP;
-   delete piPF;
-   delete piPNF;
-   delete piWP;
-   delete piRP;
-   delete piFP;
+    // Delete the memory returned from StatisticsMgr::Get
+    delete piGP;
+    delete piPF;
+    delete piPNF;
+    delete piWP;
+    delete piRP;
+    delete piFP;
 }
-#endif    // PF_STATS
-
+#endif // PF_STATS
 
 //
 // Structure of the records we will be using for the tests
 //
-struct TestRec {
-    char  str[STRLEN];
-    int   num;
+struct TestRec
+{
+    char str[STRLEN];
+    int num;
     float r;
 };
 
@@ -165,24 +170,23 @@ RC GetNextRecScan(RM_FileScan &fs, RM_Record &rec);
 //
 // Array of pointers to the test functions
 //
-#define NUM_TESTS       5               // number of tests
-int (*tests[])() =                      // RC doesn't work on some compilers
-{
-    Test1,
-    Test2,
-    Test3,
-    Test4,
-    Test5
-};
+#define NUM_TESTS 5 // number of tests
+int (*tests[])() =  // RC doesn't work on some compilers
+    {
+        Test1,
+        Test2,
+        Test3,
+        Test4,
+        Test5};
 
 //
 // main
 //
 int main(int argc, char *argv[])
 {
-    RC   rc;
-    char *progName = argv[0];   // since we will be changing argv
-    int  testNum;
+    RC rc;
+    char *progName = argv[0]; // since we will be changing argv
+    int testNum;
 
     // Write out initial starting message
     cerr.flush();
@@ -194,34 +198,41 @@ int main(int argc, char *argv[])
     unlink(FILENAME);
 
     // If no argument given, do all tests
-    if (argc == 1) {
+    if (argc == 1)
+    {
         for (testNum = 0; testNum < NUM_TESTS; testNum++)
-            if ((rc = (tests[testNum])())) {
+            if ((rc = (tests[testNum])()))
+            {
 
                 // Print the error and exit
                 PrintError(rc);
                 return (1);
             }
     }
-    else {
+    else
+    {
 
         // Otherwise, perform specific tests
-        while (*++argv != NULL) {
+        while (*++argv != NULL)
+        {
 
             // Make sure it's a number
-            if (sscanf(*argv, "%d", &testNum) != 1) {
+            if (sscanf(*argv, "%d", &testNum) != 1)
+            {
                 cerr << progName << ": " << *argv << " is not a number\n";
                 continue;
             }
 
             // Make sure it's in range
-            if (testNum < 1 || testNum > NUM_TESTS) {
+            if (testNum < 1 || testNum > NUM_TESTS)
+            {
                 cerr << "Valid test numbers are between 1 and " << NUM_TESTS << "\n";
                 continue;
             }
 
             // Perform the test
-            if ((rc = (tests[testNum - 1])())) {
+            if ((rc = (tests[testNum - 1])()))
+            {
 
                 // Print the error and exit
                 PrintError(rc);
@@ -287,10 +298,10 @@ void PrintRecord(TestRec &recBuf)
 //
 RC AddRecs(RM_FileHandle &fh, int numRecs)
 {
-    RC      rc;
-    int     i;
+    RC rc;
+    int i;
     TestRec recBuf;
-    RID     rid;
+    RID rid;
     PageNum pageNum;
     SlotNum slotNum;
 
@@ -301,7 +312,8 @@ RC AddRecs(RM_FileHandle &fh, int numRecs)
 
     printf("\nadding %d records\n", numRecs);
     // Record is added by the order of its [num]
-    for (i = 0; i < numRecs; i++) {
+    for (i = 0; i < numRecs; i++)
+    {
 #ifdef RM_LOG
         // printf("--- record %d ---\n", i);
 #endif
@@ -321,10 +333,11 @@ RC AddRecs(RM_FileHandle &fh, int numRecs)
             return (rc);
 
 #ifdef RM_LOG
-        // puts("After Insertion");
+            // puts("After Insertion");
 #endif
 
-        if ((i + 1) % PROG_UNIT == 0){
+        if ((i + 1) % PROG_UNIT == 0)
+        {
             printf("%d  ", i + 1);
             fflush(stdout);
         }
@@ -345,39 +358,43 @@ RC AddRecs(RM_FileHandle &fh, int numRecs)
 //
 RC VerifyFile(RM_FileHandle &fh, int numRecs, CompOp op)
 {
-    RC        rc;
-    int       n;
-    TestRec   *pRecBuf;
-    RID       rid;
-    char      stringBuf[STRLEN];
-    char      *found;
+    RC rc;
+    int n;
+    TestRec *pRecBuf;
+    RID rid;
+    char stringBuf[STRLEN];
+    char *found;
     RM_Record rec;
 
     printf("\nverifying file contents\n");
 
     RM_FileScan fs;
-    TestRec* tempRecord = new TestRec();
+    TestRec *tempRecord = new TestRec();
     tempRecord->num = 100;
-    if ((rc=fs.OpenScan(fh,INT,sizeof(int),offsetof(TestRec, num),
-                        op, (void*) tempRecord + offsetof(TestRec, num), NO_HINT)))
+
+    // printf("attrOffset = %d\n", offsetof(TestRec, num));
+
+    if ((rc = fs.OpenScan(fh, INT, sizeof(int), offsetof(TestRec, num),
+                          op, (void *)tempRecord + offsetof(TestRec, num), NO_HINT)))
         return (rc);
 
     found = new char[numRecs];
     memset(found, 0, numRecs);
 
-    int givenValue = *static_cast<int*>((void*)tempRecord + offsetof(TestRec, num));
+    int givenValue = *static_cast<int *>((void *)tempRecord + offsetof(TestRec, num));
 
     // For each record in the file
     for (rc = GetNextRecScan(fs, rec), n = 0;
          rc == 0;
-         rc = GetNextRecScan(fs, rec), n++) {
+         rc = GetNextRecScan(fs, rec), n++)
+    {
 
         // Make sure the record is correct
         if ((rc = rec.GetData((char *&)pRecBuf)) ||
             (rc = rec.GetRid(rid)))
             goto err;
 
-        memset(stringBuf,' ', STRLEN);
+        memset(stringBuf, ' ', STRLEN);
         sprintf(stringBuf, "a%d", pRecBuf->num);
 
         // if (pRecBuf->num < 0 || pRecBuf->num >= numRecs ||
@@ -388,9 +405,8 @@ RC VerifyFile(RM_FileHandle &fh, int numRecs, CompOp op)
         //     exit(1);
         // }
 
-        printf("Scan finds %d\n", pRecBuf->num);
-
-        if (found[pRecBuf->num]) {
+        if (found[pRecBuf->num])
+        {
             printf("VerifyFile: duplicate record = [%s, %d, %f]\n",
                    pRecBuf->str, pRecBuf->num, pRecBuf->r);
             exit(1);
@@ -405,16 +421,18 @@ RC VerifyFile(RM_FileHandle &fh, int numRecs, CompOp op)
     delete tempRecord;
     delete[] found;
 
-    if ((rc=fs.CloseScan()))
+    if ((rc = fs.CloseScan()))
         return (rc);
 
     // make sure we had the right number of records in the file
-    if (n != numRecs) {
+    if (n != numRecs)
+    {
         printf("%d records in file (supposed to be %d)\n",
                n, numRecs);
         // exit(1);
     }
-    else {
+    else
+    {
         printf("Success!\n");
     }
 
@@ -436,10 +454,10 @@ err:
 //
 RC PrintFile(RM_FileScan &fs)
 {
-    RC        rc;
-    int       n;
-    TestRec   *pRecBuf;
-    RID       rid;
+    RC rc;
+    int n;
+    TestRec *pRecBuf;
+    RID rid;
     RM_Record rec;
 
     printf("\nprinting file contents\n");
@@ -447,7 +465,8 @@ RC PrintFile(RM_FileScan &fs)
     // for each record in the file
     for (rc = GetNextRecScan(fs, rec), n = 0;
          rc == 0;
-         rc = GetNextRecScan(fs, rec), n++) {
+         rc = GetNextRecScan(fs, rec), n++)
+    {
 
         // Get the record data and record id
         if ((rc = rec.GetData((char *&)pRecBuf)) ||
@@ -467,7 +486,6 @@ RC PrintFile(RM_FileScan &fs)
     return (0);
 }
 
-
 //
 // UpdateRecords
 //
@@ -475,26 +493,30 @@ RC PrintFile(RM_FileScan &fs)
 //
 RC UpdateRecords(RM_FileHandle &fh, int numRecs)
 {
-    RC        rc;
-    int       n;
+    RC rc;
+    int n;
     RM_Record rec;
 
     printf("\nUpdating records in the file\n");
 
-    for (int i=1; i<=10; i++) {
+    for (int i = 1; i <= 10; i++)
+    {
         RID rid(1, i);
-        if ((rc = GetRec(fh, rid, rec))) {
+        if ((rc = GetRec(fh, rid, rec)))
+        {
             return rc;
         }
-        char* pData;
-        if ((rc = rec.GetData(pData))) {
+        char *pData;
+        if ((rc = rec.GetData(pData)))
+        {
             return rc;
         }
-        TestRec* tempRecord = (TestRec*) pData;
+        TestRec *tempRecord = (TestRec *)pData;
         tempRecord->num = 2000;
 
         // Update record
-        if ((rc = UpdateRec(fh, rec))) {
+        if ((rc = UpdateRec(fh, rec)))
+        {
             return rc;
         }
     }
@@ -512,17 +534,19 @@ RC UpdateRecords(RM_FileHandle &fh, int numRecs)
 //
 RC DeleteRecords(RM_FileHandle &fh, int numRecs)
 {
-    RC        rc;
-    int       n;
+    RC rc;
+    int n;
     RM_Record rec;
 
     printf("\nDeleting records in the file\n");
 
-    for (int i=1; i<=10; i++) {
+    for (int i = 1; i <= 10; i++)
+    {
         RID rid(1, i);
 
         // Delete record
-        if ((rc = DeleteRec(fh, rid))) {
+        if ((rc = DeleteRec(fh, rid)))
+        {
             return rc;
         }
     }
@@ -532,8 +556,6 @@ RC DeleteRecords(RM_FileHandle &fh, int numRecs)
 
     return rc;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // The following functions are wrappers for some of the RM component  //
@@ -645,7 +667,7 @@ RC GetNextRecScan(RM_FileScan &fs, RM_Record &rec)
 //
 RC Test1(void)
 {
-    RC            rc;
+    RC rc;
     RM_FileHandle fh;
 
     printf("\ntest1 starting\n*****************************\n");
@@ -669,7 +691,7 @@ RC Test1(void)
 //
 RC Test2(void)
 {
-    RC            rc;
+    RC rc;
     RM_FileHandle fh;
 
     printf("\ntest2 starting\n*****************************\n");
@@ -694,32 +716,39 @@ RC Test2(void)
 //
 RC Test3(void)
 {
-    RC            rc;
+    RC rc;
     RM_FileHandle fh;
 
     printf("\ntest3 starting\n*****************************\n");
 
-    if ((rc = CreateFile(FILENAME, sizeof(TestRec)))) {
+    if ((rc = CreateFile(FILENAME, sizeof(TestRec))))
+    {
         return rc;
     }
-    if ((rc = OpenFile(FILENAME, fh))) {
+    if ((rc = OpenFile(FILENAME, fh)))
+    {
         return rc;
     }
-    if ((rc = AddRecs(fh, FEW_RECS))) {
+    if ((rc = AddRecs(fh, FEW_RECS)))
+    {
         return rc;
     }
-    if ((rc = CloseFile(FILENAME, fh))) {
+    if ((rc = CloseFile(FILENAME, fh)))
+    {
         return (rc);
     }
 
     // Verify file
-    if ((rc = OpenFile(FILENAME, fh))) {
+    if ((rc = OpenFile(FILENAME, fh)))
+    {
         return rc;
     }
-    if ((rc = VerifyFile(fh, FEW_RECS, NO_OP))) {
+    if ((rc = VerifyFile(fh, FEW_RECS, NO_OP)))
+    {
         return rc;
     }
-    if ((rc = CloseFile(FILENAME, fh))) {
+    if ((rc = CloseFile(FILENAME, fh)))
+    {
         return (rc);
     }
 
@@ -728,50 +757,58 @@ RC Test3(void)
     if ((rc = DestroyFile(FILENAME)))
         return (rc);
 
-    printf("\ntest3 done\n*****************************\n");
+    printf("\ntest3 done\n*****************************\n");   
     return (0);
 }
-
 
 //
 // Test4 tests updating of records in a file
 //
 RC Test4(void)
 {
-    RC            rc;
+    RC rc;
     RM_FileHandle fh;
 
     printf("\ntest4 starting\n*****************************\n");
 
-    if ((rc = CreateFile(FILENAME, sizeof(TestRec)))) {
+    if ((rc = CreateFile(FILENAME, sizeof(TestRec))))
+    {
         return rc;
     }
-    if ((rc = OpenFile(FILENAME, fh))) {
+    if ((rc = OpenFile(FILENAME, fh)))
+    {
         return rc;
     }
-    if ((rc = AddRecs(fh, FEW_RECS))) {
+    if ((rc = AddRecs(fh, FEW_RECS)))
+    {
         return rc;
     }
-    if ((rc = VerifyFile(fh, FEW_RECS, LT_OP))) {
+    if ((rc = VerifyFile(fh, FEW_RECS, LT_OP)))
+    {
         return rc;
     }
-    if ((rc = CloseFile(FILENAME, fh))) {
+    if ((rc = CloseFile(FILENAME, fh)))
+    {
         return (rc);
     }
 
     printf("\n---------------------------------\n");
 
     // Update records in the file
-    if ((rc = OpenFile(FILENAME, fh))) {
+    if ((rc = OpenFile(FILENAME, fh)))
+    {
         return rc;
     }
-    if ((rc = UpdateRecords(fh, FEW_RECS))) {
+    if ((rc = UpdateRecords(fh, FEW_RECS)))
+    {
         return rc;
     }
-    if ((rc = VerifyFile(fh, FEW_RECS, LT_OP))) {
+    if ((rc = VerifyFile(fh, FEW_RECS, LT_OP)))
+    {
         return rc;
     }
-    if ((rc = CloseFile(FILENAME, fh))) {
+    if ((rc = CloseFile(FILENAME, fh)))
+    {
         return (rc);
     }
 
@@ -789,40 +826,49 @@ RC Test4(void)
 //
 RC Test5(void)
 {
-    RC            rc;
+    RC rc;
     RM_FileHandle fh;
 
     printf("\ntest5 starting\n*****************************\n");
 
-    if ((rc = CreateFile(FILENAME, sizeof(TestRec)))) {
+    if ((rc = CreateFile(FILENAME, sizeof(TestRec))))
+    {
         return rc;
     }
-    if ((rc = OpenFile(FILENAME, fh))) {
+    if ((rc = OpenFile(FILENAME, fh)))
+    {
         return rc;
     }
-    if ((rc = AddRecs(fh, FEW_RECS))) {
+    if ((rc = AddRecs(fh, FEW_RECS)))
+    {
         return rc;
     }
-    if ((rc = VerifyFile(fh, FEW_RECS, NO_OP))) {
+    if ((rc = VerifyFile(fh, FEW_RECS, NO_OP)))
+    {
         return rc;
     }
-    if ((rc = CloseFile(FILENAME, fh))) {
+    if ((rc = CloseFile(FILENAME, fh)))
+    {
         return (rc);
     }
 
     printf("\n---------------------------------\n");
 
     // Delete records in the file
-    if ((rc = OpenFile(FILENAME, fh))) {
+    if ((rc = OpenFile(FILENAME, fh)))
+    {
         return rc;
     }
-    if ((rc = DeleteRecords(fh, FEW_RECS))) {
+    if ((rc = DeleteRecords(fh, FEW_RECS)))
+    {
         return rc;
     }
-    if ((rc = VerifyFile(fh, FEW_RECS, NO_OP))) {
+    if ((rc = VerifyFile(fh, FEW_RECS, NO_OP)))
+    {
         return rc;
     }
-    if ((rc = CloseFile(FILENAME, fh))) {
+    if ((rc = CloseFile(FILENAME, fh)))
+    {
         return (rc);
     }
 

@@ -95,6 +95,8 @@ private:
     SlotNum recordTot;               // Total number of records
     PageNum pageTot;                 // Total number of pages
     std::vector<char> pageAvailable; // The list of available pages
+    // Here, we use 1 to represent availability
+    // which is opposite to the bitmap of slot
 
     bool headerModified; // Modified flag for the file header
 
@@ -202,6 +204,9 @@ void RM_PrintError(RC rc);
 #define RM_MANAGER_CLOSE_CLOSED_FILE (START_RM_WARN + 31)
 #define RM_MANAGER_CLOSE_FAIL (START_RM_WARN + 32)
 #define RM_MANAGER_CLOSE_FAIL_UNPIN_FAIL (START_RM_WARN + 33)
+#define RM_FILE_GET_NOT_FOUND_UNPIN_FAIL (START_RM_WARN + 34)
+#define RM_FILE_DELETE_NOT_FOUND_UNPIN_FAIL (START_RM_WARN + 35)
+#define RM_FILE_UPDATE_NOT_FOUND_UNPIN_FAIL (START_RM_WARN + 36)
 #define RM_LASTWARN RM_MANAGER_CLOSE_FAIL_UNPIN_FAIL // Mark the last warn, to be updated
 
 // Errors

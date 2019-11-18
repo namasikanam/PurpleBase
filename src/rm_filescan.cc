@@ -41,19 +41,45 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
             switch ((tmp_rc = rMFileHandle.GetRec(RID(curPageNum, curSlotNum), rec)))
             {
             case OK_RC:
-                printf("Scan find something at (%lld, %d)\n", curPageNum, curSlotNum);
+#ifdef RM_LOG
+                // printf("Scan find something at (%lld, %d)\n", curPageNum, curSlotNum);
+#endif
+
                 nextSlot(curPageNum, curSlotNum, rMFileHandle.slotNumPerPage);
+
+#ifdef RM_LOG
+                // puts("Goto next slot!");
+#endif
+
                 // Check if this record is satisfied.
-                if ([this, rec]() -> bool {
+                if ([this, &rec]() -> bool {
                         char *pData;
                         RM_ChangeRC(rec.GetData(pData), RM_SCAN_NEXT_FAIL);
+
+#ifdef RM_LOG
+                        // puts("Data is got!");
+#endif
+
                         switch (attrType)
                         {
                         case INT:
                         {
+#ifdef RM_LOG
+                            // puts("A INT!");
+#endif
+
                             int recData, scanData;
                             sscanf(pData + attrOffset, "%d", &recData);
+
+#ifdef RM_LOG
+                            // printf("recData = %d\n", recData);
+#endif
+
                             sscanf((char *)value, "%d", &scanData);
+
+#ifdef RM_LOG
+                            // printf("scanData = %d\n", scanData);
+#endif
                             switch (compOp)
                             {
                             case NO_OP:
@@ -124,13 +150,26 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
                         // The following statement is added to avoid warning,
                         // which is supposed to not reach
                         return false;
-                    }())
+                    }()) {
+#ifdef RM_LOG
+                    // printf("Something is found.\n");
+#endif
                     throw RC{OK_RC};
+                    }
+#ifdef RM_LOG
+                        // puts("Check fail!");
+#endif
                 break;
             case RM_FILE_GET_NOT_FOUND:
+#ifdef RM_LOG
+                // RM_PrintError(tmp_rc);
+#endif
                 nextSlot(curPageNum, curSlotNum, rMFileHandle.slotNumPerPage);
                 break;
             case RM_FILE_GET_ILLEGAL_RID:
+#ifdef RM_LOG
+                // RM_PrintError(tmp_rc);
+#endif
                 throw RC{RM_EOF};
                 break;
             default:
@@ -145,6 +184,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
     { return rc; }
 }
 
+// I think that deleting [value] is not my responsibility.
 RC RM_FileScan::CloseScan() {
     open = false;
     return OK_RC;
