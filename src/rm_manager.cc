@@ -134,13 +134,7 @@ RC RM_Manager::CloseFile(RM_FileHandle &fileHandle) {
         }
 
         // Close
-#ifdef RM_LOG
-        // printf("Try to close.\n");
-#endif
         RM_ChangeRC(pFManager.CloseFile(fileHandle.pFFileHandle), RM_MANAGER_CLOSE_FAIL);
-#ifdef RM_LOG
-        // printf("Finish closing.\n");
-#endif
 
         // Do some destruction
         // For safety this is necessary

@@ -34,6 +34,7 @@ RC RM_FileScan::OpenScan(const RM_FileHandle &fileHandle, AttrType attrType, int
     return OK_RC;
 }
 
+// This is the core of the File Scan
 RC RM_FileScan::GetNextRec(RM_Record &rec) {
     try{
         if (!open)
@@ -57,26 +58,11 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
                         char *pData;
                         RM_ChangeRC(rec.GetData(pData), RM_SCAN_NEXT_FAIL);
 
-#ifdef RM_LOG
-                        // puts("Data is got!");
-#endif
-
                         switch (attrType)
                         {
                         case INT:
                         {
-#ifdef RM_LOG
-                            // puts("A INT!");
-                            // printf("attrOffset = %d\n", attrOffset);
-                            // printf("recordSize = %d\n", rec.dataSize);
-#endif
-
                             int recData = *(int *)(pData + attrOffset), scanData = *(int *)value;
-
-#ifdef RM_LOG
-                            // printf("scanData = %d\n", scanData);
-                            // printf("recData = %d\n", recData);
-#endif
                             switch (compOp)
                             {
                             case NO_OP:
@@ -145,25 +131,15 @@ RC RM_FileScan::GetNextRec(RM_Record &rec) {
                         // which is supposed to not reach
                         return false;
                     }()) {
-#ifdef RM_LOG
-                    // printf("Something is found.\n");
-#endif
                     throw RC{OK_RC};
                     }
-#ifdef RM_LOG
-                        // puts("Fail to pass the satisfication condition!");
-#endif
                 break;
             case RM_FILE_GET_NOT_FOUND:
-#ifdef RM_LOG
-                // RM_PrintError(tmp_rc);
-#endif
+                // There's no record at this rid,
+                // because the record at this slot is deleted.
                 nextSlot(curPageNum, curSlotNum, rMFileHandle.slotNumPerPage);
                 break;
             case RM_FILE_GET_ILLEGAL_RID:
-#ifdef RM_LOG
-                // RM_PrintError(tmp_rc);
-#endif
                 throw RC{RM_EOF};
                 break;
             default:
