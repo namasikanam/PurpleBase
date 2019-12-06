@@ -18,12 +18,14 @@ using namespace std;
 IX_Manager::IX_Manager(PF_Manager &pfm) : pfm(pfm) {}
 
 // Destructor
-IX_Manager::~IX_Manager() {
+IX_Manager::~IX_Manager()
+{
     // Nothing to free
 }
 
 RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
-                           AttrType attrType, int attrLength) {
+                           AttrType attrType, int attrLength)
+{
     try
     {
         // Check legality
@@ -70,18 +72,23 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
         IX_Try(indexFileHandle.AllocatePage(rootPageHandle), IX_MANAGER_CREATE_ROOT_FAIL);
         IX_TryElseUnpin(rootPageHandle.GetData(rootData), IX_MANAGER_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_ROOT_FAIL, indexFileHandle, 2ll);
         IX_TryElseUnpin(indexFileHandle.MarkDirty(2ll), IX_MANAGER_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_ROOT_FAIL, indexFileHandle, 2ll);
-        *(int *)rootData = 0;
+        *(bool *)(rootData + 0) = true;
+        *(int *)(rootData + 1) = 0;
+        IX_Try(indexFileHandle.UnpinPage(2ll), IX_MANAGER_CREATE_ROOT_BUT_UNPIN_FAIL);
 
         // Everything is done.
         throw RC{OK_RC};
     }
-    catch (RC rc) {
+    catch (RC rc)
+    {
         return rc;
     }
 }
 
-RC IX_Manager::DestroyIndex(const char *fileName, int indexNo) {
-    try{
+RC IX_Manager::DestroyIndex(const char *fileName, int indexNo)
+{
+    try
+    {
         // Check legality
         if (strchr(fileName, '.') != nullptr)
             throw RC{IX_ILLEGAL_FILENAME};
@@ -94,17 +101,20 @@ RC IX_Manager::DestroyIndex(const char *fileName, int indexNo) {
 
         throw RC{OK_RC};
     }
-    catch (RC rc) {
+    catch (RC rc)
+    {
         return rc;
     }
 }
 
-RC IX_Manager::OpenIndex(const char *fileName, int indexNo, IX_IndexHandle &indexHandle) {
-    try{
+RC IX_Manager::OpenIndex(const char *fileName, int indexNo, IX_IndexHandle &indexHandle)
+{
+    try
+    {
         // Check legality
         if (strchr(fileName, '.') != nullptr)
             throw RC{IX_ILLEGAL_FILENAME};
-        
+
         // Calculate [indexFileName]
         char indexFileName[strlen(fileName) + 20] = "";
         strcat(indexFileName, fileName);
@@ -133,21 +143,25 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo, IX_IndexHandle &inde
 
         throw RC{OK_RC};
     }
-    catch (RC rc) {
+    catch (RC rc)
+    {
         return rc;
     }
 }
 
-RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle) {
-    try{
+RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle)
+{
+    try
+    {
         // Check legality
         if (!indexHandle.open)
             throw RC{IX_MANAGER_CLOSE_CLOSED_FILE_HANDLE};
-        
+
         // Write back header
-        if (indexHandle.header.modified) {
+        if (indexHandle.header.modified)
+        {
             PF_PageHandle headerPage;
-            char* headerData;
+            char *headerData;
             IX_Try(indexHandle.pFFileHandle.GetThisPage(0ll, headerPage), IX_MANAGER_CLOSE_FAIL);
             IX_TryElseUnpin(headerPage.GetData(headerData), IX_MANAGER_CLOSE_FAIL_UNPIN_FAIL, IX_MANAGER_CLOSE_FAIL, indexHandle.pFFileHandle, 0ll);
             IX_TryElseUnpin(indexHandle.pFFileHandle.MarkDirty(0ll), IX_MANAGER_CLOSE_FAIL_UNPIN_FAIL, IX_MANAGER_CLOSE_FAIL, indexHandle.pFFileHandle, 0ll);
@@ -158,7 +172,7 @@ RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle) {
             indexHandle.header.bucketPage = *(PageNum *)(headerData + offsetof(IX_IndexHeader, bucketPage));
             indexHandle.header.degree = *(int *)(headerData + offsetof(IX_IndexHeader, degree));
             indexHandle.header.bucketTot = *(int *)(headerData + offsetof(IX_IndexHeader, bucketTot));
-            
+
             IX_Try(indexHandle.pFFileHandle.UnpinPage(0ll), IX_MANAGER_CLOSE_HEAD_BUT_UNPIN_FAIL);
 
             indexHandle.header.modified = false;
@@ -170,7 +184,8 @@ RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle) {
 
         throw RC{OK_RC};
     }
-    catch (RC rc) {
+    catch (RC rc)
+    {
         return rc;
     }
 }

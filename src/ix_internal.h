@@ -10,8 +10,10 @@
 #include "ix.h"
 
 // A wrapper to execute the API of PF.
-inline void IX_Try(RC pf_rc, RC ix_rc) {
-    if (pf_rc) {
+inline void IX_Try(RC pf_rc, RC ix_rc)
+{
+    if (pf_rc)
+    {
         PF_PrintError(pf_rc);
         throw RC{ix_rc};
     }
@@ -29,11 +31,12 @@ void IX_TryElseUnpin(RC pf_rc, RC unpin_rc, RC ix_rc, const PF_FileHandle &file,
 }
 
 // Calculate degree
-inline int IX_CalDegree(AttrType attrType, int attrLength) {
-    return (PF_PAGE_SIZE - sizeof(int)) / (attrLength + sizeof(PageNum) + sizeof(SlotNum) + sizeof(PageNum));
+inline int IX_CalDegree(AttrType attrType, int attrLength)
+{
+    return (PF_PAGE_SIZE - sizeof(int)) / sizeof(IX_Key);
 }
 
 // For the requirement of store, they're supposed same
-typedef PageNum BucketNum;
+typedef int BucketNum;
 
 #endif

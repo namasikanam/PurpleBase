@@ -34,19 +34,36 @@ struct IX_IndexHeader
     bool modified = false;
 };
 
+// IX_Entry: Keys stored in B+ tree
+/* Stores the following:
+    1) key - void*
+    2) num - (positive) Pointer to some child or (negative) some value(RID) - PageNum / BucketNum
+    3) tombstone - if this child is empty
+*/
+struct IX_Key
+{
+    void *key;
+    PageNum num;
+};
+
 //
 // IX_IndexHandle: IX Index File interface
 //
-// 1) The key of B+ tree is (someAttribute, pageNum, slotNum).
-// 2) Different with traditional B+ tree,
-//    here we adopt a structure of left-inclusive right-exclusive intervals.
+// 1) Differences with traditional B+ tree:
+//    1.1) here we adopt a structure of left-inclusive right-exclusive intervals.
 //    The number of keys stored in the node is the same as children.
-// 3) In one page, i.e. one node of B+ tree, we store following things:
-//    3.1) The number of its children w.
-//    3.2) w ((someAttribute, pageNum, slotNum), childPtr)
-//         where childPtr is either the pageNum of its child or the id of rid in the bucket.
-// 4) We just simply assume that the rids won't reach out the capacity of one bucket page.
-// 5) Root page is possibily empty, which is a legal special case.
+//    1.2) keys of some nodes are possibly non-unique
+// 2) In one page, i.e. one node of B+ tree, we store following things:
+//    2.1) A bool that indicates if this node is a leaf
+//    If this node is not a leaf:
+//      2.1_2) The number of its children w.
+//      2.1_3) (key, pageNnum) * w
+//    If this node is a leaf:
+//      2.2_2) The number of its children w.
+//      2.2_3) (key, bucketNum) * w
+// 3) We just simply assume that the rids won't reach out the capacity of one bucket page.
+// 4) Root page is possibily empty, which is a legal special case.
+// 5) The bucket page is filled with things as (pageNum, slotNum, tombstone).
 class IX_IndexHandle
 {
     friend class IX_Manager;
@@ -73,6 +90,10 @@ private:
     // As in the RM component,
     // a header page of the file is needed.
     IX_IndexHeader header;
+
+    // Fundamental operations of B+ tree
+    void InsertBPlus(const PageNum &nodePageNum, const void *pData, const RID &rid);
+    void DeleteBPlus(const PageNum &nodePageNum, const void *pData, const RID &rid);
 };
 
 //
@@ -149,6 +170,9 @@ void IX_PrintError(RC rc);
 #define IX_MANAGER_OPEN_FAIL_UNPIN_FAIL (START_IX_WARN + 4)
 #define IX_MANAGER_CLOSE_CLOSED_FILE_HANDLE (START_IX_WARN + 5)
 #define IX_MANAGER_CLOSE_FAIL (START_IX_WARN + 6)
+#define IX_HANDLE_FORCE_FAIL (START_IX_WARN + 7)
+#define IX_HANDLE_INSERT_FAIL (START_IX_WARN + 8)
+#define IX_HANDLE_INSERT_FAIL_UNPIN_FAIL (START_IX_WARN + 9)
 #define IX_LASTWARN IX_CREAT_FAIL
 
 // Errors
