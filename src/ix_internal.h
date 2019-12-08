@@ -22,7 +22,7 @@ inline void IX_Try(RC pf_rc, RC ix_rc)
 }
 
 // Try and if fail, unpin
-void IX_TryElseUnpin(RC pf_rc, RC unpin_rc, RC ix_rc, const PF_FileHandle &file, const PageNum &pageNum)
+inline void IX_TryElseUnpin(RC pf_rc, RC unpin_rc, RC ix_rc, const PF_FileHandle &file, const PageNum &pageNum)
 {
     if (pf_rc)
     {

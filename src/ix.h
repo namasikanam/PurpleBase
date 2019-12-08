@@ -12,6 +12,7 @@
 #include "redbase.h" // Please don't change these lines
 #include "rm_rid.h"  // Please don't change these lines
 #include "pf.h"
+#include <utility>
 
 // To make the volume of the bucket larger, we use [short] as [BucketNum].
 typedef short BucketNum;
@@ -35,8 +36,8 @@ struct IX_IndexHeader
 
     // The followings don't need storing in the header page,
     // can be inferred when reading from the header page.
-    int innerKeyLength;
-    int leafKeyLength;
+    int innerEntryLength;
+    int leafEntryLength;
     // Deg means the maximum plus one.
     int innerDeg;
     int leafDeg;
@@ -89,7 +90,7 @@ private:
 
     // Fundamental operations of B+ tree
     bool BPlus_Exists(const PageNum &nodePageNum, const void *pData, const RID &rid);
-    const void *BPlus_Insert(const PageNum &nodePageNum, const void *pData, const RID &rid);
+    const std::pair<void *, PageNum> BPlus_Insert(const PageNum &nodePageNum, const void *pData, const RID &rid);
     bool BPlus_Delete(const PageNum &nodePageNum, const void *pData, const RID &rid);
     void BPlus_Update(const PageNum &nodePageNum, const void *pData, const RID &rid);
 
@@ -183,6 +184,7 @@ void IX_PrintError(RC rc);
 #define IX_HANDLE_INSERT_EXISTS (START_IX_WARN + 10)
 #define IX_HANDLE_GETRID_FAIL (START_IX_WARN + 11)
 #define IX_HANDLE_SPLIT_FAIL (START_IX_WARN + 12)
+#define IX_HANDLE_NEW_ROOT_FAIL (START_IX_WARN + 13)
 #define IX_LASTWARN IX_CREAT_FAIL
 
 // Errors

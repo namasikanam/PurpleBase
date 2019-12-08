@@ -81,9 +81,9 @@ bool IX_IndexHandle::BPlus_Exists(const PageNum &nodePageNum, const void *pData,
     int childTot = *(int *)(nodePageData + sizeof(bool));
     if (!isLeaf)
     {
-        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerKeyLength)
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
         {
-            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerKeyLength) < 0) || cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerKeyLength) == 0)
+            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0) || cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0)
             { // Regular condition: [, )
                 if (BPlus_Exists(*(PageNum *)(nodePageData + j + header.attrLength), pData, rid))
                     return true;
@@ -92,7 +92,7 @@ bool IX_IndexHandle::BPlus_Exists(const PageNum &nodePageNum, const void *pData,
     }
     else
     {
-        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.leafKeyLength)
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.leafEntryLength)
         {
             // For leaf, there's no segment more.
             // Keys stored in the node are the exact keys.
@@ -109,7 +109,7 @@ bool IX_IndexHandle::BPlus_Exists(const PageNum &nodePageNum, const void *pData,
 // Desc: Insert a (pData, rid) into the B+ tree.
 // Note: If there have existed some keys equal to the inserted key,
 // this one will inserted to the right of them.
-const void *IX_IndexHandle::BPlus_Insert(const PageNum &nodePageNum, const void *pData, const RID &rid)
+const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePageNum, const void *pData, const RID &rid)
 {
     PF_PageHandle nodePageHandle;
     char *nodePageData;
@@ -121,16 +121,16 @@ const void *IX_IndexHandle::BPlus_Insert(const PageNum &nodePageNum, const void 
     int childTot = *(int *)(nodePageData + sizeof(bool));
     if (isLeaf)
     {
-        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerKeyLength)
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
         {
-            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1) || cmp(pData, nodePageData + j + header.innerKeyLength))
+            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1) || cmp(pData, nodePageData + j + header.innerEntryLength))
             {
-                ++i, j += header.innerKeyLength;
+                ++i, j += header.innerEntryLength;
                 // Now, the correct position has been found!
                 if (childTot + 1 < header.leafDeg)
                 { // There's some empty room remaining, just insert it!
-                    // Move the right ones one step
-                    memmove(nodePageData + j + header.innerKeyLength, nodePageData + j, header.innerKeyLength * (childTot - i));
+                    // Move the right ones by one unit
+                    memmove(nodePageData + j + header.innerEntryLength, nodePageData + j, header.innerEntryLength * (childTot - i));
                     // Copy the inserting information
                     memcpy(nodePageData + j, pData, header.attrLength);
                     *(RID *)(nodePageData + j + header.attrLength) = rid;
@@ -143,11 +143,11 @@ const void *IX_IndexHandle::BPlus_Insert(const PageNum &nodePageNum, const void 
                     // Allocate a new page
                     PF_PageHandle rightPageHandle;
                     char *rightPageData;
-                    PageNum rightPageNum = header.pageTot + 1;
+                    PageNum rightPageNum = header.pageTot;
                     // Since we never deallocate a page, the pagenum will be allocated sequentially here.
                     IX_Try(pFFileHandle.AllocatePage(rightPageHandle), IX_HANDLE_SPLIT_FAIL);
-                    IX_TryElseUnpin(rightPageHandle.GetData(rightPageData), IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_SPLIT_FAIL, pFFileHandle, rightPageNum);
                     ++header.pageTot;
+                    IX_TryElseUnpin(rightPageHandle.GetData(rightPageData), IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_SPLIT_FAIL, pFFileHandle, rightPageNum);
                     header.modified = true;
 
                     // Write the right data to the new page
@@ -155,21 +155,61 @@ const void *IX_IndexHandle::BPlus_Insert(const PageNum &nodePageNum, const void 
                     *(int *)(rightPageData + sizeof(bool)) = (header.leafDeg + 1) - (header.leafDeg + 1) / 2;
                     if (i >= (header.leafDeg + 1) / 2)
                     { // The inserted entry located in the right page
-                        memcpy(rightPageData + sizeof(bool))
+                        // Copy entries before the inserted entry
+                        memcpy(rightPageData + sizeof(bool) + sizeof(int), nodePageData + sizeof(bool) + sizeof(int) + (header.leafDeg + 1) / 2 * header.leafEntryLength, (i - (header.leafDeg + 1) / 2) * header.leafEntryLength);
+
+                        int j1 = sizeof(bool) + sizeof(int) + (i - (header.leafDeg + 1) / 2) * header.leafEntryLength; // The [j] in the right page
+                        memcpy(rightPageData + j1, pData, header.attrLength);
+                        *(RID *)(rightPageData + j1 + header.attrLength) = rid;
+
+                        // Copy entries after the inserted entry
+                        memcpy(rightPageData + j1 + header.leafEntryLength, nodePageData + j, (childTot - j) * header.leafEntryLength);
                     }
                     else
                     { // The inserted entry located in the left page
+                        memcpy(rightPageData + sizeof(bool) + sizeof(int), nodePageData + sizeof(bool) + sizeof(int) + ((header.leafDeg + 1) / 2 - 1) * header.leafEntryLength, (header.leafDeg + 1 - (header.leafDeg + 1) / 2) * header.leafEntryLength);
                     }
 
                     // Adjust the data of the original node
+                    *(int *)(nodePageData + sizeof(bool)) = (header.leafDeg + 1) / 2;
+                    if (i < (header.leafDeg + 1) / 2)
+                    { // The inserted entry needs inserting in the left page
+                        // Move the right ones by one unit
+                        memmove(nodePageData + j + header.innerEntryLength, nodePageData + j, header.innerEntryLength * ((header.leafDeg + 1) / 2 - i));
+                        // Copy the inserting information
+                        memcpy(nodePageData + j, pData, header.attrLength);
+                        *(RID *)(nodePageData + j + header.attrLength) = rid;
+                    }
+                    else
+                    { // The inserted entry needs inserting in the right page
+                        // Nothing to do
+                    }
 
                     if (header.rootPage == nodePageNum)
                     { // If this is the root
                         // Create a new root
+                        PF_PageHandle rootPageHandle;
+                        char *rootPageData;
+                        // Since we never deallocate a page, the pagenum will be allocated sequentially here.
+                        IX_Try(pFFileHandle.AllocatePage(rootPageHandle), IX_HANDLE_SPLIT_FAIL);
+                        header.rootPage = header.pageTot;
+                        ++header.pageTot;
+                        IX_TryElseUnpin(rootPageHandle.GetData(rightPageData), IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_SPLIT_FAIL, pFFileHandle, header.rootPage);
+                        // [header.modified] is assumed to be set to [true] in the executions above.
+
+                        *(bool *)rootPageData = false;
+                        *(int *)(rootPageData + sizeof(bool)) = 2;
+
+                        memcpy(rootPageData + sizeof(bool) + sizeof(int), nodePageData + sizeof(bool) + sizeof(int), header.attrLength);
+                        *(PageNum *)(rootPageData + sizeof(bool) + sizeof(int) + header.attrLength) = nodePageNum;
+                        memcpy(rootPageData + sizeof(bool) + sizeof(int) + header.innerEntryLength, rightPageData + sizeof(bool) + sizeof(int), header.attrLength);
+                        *(PageNum *)(rootPageData + sizeof(bool) + sizeof(int) + header.innerEntryLength + header.attrLength) = rightPageNum;
+
+                        // What to return is meaningless
+                        return make_pair(nullptr, -1ll);
                     }
                     else
-                    {
-                    }
+                        return make_pair(rightPageData + sizeof(bool) + sizeof(int), rightPageNum);
                 }
                 break;
             }
