@@ -13,6 +13,9 @@
 #include "rm_rid.h"  // Please don't change these lines
 #include "pf.h"
 
+// To make the volume of the bucket larger, we use [short] as [BucketNum].
+typedef short BucketNum;
+
 // IX_IndexHeader: Struct for the index file header
 /* Stores the following:
     1) attrType - Attribute type for the index - AttrType
@@ -28,39 +31,32 @@ struct IX_IndexHeader
     AttrType attrType;
     int attrLength;
     PageNum rootPage;
-    PageNum bucketPage;
-    int degree;
-    int bucketTot;
-    bool modified = false;
-};
+    PageNum pageTot;
 
-// IX_Entry: Keys stored in B+ tree
-/* Stores the following:
-    1) key - void*
-    2) num - (positive) Pointer to some child or (negative) some value(RID) - PageNum / BucketNum
-    3) tombstone - if this child is empty
-*/
-struct IX_Key
-{
-    void *key;
-    PageNum num;
+    // The followings don't need storing in the header page,
+    // can be inferred when reading from the header page.
+    int innerKeyLength;
+    int leafKeyLength;
+    // Deg means the maximum plus one.
+    int innerDeg;
+    int leafDeg;
+    bool modified = false;
 };
 
 //
 // IX_IndexHandle: IX Index File interface
 //
 // 1) Differences with traditional B+ tree:
-//    1.1) here we adopt a structure of left-inclusive right-exclusive intervals.
+//    1.1) here we adopt a structure of left-inclusive right-exclusive intervals: [l, r)
 //    The number of keys stored in the node is the same as children.
 //    1.2) keys of some nodes are possibly non-unique
 // 2) In one page, i.e. one node of B+ tree, we store following things:
 //    2.1) A bool that indicates if this node is a leaf
+//    2.2) The number of its children w.
 //    If this node is not a leaf:
-//      2.1_2) The number of its children w.
-//      2.1_3) (key, pageNnum) * w
+//      2.3_1) (key, pageNum) * w
 //    If this node is a leaf:
-//      2.2_2) The number of its children w.
-//      2.2_3) (key, bucketNum) * w
+//      2.3_2) (key, RID) * w, where [RID.viable == false] means that this index is deleted.
 // 3) We just simply assume that the rids won't reach out the capacity of one bucket page.
 // 4) Root page is possibily empty, which is a legal special case.
 // 5) The bucket page is filled with things as (pageNum, slotNum, tombstone).
@@ -92,8 +88,19 @@ private:
     IX_IndexHeader header;
 
     // Fundamental operations of B+ tree
-    void InsertBPlus(const PageNum &nodePageNum, const void *pData, const RID &rid);
-    void DeleteBPlus(const PageNum &nodePageNum, const void *pData, const RID &rid);
+    bool BPlus_Exists(const PageNum &nodePageNum, const void *pData, const RID &rid);
+    const void *BPlus_Insert(const PageNum &nodePageNum, const void *pData, const RID &rid);
+    bool BPlus_Delete(const PageNum &nodePageNum, const void *pData, const RID &rid);
+    void BPlus_Update(const PageNum &nodePageNum, const void *pData, const RID &rid);
+
+    // Utilities
+
+    // Compare two key of the current index.
+    // Return:
+    //        -1, if [data1] < [data2]
+    //        0,  if [data1] == [data2]
+    //        1,  if [data1] > [data2]
+    int cmp(const void *data1, const void *data2);
 };
 
 //
@@ -167,12 +174,15 @@ void IX_PrintError(RC rc);
 #define IX_MANAGER_CREATE_FAIL (START_IX_WARN + 1)
 #define IX_MANAGER_DESTROY_FAIL (START_IX_WARN + 2)
 #define IX_MANAGER_OPEN_FAIL (START_IX_WARN + 3)
-#define IX_MANAGER_OPEN_FAIL_UNPIN_FAIL (START_IX_WARN + 4)
+#define IX_HANDLE_GETRID_FAIL (START_IX_WARN + 4)
 #define IX_MANAGER_CLOSE_CLOSED_FILE_HANDLE (START_IX_WARN + 5)
 #define IX_MANAGER_CLOSE_FAIL (START_IX_WARN + 6)
 #define IX_HANDLE_FORCE_FAIL (START_IX_WARN + 7)
 #define IX_HANDLE_INSERT_FAIL (START_IX_WARN + 8)
-#define IX_HANDLE_INSERT_FAIL_UNPIN_FAIL (START_IX_WARN + 9)
+#define IX_HANDLE_DELETE_NOT_EXIST (START_IX_WARN + 9)
+#define IX_HANDLE_INSERT_EXISTS (START_IX_WARN + 10)
+#define IX_HANDLE_GETRID_FAIL (START_IX_WARN + 11)
+#define IX_HANDLE_SPLIT_FAIL (START_IX_WARN + 12)
 #define IX_LASTWARN IX_CREAT_FAIL
 
 // Errors
@@ -190,6 +200,11 @@ void IX_PrintError(RC rc);
 #define IX_MANAGER_CLOSE_FAIL_UNPIN_FAIL (START_IX_ERR - 11)
 #define IX_MANAGER_CLOSE_HEAD_BUT_UNPIN_FAIL (START_IX_ERR - 12)
 #define IX_HANDLE_CLOSED (START_IX_ERR - 13)
+#define IX_MANAGER_OPEN_FAIL_UNPIN_FAIL (START_IX_ERR - 14)
+#define IX_HANDLE_INSERT_FAIL_UNPIN_FAIL (START_IX_ERR - 15)
+#define IX_HANDLE_GETRID_FAIL_UNPIN_FAIL (START_IX_ERR - 16)
+#define IX_HANDLE_GETRID_BUT_UNPIN_FAIL (START_IX_ERR - 17)
+#define IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL (START_IX_ERR - 18)
 
 // The exact definition needs to be modified.
 // Error in UNIX system call or library routine

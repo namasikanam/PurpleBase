@@ -45,6 +45,7 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 
         // Step 2: Allocate and write head page
         // If everything runs right, the pagenum of head page should be 0.
+        // TODO: Rewrite the initialization of the head page of index
         PF_PageHandle headerPageHandle;
         char *headerData;
         IX_Try(indexFileHandle.AllocatePage(headerPageHandle), IX_MANAGER_CREATE_HEAD_FAIL);
@@ -124,6 +125,7 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo, IX_IndexHandle &inde
         IX_Try(pfm.OpenFile(indexFileName, indexHandle.pFFileHandle), IX_MANAGER_OPEN_FAIL);
 
         // Read header page
+        // TOOD: Rewrite the header page reading
         PF_PageHandle headerPageHandle;
         char *headerData;
         IX_Try(indexHandle.pFFileHandle.GetThisPage(0ll, headerPageHandle), IX_MANAGER_OPEN_FAIL);
@@ -158,6 +160,7 @@ RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle)
             throw RC{IX_MANAGER_CLOSE_CLOSED_FILE_HANDLE};
 
         // Write back header
+        // TODO: Rewrite the update of the header page when closing an index.
         if (indexHandle.header.modified)
         {
             PF_PageHandle headerPage;
