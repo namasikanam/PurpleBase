@@ -73,9 +73,9 @@ bool IX_IndexHandle::BPlus_Exists(const PageNum &nodePageNum, const void *pData,
 {
     PF_PageHandle nodePageHandle;
     char *nodePageData;
-    IX_Try(pFFileHandle.GetThisPage(nodePageNum, nodePageHandle), IX_HANDLE_INSERT_FAIL);
-    IX_TryElseUnpin(pFFileHandle.MarkDirty(nodePageNum), IX_HANDLE_INSERT_FAIL_UNPIN_FAIL, IX_HANDLE_INSERT_FAIL, pFFileHandle, nodePageNum);
-    IX_TryElseUnpin(nodePageHandle.GetData(nodePageData), IX_HANDLE_INSERT_FAIL_UNPIN_FAIL, IX_HANDLE_INSERT_FAIL, pFFileHandle, nodePageNum);
+    IX_Try(pFFileHandle.GetThisPage(nodePageNum, nodePageHandle), IX_HANDLE_EXISTS_FAIL);
+    IX_TryElseUnpin(pFFileHandle.MarkDirty(nodePageNum), IX_HANDLE_EXISTS_FAIL_UNPIN_FAIL, IX_HANDLE_EXISTS_FAIL, pFFileHandle, nodePageNum);
+    IX_TryElseUnpin(nodePageHandle.GetData(nodePageData), IX_HANDLE_EXISTS_FAIL_UNPIN_FAIL, IX_HANDLE_EXISTS_FAIL, pFFileHandle, nodePageNum);
 
     bool isLeaf = *(bool *)nodePageData;
     int childTot = *(int *)(nodePageData + sizeof(bool));
@@ -86,7 +86,10 @@ bool IX_IndexHandle::BPlus_Exists(const PageNum &nodePageNum, const void *pData,
             if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0) || cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0)
             { // Regular condition: [, )
                 if (BPlus_Exists(*(PageNum *)(nodePageData + j + header.attrLength), pData, rid))
+                {
+                    IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_INNER_EXISTS_BUT_UNPIN_FAIL);
                     return true;
+                }
             }
         }
     }
@@ -98,10 +101,12 @@ bool IX_IndexHandle::BPlus_Exists(const PageNum &nodePageNum, const void *pData,
             // Keys stored in the node are the exact keys.
             if (cmp(pData, nodePageData + j) == 0 && ((RID *)(nodePageData + j + header.attrLength))->viable)
             {
+                IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_LEAF_EXISTS_BUT_UNPIN_FAIL);
                 return true;
             }
         }
     }
+    IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_NOT_EXISTS_BUT_UNPIN_FAIL);
     return false;
 }
 
@@ -137,6 +142,7 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
                     memcpy(nodePageData + j, pData, header.attrLength);
                     *(RID *)(nodePageData + j + header.attrLength) = rid;
 
+                    IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_INSERT_LEAF_JUST_INSERT_BUT_UNPIN_FAIL);
                     return make_pair(nullptr, -1);
                 }
                 else
@@ -149,9 +155,9 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
                     char *rightPageData;
                     PageNum rightPageNum = header.pageTot;
                     // Since we never deallocate a page, the pagenum will be allocated sequentially here.
-                    IX_Try(pFFileHandle.AllocatePage(rightPageHandle), IX_HANDLE_SPLIT_FAIL);
+                    IX_Try(pFFileHandle.AllocatePage(rightPageHandle), IX_HANDLE_LEAF_SPLIT_FAIL);
                     ++header.pageTot;
-                    IX_TryElseUnpin(rightPageHandle.GetData(rightPageData), IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_SPLIT_FAIL, pFFileHandle, rightPageNum);
+                    IX_TryElseUnpin(rightPageHandle.GetData(rightPageData), IX_HANDLE_LEAF_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_LEAF_SPLIT_FAIL, pFFileHandle, rightPageNum);
                     header.modified = true;
 
                     // Write the right data to the new page
@@ -195,10 +201,10 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
                         PF_PageHandle rootPageHandle;
                         char *rootPageData;
                         // Since we never deallocate a page, the pagenum will be allocated sequentially here.
-                        IX_Try(pFFileHandle.AllocatePage(rootPageHandle), IX_HANDLE_SPLIT_FAIL);
+                        IX_Try(pFFileHandle.AllocatePage(rootPageHandle), IX_HANDLE_LEAF_NEW_ROOT_FAIL);
                         header.rootPage = header.pageTot;
                         ++header.pageTot;
-                        IX_TryElseUnpin(rootPageHandle.GetData(rightPageData), IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_SPLIT_FAIL, pFFileHandle, header.rootPage);
+                        IX_TryElseUnpin(rootPageHandle.GetData(rightPageData), IX_HANDLE_LEAF_NEW_ROOT_FAIL_UNPIN_FAIL, IX_HANDLE_LEAF_NEW_ROOT_FAIL, pFFileHandle, header.rootPage);
                         // [header.modified] is assumed to be set to [true] in the executions above.
 
                         *(bool *)rootPageData = false;
@@ -209,11 +215,14 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
                         memcpy(rootPageData + sizeof(bool) + sizeof(int) + header.innerEntryLength, rightPageData + sizeof(bool) + sizeof(int), header.attrLength);
                         *(PageNum *)(rootPageData + sizeof(bool) + sizeof(int) + header.innerEntryLength + header.attrLength) = rightPageNum;
 
-                        // What to return is meaningless
+                        IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_INSERT_LEAF_NEW_ROOT_BUT_UNPIN_FAIL);
                         return make_pair(nullptr, -1ll);
                     }
                     else
+                    {
+                        IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_INSERT_LEAF_SPLIT_BUT_UNPIN_FAIL);
                         return make_pair(rightPageData + sizeof(bool) + sizeof(int), rightPageNum);
+                    }
                 }
                 break;
             }
@@ -242,6 +251,7 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
                         memcpy(nodePageData + j, pData, header.attrLength);
                         *(PageNum *)(nodePageData + j + header.attrLength) = pageNum;
 
+                        IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_INSERT_INNER_JUST_INSERT_BUT_UNPIN_FAIL);
                         return make_pair(nullptr, -1);
                     }
                     else
@@ -254,9 +264,9 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
                         char *rightPageData;
                         PageNum rightPageNum = header.pageTot;
                         // Since we never deallocate a page, the pagenum will be allocated sequentially here.
-                        IX_Try(pFFileHandle.AllocatePage(rightPageHandle), IX_HANDLE_SPLIT_FAIL);
+                        IX_Try(pFFileHandle.AllocatePage(rightPageHandle), IX_HANDLE_INNER_SPLIT_FAIL);
                         ++header.pageTot;
-                        IX_TryElseUnpin(rightPageHandle.GetData(rightPageData), IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_SPLIT_FAIL, pFFileHandle, rightPageNum);
+                        IX_TryElseUnpin(rightPageHandle.GetData(rightPageData), IX_HANDLE_INNER_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_INNER_SPLIT_FAIL, pFFileHandle, rightPageNum);
                         header.modified = true;
 
                         // Write the right data to the new page
@@ -300,10 +310,10 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
                             PF_PageHandle rootPageHandle;
                             char *rootPageData;
                             // Since we never deallocate a page, the pagenum will be allocated sequentially here.
-                            IX_Try(pFFileHandle.AllocatePage(rootPageHandle), IX_HANDLE_SPLIT_FAIL);
+                            IX_Try(pFFileHandle.AllocatePage(rootPageHandle), IX_HANDLE_INNER_NEW_ROOT_FAIL);
                             header.rootPage = header.pageTot;
                             ++header.pageTot;
-                            IX_TryElseUnpin(rootPageHandle.GetData(rightPageData), IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_SPLIT_FAIL, pFFileHandle, header.rootPage);
+                            IX_TryElseUnpin(rootPageHandle.GetData(rightPageData), IX_HANDLE_INNER_NEW_ROOT_FAIL_UNPIN_FAIL, IX_HANDLE_INNER_NEW_ROOT_FAIL, pFFileHandle, header.rootPage);
                             // [header.modified] is assumed to be set to [true] in the executions above.
 
                             *(bool *)rootPageData = false;
@@ -314,15 +324,21 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
                             memcpy(rootPageData + sizeof(bool) + sizeof(int) + header.innerEntryLength, rightPageData + sizeof(bool) + sizeof(int), header.attrLength);
                             *(PageNum *)(rootPageData + sizeof(bool) + sizeof(int) + header.innerEntryLength + header.attrLength) = rightPageNum;
 
-                            // What to return is meaningless
+                            IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_INSERT_INNER_NEW_ROOT_BUT_UNPIN_FAIL);
                             return make_pair(nullptr, -1ll);
                         }
                         else
+                        {
+                            IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_INSERT_INNER_SPLIT_BUT_UNPIN_FAIL);
                             return make_pair(rightPageData + sizeof(bool) + sizeof(int), rightPageNum);
+                        }
                     }
                 }
                 else
+                {
+                    IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_INSERT_BUT_UNPIN_FAIL);
                     return make_pair(nullptr, -1);
+                }
                 break;
             }
         }
@@ -337,9 +353,9 @@ bool IX_IndexHandle::BPlus_Delete(const PageNum &nodePageNum, const void *pData,
 {
     PF_PageHandle nodePageHandle;
     char *nodePageData;
-    IX_Try(pFFileHandle.GetThisPage(nodePageNum, nodePageHandle), IX_HANDLE_INSERT_FAIL);
-    IX_TryElseUnpin(pFFileHandle.MarkDirty(nodePageNum), IX_HANDLE_INSERT_FAIL_UNPIN_FAIL, IX_HANDLE_INSERT_FAIL, pFFileHandle, nodePageNum);
-    IX_TryElseUnpin(nodePageHandle.GetData(nodePageData), IX_HANDLE_INSERT_FAIL_UNPIN_FAIL, IX_HANDLE_INSERT_FAIL, pFFileHandle, nodePageNum);
+    IX_Try(pFFileHandle.GetThisPage(nodePageNum, nodePageHandle), IX_HANDLE_DELETE_FAIL);
+    IX_TryElseUnpin(pFFileHandle.MarkDirty(nodePageNum), IX_HANDLE_DELETE_FAIL_UNPIN_FAIL, IX_HANDLE_DELETE_FAIL, pFFileHandle, nodePageNum);
+    IX_TryElseUnpin(nodePageHandle.GetData(nodePageData), IX_HANDLE_DELETE_FAIL_UNPIN_FAIL, IX_HANDLE_DELETE_FAIL, pFFileHandle, nodePageNum);
 
     bool isLeaf = *(bool *)nodePageData;
     int childTot = *(int *)(nodePageData + sizeof(bool));
@@ -350,7 +366,10 @@ bool IX_IndexHandle::BPlus_Delete(const PageNum &nodePageNum, const void *pData,
             if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0) || cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0)
             { // Regular condition: [, )
                 if (BPlus_Delete(*(PageNum *)(nodePageData + j + header.attrLength), pData, rid))
+                {
+                    IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_DELETE_INNER_BUT_UNPIN_FAIL);
                     return true;
+                }
             }
         }
     }
@@ -363,10 +382,12 @@ bool IX_IndexHandle::BPlus_Delete(const PageNum &nodePageNum, const void *pData,
             if (cmp(pData, nodePageData + j) == 0 && ((RID *)(nodePageData + j + header.attrLength))->viable)
             {
                 ((RID *)(nodePageData + j + header.attrLength))->viable = false;
+                IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_DELETE_LEAF_BUT_UNPIN_FAIL);
                 return true;
             }
         }
     }
+    IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_NOT_DELETE_BUT_UNPIN_FAIL);
     return false;
 }
 
@@ -392,7 +413,10 @@ bool IX_IndexHandle::BPlus_Update(const PageNum &nodePageNum, const void *pData,
             if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0) || cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0)
             { // Regular condition: [, )
                 if (BPlus_Update(*(PageNum *)(nodePageData + j + header.attrLength), pData, origin_rid, updated_rid))
+                {
+                    IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_UPDATE_INNER_BUT_UNPIN_FAIL);
                     return true;
+                }
             }
         }
     }
@@ -405,10 +429,12 @@ bool IX_IndexHandle::BPlus_Update(const PageNum &nodePageNum, const void *pData,
             if (cmp(pData, nodePageData + j) == 0 && ((RID *)(nodePageData + j + header.attrLength))->viable)
             {
                 *((RID *)(nodePageData + j + header.attrLength)) = updated_rid;
+                IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_UPDATE_LEAF_BUT_UNPIN_FAIL);
                 return true;
             }
         }
     }
+    IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_NOT_UPDATE_BUT_UNPIN_FAIL);
     return false;
 }
 

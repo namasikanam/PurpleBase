@@ -13,6 +13,7 @@
 #include "rm_rid.h"  // Please don't change these lines
 #include "pf.h"
 #include <utility>
+#include <list>
 
 // To make the volume of the bucket larger, we use [short] as [BucketNum].
 typedef short BucketNum;
@@ -58,9 +59,8 @@ struct IX_IndexHeader
 //      2.3_1) (key, pageNum) * w
 //    If this node is a leaf:
 //      2.3_2) (key, RID) * w, where [RID.viable == false] means that this index is deleted.
-// 3) We just simply assume that the rids won't reach out the capacity of one bucket page.
-// 4) Root page is possibily empty, which is a legal special case.
-// 5) The bucket page is filled with things as (pageNum, slotNum, tombstone).
+// 3) Here we reuse [RID.viable] as tombstone.
+// 4) The private functions starting with [BPlus_] are recursive functions on the B+ tree.
 class IX_IndexHandle
 {
     friend class IX_Manager;
@@ -101,7 +101,7 @@ private:
     //        -1, if [data1] < [data2]
     //        0,  if [data1] == [data2]
     //        1,  if [data1] > [data2]
-    int cmp(const void *data1, const void *data2);
+    int cmp(const void *data1, const void *data2) const;
 };
 
 //
@@ -127,6 +127,11 @@ public:
     RC CloseScan();
 
 private:
+    bool open;
+
+    std::list<RID> scan;
+
+    void BPlus_Find(const IX_IndexHandle &indexHandle, PageNum nodePageNum, CompOp compOp, void *value);
 };
 
 //
@@ -183,8 +188,14 @@ void IX_PrintError(RC rc);
 #define IX_HANDLE_DELETE_NOT_EXIST (START_IX_WARN + 9)
 #define IX_HANDLE_INSERT_EXISTS (START_IX_WARN + 10)
 #define IX_HANDLE_GETRID_FAIL (START_IX_WARN + 11)
-#define IX_HANDLE_SPLIT_FAIL (START_IX_WARN + 12)
-#define IX_HANDLE_NEW_ROOT_FAIL (START_IX_WARN + 13)
+#define IX_HANDLE_LEAF_SPLIT_FAIL (START_IX_WARN + 12)
+#define IX_HANDLE_LEAF_NEW_ROOT_FAIL (START_IX_WARN + 13)
+#define IX_EOF (START_IX_WARN + 14)
+#define IX_HANDLE_EXISTS_FAIL (START_IX_WARN + 15)
+#define IX_HANDLE_INNER_SPLIT_FAIL (START_IX_WARN + 16)
+#define IX_HANDLE_INNER_NEW_ROOT_FAIL (START_IX_WARN + 17)
+#define IX_HANDLE_DELETE_FAIL (START_IX_WARN + 18)
+#define IX_OPEN_SCAN_NE (START_IX_WARN + 19)
 #define IX_LASTWARN IX_CREAT_FAIL
 
 // Errors
@@ -206,7 +217,28 @@ void IX_PrintError(RC rc);
 #define IX_HANDLE_INSERT_FAIL_UNPIN_FAIL (START_IX_ERR - 15)
 #define IX_HANDLE_GETRID_FAIL_UNPIN_FAIL (START_IX_ERR - 16)
 #define IX_HANDLE_GETRID_BUT_UNPIN_FAIL (START_IX_ERR - 17)
-#define IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL (START_IX_ERR - 18)
+#define IX_HANDLE_LEAF_SPLIT_FAIL_UNPIN_FAIL (START_IX_ERR - 18)
+#define IX_HANDLE_EXISTS_FAIL_UNPIN_FAIL (START_IX_ERR - 19)
+#define IX_HANDLE_INNER_SPLIT_FAIL_UNPIN_FAIL (START_IX_ERR - 20)
+#define IX_HANDLE_LEAF_NEW_ROOT_FAIL_UNPIN_FAIL (START_IX_ERR - 21)
+#define IX_HANDLE_INNER_NEW_ROOT_FAIL_UNPIN_FAIL (START_IX_ERR - 22)
+#define IX_HANDLE_DELETE_FAIL_UNPIN_FAIL (START_IX_ERR - 23)
+#define IX_HANDLE_INNER_EXISTS_BUT_UNPIN_FAIL (START_IX_ERR - 24)
+#define IX_HANDLE_LEAF_EXISTS_BUT_UNPIN_FAIL (START_IX_ERR - 25)
+#define IX_HANDLE_INSERT_LEAF_JUST_INSERT_BUT_UNPIN_FAIL (START_IX_ERR - 25)
+#define IX_HANDLE_INSERT_LEAF_NEW_ROOT_BUT_UNPIN_FAIL (START_IX_ERR - 26)
+#define IX_HANDLE_INSERT_LEAF_SPLIT_BUT_UNPIN_FAIL (START_IX_ERR - 27)
+#define IX_HANDLE_INSERT_INNER_JUST_INSERT_BUT_UNPIN_FAIL (START_IX_ERR - 28)
+#define IX_HANDLE_INSERT_INNER_NEW_ROOT_BUT_UNPIN_FAIL (START_IX_ERR - 29)
+#define IX_HANDLE_INSERT_INNER_SPLIT_BUT_UNPIN_FAIL (START_IX_ERR - 30)
+#define IX_HANDLE_DELETE_INNER_BUT_UNPIN_FAIL (START_IX_ERR - 31)
+#define IX_HANDLE_DELETE_LEAF_BUT_UNPIN_FAIL (START_IX_ERR - 32)
+#define IX_HANDLE_UPDATE_INNER_BUT_UNPIN_FAIL (START_IX_ERR - 33)
+#define IX_HANDLE_UPDATE_LEAF_BUT_UNPIN_FAIL (START_IX_ERR - 34)
+#define IX_HANDLE_NOT_UPDATE_BUT_UNPIN_FAIL (START_IX_ERR - 35)
+#define IX_HANDLE_NOT_DELETE_BUT_UNPIN_FAIL (START_IX_ERR - 36)
+#define IX_HANDLE_INSERT_BUT_UNPIN_FAIL (START_IX_ERR - 37)
+#define IX_HANDLE_NOT_EXISTS_BUT_UNPIN_FAIL (START_IX_ERR - 38)
 
 // The exact definition needs to be modified.
 // Error in UNIX system call or library routine
