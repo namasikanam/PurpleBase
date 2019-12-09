@@ -41,10 +41,10 @@ RC IX_IndexHandle::DeleteEntry(void *pData, const RID &rid)
         if (!open)
             throw RC{IX_HANDLE_CLOSED};
 
-        if (!BPlus_Exists(header.rootPage, pData, rid))
+        // It's not necessary that check if [BPlus_Exists],
+        // since the [BPlus_Delete] is almost the same as [BPlus_Exists].
+        if (!BPlus_Delete(header.rootPage, pData, rid))
             throw RC{IX_HANDLE_DELETE_NOT_EXIST};
-        else
-            BPlus_Delete(header.rootPage, pData, rid);
     }
     catch (RC rc)
     {
@@ -96,7 +96,7 @@ bool IX_IndexHandle::BPlus_Exists(const PageNum &nodePageNum, const void *pData,
         {
             // For leaf, there's no segment more.
             // Keys stored in the node are the exact keys.
-            if (cmp(pData, nodePageData + j) == 0)
+            if (cmp(pData, nodePageData + j) == 0 && ((RID *)(nodePageData + j + header.attrLength))->viable)
             {
                 return true;
             }
@@ -121,22 +121,26 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
     int childTot = *(int *)(nodePageData + sizeof(bool));
     if (isLeaf)
     {
-        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.leafEntryLength)
         {
-            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1) || cmp(pData, nodePageData + j + header.innerEntryLength))
+            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1) || cmp(pData, nodePageData + j + header.leafEntryLength))
             {
-                ++i, j += header.innerEntryLength;
+                ++i, j += header.leafEntryLength;
                 // Now, the correct position has been found!
                 if (childTot + 1 < header.leafDeg)
                 { // There's some empty room remaining, just insert it!
+                    // ++childTot
+                    ++*(int *)(nodePageData + sizeof(bool));
                     // Move the right ones by one unit
-                    memmove(nodePageData + j + header.innerEntryLength, nodePageData + j, header.innerEntryLength * (childTot - i));
+                    memmove(nodePageData + j + header.leafEntryLength, nodePageData + j, header.leafEntryLength * (childTot - i));
                     // Copy the inserting information
                     memcpy(nodePageData + j, pData, header.attrLength);
                     *(RID *)(nodePageData + j + header.attrLength) = rid;
+
+                    return make_pair(nullptr, -1);
                 }
                 else
-                { // No more room! A split is waiting!
+                { // No more room! A split is going on!
                     // Create a new node as the right one: [0, (leafDeg + 1) / 2)
                     // The original node will be the left one: [(leafDeg + 1) / 2, leafDeg + 1)
 
@@ -217,35 +221,195 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
     }
     else
     {
-        // Find the correct child to insert
-        if ()
-        { // If the inserted child splits
-            if (childTot < header.innerDeg)
+        // Things here are similar to things above
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
+        {
+            // Find the correct child to insert
+            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1) || cmp(pData, nodePageData + j + header.innerEntryLength))
             {
-            }
-            else
-            {
-                if ()
-                { // If this is the root
+                pair<void *, PageNum> insertedChild = BPlus_Insert(*(PageNum *)(nodePageData + j), pData, rid);
+                if (insertedChild.first != nullptr)
+                { // If the inserted child splits
+                    void *pData = insertedChild.first;
+                    PageNum pageNum = insertedChild.second;
+                    if (childTot + 1 < header.innerDeg)
+                    { // There's some emtpy room
+                        // ++childTot
+                        ++*(int *)(nodePageData + sizeof(bool));
+                        // Move the right ones by one unit
+                        memmove(nodePageData + j + header.innerEntryLength, nodePageData + j, header.innerEntryLength * (childTot - i));
+                        // Copy the inserting information
+                        memcpy(nodePageData + j, pData, header.attrLength);
+                        *(PageNum *)(nodePageData + j + header.attrLength) = pageNum;
+
+                        return make_pair(nullptr, -1);
+                    }
+                    else
+                    { // No more room! A split is going on!
+                        // Create a new node as the right one: [0, (innerDeg + 1) / 2)
+                        // The original node will be left one: [(innerDeg + 1) / 2, innerDeg + 1)
+
+                        // Allocate a new page
+                        PF_PageHandle rightPageHandle;
+                        char *rightPageData;
+                        PageNum rightPageNum = header.pageTot;
+                        // Since we never deallocate a page, the pagenum will be allocated sequentially here.
+                        IX_Try(pFFileHandle.AllocatePage(rightPageHandle), IX_HANDLE_SPLIT_FAIL);
+                        ++header.pageTot;
+                        IX_TryElseUnpin(rightPageHandle.GetData(rightPageData), IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_SPLIT_FAIL, pFFileHandle, rightPageNum);
+                        header.modified = true;
+
+                        // Write the right data to the new page
+                        *(bool *)rightPageData = true;
+                        *(int *)(rightPageData + sizeof(bool)) = (header.innerDeg + 1) - (header.innerDeg + 1) / 2;
+                        if (i >= (header.innerDeg + 1) / 2)
+                        { // The inserted entry located in the right page
+                            // Copy entries before the inserted entry
+                            memcpy(rightPageData + sizeof(bool) + sizeof(int), nodePageData + sizeof(bool) + sizeof(int) + (header.innerDeg + 1) / 2 * header.innerEntryLength, (i - (header.innerDeg + 1) / 2) * header.innerEntryLength);
+
+                            int j1 = sizeof(bool) + sizeof(int) + (i - (header.innerDeg + 1) / 2) * header.innerEntryLength; // The [j] in the right page
+                            memcpy(rightPageData + j1, pData, header.attrLength);
+                            *(PageNum *)(rightPageData + j1 + header.attrLength) = pageNum;
+
+                            // Copy entries after the inserted entry
+                            memcpy(rightPageData + j1 + header.innerEntryLength, nodePageData + j, (childTot - j) * header.innerEntryLength);
+                        }
+                        else
+                        { // The inserted entry located in the left page
+                            memcpy(rightPageData + sizeof(bool) + sizeof(int), nodePageData + sizeof(bool) + sizeof(int) + ((header.innerDeg + 1) / 2 - 1) * header.innerEntryLength, (header.innerDeg + 1 - (header.innerDeg + 1) / 2) * header.innerEntryLength);
+                        }
+
+                        // Adjust the data of the original node
+                        *(int *)(nodePageData + sizeof(bool)) = (header.innerDeg + 1) / 2;
+                        if (i < (header.innerDeg + 1) / 2)
+                        { // The inserted entry needs inserting in the left page
+                            // Move the right ones by one unit
+                            memmove(nodePageData + j + header.innerEntryLength, nodePageData + j, header.innerEntryLength * ((header.innerDeg + 1) / 2 - i));
+                            // Copy the inserting information
+                            memcpy(nodePageData + j, pData, header.attrLength);
+                            *(PageNum *)(nodePageData + j + header.attrLength) = pageNum;
+                        }
+                        else
+                        { // The inserted entry needs inserting in the right page
+                            // Nothing to do
+                        }
+
+                        if (header.rootPage == nodePageNum)
+                        { // If this is the root
+                            // Create a new root
+                            PF_PageHandle rootPageHandle;
+                            char *rootPageData;
+                            // Since we never deallocate a page, the pagenum will be allocated sequentially here.
+                            IX_Try(pFFileHandle.AllocatePage(rootPageHandle), IX_HANDLE_SPLIT_FAIL);
+                            header.rootPage = header.pageTot;
+                            ++header.pageTot;
+                            IX_TryElseUnpin(rootPageHandle.GetData(rightPageData), IX_HANDLE_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_SPLIT_FAIL, pFFileHandle, header.rootPage);
+                            // [header.modified] is assumed to be set to [true] in the executions above.
+
+                            *(bool *)rootPageData = false;
+                            *(int *)(rootPageData + sizeof(bool)) = 2;
+
+                            memcpy(rootPageData + sizeof(bool) + sizeof(int), nodePageData + sizeof(bool) + sizeof(int), header.attrLength);
+                            *(PageNum *)(rootPageData + sizeof(bool) + sizeof(int) + header.attrLength) = nodePageNum;
+                            memcpy(rootPageData + sizeof(bool) + sizeof(int) + header.innerEntryLength, rightPageData + sizeof(bool) + sizeof(int), header.attrLength);
+                            *(PageNum *)(rootPageData + sizeof(bool) + sizeof(int) + header.innerEntryLength + header.attrLength) = rightPageNum;
+
+                            // What to return is meaningless
+                            return make_pair(nullptr, -1ll);
+                        }
+                        else
+                            return make_pair(rightPageData + sizeof(bool) + sizeof(int), rightPageNum);
+                    }
                 }
                 else
-                {
-                }
+                    return make_pair(nullptr, -1);
+                break;
             }
         }
     }
 }
 
+//
+// Desc: Delete some entry fromm B+ tree
+//
+// Note: Similar to [BPlus_Exists]
 bool IX_IndexHandle::BPlus_Delete(const PageNum &nodePageNum, const void *pData, const RID &rid)
 {
-    // TODO: BPlus_Delete
+    PF_PageHandle nodePageHandle;
+    char *nodePageData;
+    IX_Try(pFFileHandle.GetThisPage(nodePageNum, nodePageHandle), IX_HANDLE_INSERT_FAIL);
+    IX_TryElseUnpin(pFFileHandle.MarkDirty(nodePageNum), IX_HANDLE_INSERT_FAIL_UNPIN_FAIL, IX_HANDLE_INSERT_FAIL, pFFileHandle, nodePageNum);
+    IX_TryElseUnpin(nodePageHandle.GetData(nodePageData), IX_HANDLE_INSERT_FAIL_UNPIN_FAIL, IX_HANDLE_INSERT_FAIL, pFFileHandle, nodePageNum);
+
+    bool isLeaf = *(bool *)nodePageData;
+    int childTot = *(int *)(nodePageData + sizeof(bool));
+    if (!isLeaf)
+    {
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
+        {
+            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0) || cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0)
+            { // Regular condition: [, )
+                if (BPlus_Delete(*(PageNum *)(nodePageData + j + header.attrLength), pData, rid))
+                    return true;
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.leafEntryLength)
+        {
+            // For leaf, there's no segment more.
+            // Keys stored in the node are the exact keys.
+            if (cmp(pData, nodePageData + j) == 0 && ((RID *)(nodePageData + j + header.attrLength))->viable)
+            {
+                ((RID *)(nodePageData + j + header.attrLength))->viable = false;
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
+//
+// Desc: Update some entry
+//
 // Even though an update can be decomposed to an insert and a deletion intuitionally,
 // but things are not like that because of the applied lazy deletion.
-void BPlus_Update(const PageNum &nodePageNum, const void *pData, const RID &rid)
+bool IX_IndexHandle::BPlus_Update(const PageNum &nodePageNum, const void *pData, const RID &origin_rid, const RID &updated_rid)
 {
-    // TODO: BPlus_Update
+    PF_PageHandle nodePageHandle;
+    char *nodePageData;
+    IX_Try(pFFileHandle.GetThisPage(nodePageNum, nodePageHandle), IX_HANDLE_INSERT_FAIL);
+    IX_TryElseUnpin(pFFileHandle.MarkDirty(nodePageNum), IX_HANDLE_INSERT_FAIL_UNPIN_FAIL, IX_HANDLE_INSERT_FAIL, pFFileHandle, nodePageNum);
+    IX_TryElseUnpin(nodePageHandle.GetData(nodePageData), IX_HANDLE_INSERT_FAIL_UNPIN_FAIL, IX_HANDLE_INSERT_FAIL, pFFileHandle, nodePageNum);
+
+    bool isLeaf = *(bool *)nodePageData;
+    int childTot = *(int *)(nodePageData + sizeof(bool));
+    if (!isLeaf)
+    {
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
+        {
+            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0) || cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0)
+            { // Regular condition: [, )
+                if (BPlus_Update(*(PageNum *)(nodePageData + j + header.attrLength), pData, origin_rid, updated_rid))
+                    return true;
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.leafEntryLength)
+        {
+            // For leaf, there's no segment more.
+            // Keys stored in the node are the exact keys.
+            if (cmp(pData, nodePageData + j) == 0 && ((RID *)(nodePageData + j + header.attrLength))->viable)
+            {
+                *((RID *)(nodePageData + j + header.attrLength)) = updated_rid;
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 int IX_IndexHandle::cmp(const void *data1, const void *data2)

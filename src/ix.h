@@ -92,7 +92,7 @@ private:
     bool BPlus_Exists(const PageNum &nodePageNum, const void *pData, const RID &rid);
     const std::pair<void *, PageNum> BPlus_Insert(const PageNum &nodePageNum, const void *pData, const RID &rid);
     bool BPlus_Delete(const PageNum &nodePageNum, const void *pData, const RID &rid);
-    void BPlus_Update(const PageNum &nodePageNum, const void *pData, const RID &rid);
+    bool BPlus_Update(const PageNum &nodePageNum, const void *pData, const RID &origin_rid, const RID &updated_rid);
 
     // Utilities
 
