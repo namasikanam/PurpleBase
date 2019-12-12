@@ -45,7 +45,6 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 
         // Step 2: Allocate and write head page
         // If everything runs right, the pagenum of head page should be 0.
-        // TODO: Rewrite the initialization of the head page of index
         PF_PageHandle headerPageHandle;
         char *headerData;
         IX_Try(indexFileHandle.AllocatePage(headerPageHandle), IX_MANAGER_CREATE_HEAD_FAIL);
@@ -54,28 +53,19 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
         // Store header information into the header page
         *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType)) = attrType;
         *(int *)(headerData + offsetof(IX_IndexHeader, attrLength)) = attrType;
-        *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage)) = 2ll;
-        *(PageNum *)(headerData + offsetof(IX_IndexHeader, bucketPage)) = 1ll;
-        *(int *)(headerData + offsetof(IX_IndexHeader, degree)) = IX_CalDegree(attrType, attrLength);
-        *(int *)(headerData + offsetof(IX_IndexHeader, bucketTot)) = 0ll;
+        *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage)) = 1ll;
+        *(PageNum *)(headerData + offsetof(IX_IndexHeader, pageTot)) = 2ll;
         IX_Try(indexFileHandle.UnpinPage(0ll), IX_MANAGER_CREATE_HEAD_BUT_UNPIN_FAIL);
-
-        // Step 4: Allocate and write bucket page
-        // Bucket page is only one, so its [pageNum] won't ever change.
-        PF_PageHandle bucketPageHandle;
-        IX_Try(indexFileHandle.AllocatePage(bucketPageHandle), IX_MANAGER_CREATE_BUCKET_FAIL);
-        // Surprise! Bucket page is empty!
-        IX_Try(indexFileHandle.UnpinPage(1ll), IX_MANAGER_CREATE_BUCKET_BUT_UNPIN_FAIL);
 
         // Step 3: Allocate and write root page
         PF_PageHandle rootPageHandle;
         char *rootData;
         IX_Try(indexFileHandle.AllocatePage(rootPageHandle), IX_MANAGER_CREATE_ROOT_FAIL);
-        IX_TryElseUnpin(rootPageHandle.GetData(rootData), IX_MANAGER_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_ROOT_FAIL, indexFileHandle, 2ll);
-        IX_TryElseUnpin(indexFileHandle.MarkDirty(2ll), IX_MANAGER_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_ROOT_FAIL, indexFileHandle, 2ll);
+        IX_TryElseUnpin(rootPageHandle.GetData(rootData), IX_MANAGER_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_ROOT_FAIL, indexFileHandle, 1ll);
+        IX_TryElseUnpin(indexFileHandle.MarkDirty(1ll), IX_MANAGER_CREATE_ROOT_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_ROOT_FAIL, indexFileHandle, 1ll);
         *(bool *)(rootData + 0) = true;
         *(int *)(rootData + 1) = 0;
-        IX_Try(indexFileHandle.UnpinPage(2ll), IX_MANAGER_CREATE_ROOT_BUT_UNPIN_FAIL);
+        IX_Try(indexFileHandle.UnpinPage(1ll), IX_MANAGER_CREATE_ROOT_BUT_UNPIN_FAIL);
 
         // Everything is done.
         throw RC{OK_RC};
@@ -125,7 +115,6 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo, IX_IndexHandle &inde
         IX_Try(pfm.OpenFile(indexFileName, indexHandle.pFFileHandle), IX_MANAGER_OPEN_FAIL);
 
         // Read header page
-        // TOOD: Rewrite the header page reading
         PF_PageHandle headerPageHandle;
         char *headerData;
         IX_Try(indexHandle.pFFileHandle.GetThisPage(0ll, headerPageHandle), IX_MANAGER_OPEN_FAIL);
@@ -134,11 +123,11 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo, IX_IndexHandle &inde
             *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType)),
             *(int *)(headerData + offsetof(IX_IndexHeader, attrLength)),
             *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage)),
-            *(PageNum *)(headerData + offsetof(IX_IndexHeader, bucketPage)),
-            *(int *)(headerData + offsetof(IX_IndexHeader, degree)),
-            *(int *)(headerData + offsetof(IX_IndexHeader, bucketTot)),
-            false // modified
-        };
+            *(PageNum *)(headerData + offsetof(IX_IndexHeader, pageTot))};
+        indexHandle.header.innerEntryLength = indexHandle.header.attrLength + sizeof(PageNum);
+        indexHandle.header.leafEntryLength = indexHandle.header.attrLength + sizeof(RID);
+        indexHandle.header.innerDeg = (PF_PAGE_SIZE - sizeof(bool) - sizeof(int)) / indexHandle.header.innerEntryLength;
+        indexHandle.header.leafDeg = (PF_PAGE_SIZE - sizeof(bool) - sizeof(int)) / indexHandle.header.leafEntryLength;
         IX_Try(indexHandle.pFFileHandle.UnpinPage(0ll), IX_MANAGER_OPEN_BUT_UNPIN_FAIL);
 
         indexHandle.open = true;
@@ -160,7 +149,6 @@ RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle)
             throw RC{IX_MANAGER_CLOSE_CLOSED_FILE_HANDLE};
 
         // Write back header
-        // TODO: Rewrite the update of the header page when closing an index.
         if (indexHandle.header.modified)
         {
             PF_PageHandle headerPage;
@@ -169,12 +157,10 @@ RC IX_Manager::CloseIndex(IX_IndexHandle &indexHandle)
             IX_TryElseUnpin(headerPage.GetData(headerData), IX_MANAGER_CLOSE_FAIL_UNPIN_FAIL, IX_MANAGER_CLOSE_FAIL, indexHandle.pFFileHandle, 0ll);
             IX_TryElseUnpin(indexHandle.pFFileHandle.MarkDirty(0ll), IX_MANAGER_CLOSE_FAIL_UNPIN_FAIL, IX_MANAGER_CLOSE_FAIL, indexHandle.pFFileHandle, 0ll);
 
-            indexHandle.header.attrType = *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType));
-            indexHandle.header.attrLength = *(int *)(headerData + offsetof(IX_IndexHeader, attrLength));
-            indexHandle.header.rootPage = *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage));
-            indexHandle.header.bucketPage = *(PageNum *)(headerData + offsetof(IX_IndexHeader, bucketPage));
-            indexHandle.header.degree = *(int *)(headerData + offsetof(IX_IndexHeader, degree));
-            indexHandle.header.bucketTot = *(int *)(headerData + offsetof(IX_IndexHeader, bucketTot));
+            *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType)) = indexHandle.header.attrType;
+            *(int *)(headerData + offsetof(IX_IndexHeader, attrLength)) = indexHandle.header.attrLength;
+            *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage)) = indexHandle.header.rootPage;
+            *(PageNum *)(headerData + offsetof(IX_IndexHeader, pageTot)) = indexHandle.header.pageTot;
 
             IX_Try(indexHandle.pFFileHandle.UnpinPage(0ll), IX_MANAGER_CLOSE_HEAD_BUT_UNPIN_FAIL);
 

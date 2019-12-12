@@ -46,7 +46,7 @@ QL_SOURCES     = ql_manager.cc ql_operators.cc ql_error.cc
 EX_SOURCES	   = ex_commlayer.cc ex_error.cc
 UTILS_SOURCES  = dbcreate.cc dbdestroy.cc redbase.cc
 PARSER_SOURCES = scan.c parse.c nodes.c interp.c
-TESTER_SOURCES = rm_test.cc
+TESTER_SOURCES = ix_test.cc
 #parser_test.cc pf_test1.cc pf_test2.cc pf_test3.cc rm_test.cc ix_test.cc
 
 PF_OBJECTS     = $(addprefix $(BUILD_DIR), $(PF_SOURCES:.cc=.o))

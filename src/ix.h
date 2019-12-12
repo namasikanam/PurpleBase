@@ -23,10 +23,13 @@ typedef short BucketNum;
     1) attrType - Attribute type for the index - AttrType
     2) attrLength - Attribute length - integer
     3) rootPage - Page number of the B+ Tree root - PageNum
-    4) bucketPage - Page number of the bucket - PageNum
-    5) degree - Degree of a node in the B+ Tree - integer
-    6) bucketTot - How many rids are in the bucket now? - integer
-    7) modified - Has the header modified since last read from the header page? - This shouldn't be stored in the header page. - bool
+    4) pageTot - The number of pages now - PageNum
+
+    5) innerEntryLength - The length of the entry in the inner node - int
+    6) leafEntryLength - The length of the entry in the leaf node - int
+    7) innerDeg - The degree of the inner node of the B+ tree - int
+    8) leafDeg - The degree of the leaf node of the B+ tree - int
+    9) modified - Has the header modified since last read from the header page? - This shouldn't be stored in the header page. - bool
 */
 struct IX_IndexHeader
 {
@@ -187,7 +190,7 @@ void IX_PrintError(RC rc);
 #define IX_HANDLE_INSERT_FAIL (START_IX_WARN + 8)
 #define IX_HANDLE_DELETE_NOT_EXIST (START_IX_WARN + 9)
 #define IX_HANDLE_INSERT_EXISTS (START_IX_WARN + 10)
-#define IX_HANDLE_GETRID_FAIL (START_IX_WARN + 11)
+#define IX_OPEN_SCAN_NE (START_IX_WARN + 11)
 #define IX_HANDLE_LEAF_SPLIT_FAIL (START_IX_WARN + 12)
 #define IX_HANDLE_LEAF_NEW_ROOT_FAIL (START_IX_WARN + 13)
 #define IX_EOF (START_IX_WARN + 14)
@@ -195,17 +198,16 @@ void IX_PrintError(RC rc);
 #define IX_HANDLE_INNER_SPLIT_FAIL (START_IX_WARN + 16)
 #define IX_HANDLE_INNER_NEW_ROOT_FAIL (START_IX_WARN + 17)
 #define IX_HANDLE_DELETE_FAIL (START_IX_WARN + 18)
-#define IX_OPEN_SCAN_NE (START_IX_WARN + 19)
-#define IX_LASTWARN IX_CREAT_FAIL
+#define IX_LASTWARN IX_OPEN_SCAN_NE
 
 // Errors
 #define IX_MANAGER_CREATE_OPEN_FILE_FAIL (START_IX_ERR - 0) // Invalid PC file name
 #define IX_MANAGER_CREATE_HEAD_FAIL (START_IX_ERR - 1)
 #define IX_MANAGER_CREATE_HEAD_FAIL_UNPIN_FAIL (START_IX_ERR - 2)
 #define IX_MANAGER_CREATE_HEAD_BUT_UNPIN_FAIL (START_IX_ERR - 3)
-#define IX_MANAGER_CREATE_BUCKET_FAIL (START_IX_ERR - 4)
-#define IX_MANAGER_CREATE_BUCKET_FAIL_UNPIN_FAIL (START_IX_ERR - 5)
-#define IX_MANAGER_CREATE_BUCKET_BUT_UNPIN_FAIL (START_IX_ERR - 6)
+#define IX_HANDLE_NOT_DELETE_BUT_UNPIN_FAIL (START_IX_ERR - 4)
+#define IX_HANDLE_INSERT_BUT_UNPIN_FAIL (START_IX_ERR - 5)
+#define IX_HANDLE_NOT_EXISTS_BUT_UNPIN_FAIL (START_IX_ERR - 6)
 #define IX_MANAGER_CREATE_ROOT_FAIL (START_IX_ERR - 7)
 #define IX_MANAGER_CREATE_ROOT_FAIL_UNPIN_FAIL (START_IX_ERR - 8)
 #define IX_MANAGER_CREATE_ROOT_BUT_UNPIN_FAIL (START_IX_ERR - 9)
@@ -236,13 +238,10 @@ void IX_PrintError(RC rc);
 #define IX_HANDLE_UPDATE_INNER_BUT_UNPIN_FAIL (START_IX_ERR - 33)
 #define IX_HANDLE_UPDATE_LEAF_BUT_UNPIN_FAIL (START_IX_ERR - 34)
 #define IX_HANDLE_NOT_UPDATE_BUT_UNPIN_FAIL (START_IX_ERR - 35)
-#define IX_HANDLE_NOT_DELETE_BUT_UNPIN_FAIL (START_IX_ERR - 36)
-#define IX_HANDLE_INSERT_BUT_UNPIN_FAIL (START_IX_ERR - 37)
-#define IX_HANDLE_NOT_EXISTS_BUT_UNPIN_FAIL (START_IX_ERR - 38)
 
 // The exact definition needs to be modified.
 // Error in UNIX system call or library routine
-#define IX_UNIX (START_IX_ERR - 10) // Unix error
+#define IX_UNIX (START_IX_ERR - 36) // Unix error
 #define IX_LASTERROR IX_UNIX
 
 #endif

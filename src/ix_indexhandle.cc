@@ -438,7 +438,7 @@ bool IX_IndexHandle::BPlus_Update(const PageNum &nodePageNum, const void *pData,
     return false;
 }
 
-int IX_IndexHandle::cmp(const void *data1, const void *data2)
+int IX_IndexHandle::cmp(const void *data1, const void *data2) const
 {
     switch (header.attrType)
     {

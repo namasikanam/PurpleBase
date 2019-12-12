@@ -32,10 +32,4 @@ inline void IX_TryElseUnpin(RC pf_rc, RC unpin_rc, RC ix_rc, const PF_FileHandle
     }
 }
 
-// Calculate degree
-inline int IX_CalDegree(int attrLength)
-{
-    return (PF_PAGE_SIZE - sizeof(int)) / (attrLength + std::max(sizeof(PageNum), sizeof(RID)));
-}
-
 #endif

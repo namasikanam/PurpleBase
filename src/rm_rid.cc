@@ -14,17 +14,13 @@ RID::RID()
 }
 
 // Constructor with PageNum and SlotNum as arguments
-RID::RID(PageNum _pageNum, SlotNum _slotNum) : pageNum(_pageNum), slotNum(_slotNum)
-{
-    // Set the viablity flag true
-    this->viable = true;
-}
+RID::RID(PageNum _pageNum, SlotNum _slotNum) : viable(true), pageNum(_pageNum), slotNum(_slotNum) {} // Set the viablity flag true
 
 // Destructor
 RID::~RID() {}
 
 // Copy constructor
-RID::RID(const RID &_) : pageNum(_.pageNum), slotNum(_.slotNum), viable(_.viable) {}
+RID::RID(const RID &_) : viable(_.viable), pageNum(_.pageNum), slotNum(_.slotNum) {}
 
 // Overload =
 RID &RID::operator=(const RID &rid)
