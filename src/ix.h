@@ -92,10 +92,10 @@ private:
     IX_IndexHeader header;
 
     // Fundamental operations of B+ tree
-    bool BPlus_Exists(const PageNum &nodePageNum, const void *pData, const RID &rid);
-    const std::pair<void *, PageNum> BPlus_Insert(const PageNum &nodePageNum, const void *pData, const RID &rid);
-    bool BPlus_Delete(const PageNum &nodePageNum, const void *pData, const RID &rid);
-    bool BPlus_Update(const PageNum &nodePageNum, const void *pData, const RID &origin_rid, const RID &updated_rid);
+    bool BPlus_Exists(PageNum nodePageNum, const void *pData, const RID &rid);
+    const std::pair<const void *, PageNum> BPlus_Insert(PageNum nodePageNum, const void *pData, const RID &rid);
+    bool BPlus_Delete(PageNum nodePageNum, const void *pData, const RID &rid);
+    bool BPlus_Update(PageNum nodePageNum, const void *pData, const RID &origin_rid, const RID &updated_rid);
 
     // Utilities
 
@@ -198,7 +198,7 @@ void IX_PrintError(RC rc);
 #define IX_HANDLE_INNER_SPLIT_FAIL (START_IX_WARN + 16)
 #define IX_HANDLE_INNER_NEW_ROOT_FAIL (START_IX_WARN + 17)
 #define IX_HANDLE_DELETE_FAIL (START_IX_WARN + 18)
-#define IX_LASTWARN IX_OPEN_SCAN_NE
+#define IX_LASTWARN IX_HANDLE_DELETE_FAIL
 
 // Errors
 #define IX_MANAGER_CREATE_OPEN_FILE_FAIL (START_IX_ERR - 0) // Invalid PC file name
@@ -243,10 +243,12 @@ void IX_PrintError(RC rc);
 #define IX_HANDLE_INSERT_LEAF_NEW_ROOT_BUT_UNPIN_ROOT_FAIL (START_IX_ERR - 38)
 #define IX_HANDLE_INSERT_INNER_SPLIT_BUT_UNPIN_RIGHT_FAIL (START_IX_ERR - 39)
 #define IX_HANDLE_INSERT_INNER_NEW_ROOT_BUT_UNPIN_ROOT_FAIL (START_IX_ERR - 40)
+#define IX_HANDLE_INSERT_LEAF_NEW_ROOT_BUT_UNPIN_RIGHT_FAIL (START_IX_ERR - 41)
+#define IX_HANDLE_INSERT_INNER_NEW_ROOT_BUT_UNPIN_RIGHT_FAIL (START_IX_ERR - 42)
 
 // The exact definition needs to be modified.
 // Error in UNIX system call or library routine
-#define IX_UNIX (START_IX_ERR - 41) // Unix error
+#define IX_UNIX (START_IX_ERR - 43) // Unix error
 #define IX_LASTERROR IX_UNIX
 
 #endif

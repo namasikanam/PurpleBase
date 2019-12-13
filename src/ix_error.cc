@@ -80,6 +80,8 @@ static char *IX_ErrorMsg[] = {
     (char *)"Create a new root when splitting a leaf node, but fail to unpin it.",                            // IX_HANDLE_INSERT_LEAF_NEW_ROOT_BUT_UNPIN_ROOT_FAIL (START_IX_ERR - 38)
     (char *)"Split an inner node when inserting, but fail to unpin the split right one.",                     // IX_HANDLE_INSERT_INNER_SPLIT_BUT_UNPIN_RIGHT_FAIL (START_IX_ERR - 39)
     (char *)"Create a new root when inserting some entry to an inner node, but fail to unpin the root node.", // IX_HANDLE_INSERT_INNER_NEW_ROOT_BUT_UNPIN_ROOT_FAIL (START_IX_ERR - 40)
+    (char *)"A new root is created from a leaf root, but failed to unpin the right page.",                    // IX_HANDLE_INSERT_LEAF_NEW_ROOT_BUT_UNPIN_RIGHT_FAIL (START_IX_ERR - 41)
+    (char *)"A new root is created from an inner root, but failed to unpin the right page.",                  // IX_HANDLE_INSERT_INNER_NEW_ROOT_BUT_UNPIN_RIGHT_FAIL (START_IX_ERR - 42)
     (char *)"Error in Unix system call or library routine.",                                                  // IX_UNIX (START_IX_ERR - 41)
 };
 

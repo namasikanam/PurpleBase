@@ -37,6 +37,8 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle, CompOp compOp,
         if (compOp == NE_OP)
             throw RC{IX_OPEN_SCAN_NE};
 
+        printf("OpenScan: Find in the B+ tree.\n");
+
         BPlus_Find(indexHandle, indexHandle.header.rootPage, compOp, value);
     }
     catch (RC rc)
@@ -51,6 +53,8 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle, CompOp compOp,
 // Similar to [BPlus_Exists]
 void IX_IndexScan::BPlus_Find(const IX_IndexHandle &indexHandle, PageNum nodePageNum, CompOp compOp, void *value)
 {
+    // printf("BPlus_Find(..., nodePageNum = %lld, ...)\n", nodePageNum);
+
     PF_PageHandle nodePageHandle;
     char *nodePageData;
     IX_Try(indexHandle.pFFileHandle.GetThisPage(nodePageNum, nodePageHandle), IX_HANDLE_EXISTS_FAIL);
@@ -86,7 +90,7 @@ void IX_IndexScan::BPlus_Find(const IX_IndexHandle &indexHandle, PageNum nodePag
                     return false; // meaningless return to avoid warning
                 }())
             {
-                BPlus_Find(indexHandle, *(PageNum *)(nodePageData + indexHandle.header.attrLength), compOp, value);
+                BPlus_Find(indexHandle, *(PageNum *)(nodePageData + j + indexHandle.header.attrLength), compOp, value);
             }
         }
     }
