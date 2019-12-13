@@ -238,10 +238,11 @@ void IX_PrintError(RC rc);
 #define IX_HANDLE_UPDATE_INNER_BUT_UNPIN_FAIL (START_IX_ERR - 33)
 #define IX_HANDLE_UPDATE_LEAF_BUT_UNPIN_FAIL (START_IX_ERR - 34)
 #define IX_HANDLE_NOT_UPDATE_BUT_UNPIN_FAIL (START_IX_ERR - 35)
+#define IX_MANAGER_CREATE_BUT_CLOSE_FILE_FAIL (START_IX_ERR - 36)
 
 // The exact definition needs to be modified.
 // Error in UNIX system call or library routine
-#define IX_UNIX (START_IX_ERR - 36) // Unix error
+#define IX_UNIX (START_IX_ERR - 37) // Unix error
 #define IX_LASTERROR IX_UNIX
 
 #endif

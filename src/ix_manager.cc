@@ -67,6 +67,9 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
         *(int *)(rootData + 1) = 0;
         IX_Try(indexFileHandle.UnpinPage(1ll), IX_MANAGER_CREATE_ROOT_BUT_UNPIN_FAIL);
 
+        // Close the file
+        IX_Try(pfm.CloseFile(indexFileHandle), IX_MANAGER_CREATE_BUT_CLOSE_FILE_FAIL);
+
         // Everything is done.
         throw RC{OK_RC};
     }

@@ -32,6 +32,7 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid)
     {
         return rc;
     }
+    return OK_RC;
 }
 
 RC IX_IndexHandle::DeleteEntry(void *pData, const RID &rid)
@@ -50,6 +51,7 @@ RC IX_IndexHandle::DeleteEntry(void *pData, const RID &rid)
     {
         return rc;
     }
+    return OK_RC;
 }
 
 RC IX_IndexHandle::ForcePages()
@@ -67,6 +69,7 @@ RC IX_IndexHandle::ForcePages()
     {
         return rc;
     }
+    return OK_RC;
 }
 
 bool IX_IndexHandle::BPlus_Exists(const PageNum &nodePageNum, const void *pData, const RID &rid)
@@ -83,7 +86,7 @@ bool IX_IndexHandle::BPlus_Exists(const PageNum &nodePageNum, const void *pData,
     {
         for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
         {
-            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0) || cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0)
+            if ((cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0)) || (i != childTot - 1 && cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0))
             { // Regular condition: [, )
                 if (BPlus_Exists(*(PageNum *)(nodePageData + j + header.attrLength), pData, rid))
                 {
@@ -128,7 +131,7 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
     {
         for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.leafEntryLength)
         {
-            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1) || cmp(pData, nodePageData + j + header.leafEntryLength))
+            if ((cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0)) || (i != childTot - 1 && cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0))
             {
                 ++i, j += header.leafEntryLength;
                 // Now, the correct position has been found!
@@ -234,7 +237,7 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
         for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
         {
             // Find the correct child to insert
-            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1) || cmp(pData, nodePageData + j + header.innerEntryLength))
+            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0))
             {
                 pair<void *, PageNum> insertedChild = BPlus_Insert(*(PageNum *)(nodePageData + j), pData, rid);
                 if (insertedChild.first != nullptr)
@@ -343,6 +346,10 @@ const pair<void *, PageNum> IX_IndexHandle::BPlus_Insert(const PageNum &nodePage
             }
         }
     }
+    // Nothing happens,
+    // which won't happen
+    // if everything works normally
+    return make_pair(nullptr, 0ll);
 }
 
 //
@@ -363,7 +370,7 @@ bool IX_IndexHandle::BPlus_Delete(const PageNum &nodePageNum, const void *pData,
     {
         for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
         {
-            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0) || cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0)
+            if ((cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0)) || (cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0))
             { // Regular condition: [, )
                 if (BPlus_Delete(*(PageNum *)(nodePageData + j + header.attrLength), pData, rid))
                 {
@@ -410,7 +417,7 @@ bool IX_IndexHandle::BPlus_Update(const PageNum &nodePageNum, const void *pData,
     {
         for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
         {
-            if (cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0) || cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0)
+            if ((cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0)) || (cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0))
             { // Regular condition: [, )
                 if (BPlus_Update(*(PageNum *)(nodePageData + j + header.attrLength), pData, origin_rid, updated_rid))
                 {
@@ -465,4 +472,5 @@ int IX_IndexHandle::cmp(const void *data1, const void *data2) const
         }
         return 0;
     }
+    return 0; // This command won't run if everything works normally
 }

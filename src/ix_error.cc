@@ -75,6 +75,7 @@ static char *IX_ErrorMsg[] = {
     (char *)"An inner node is updated, but fail to unpin.",                                             // IX_HANDLE_UPDATE_INNER_BUT_UNPIN_FAIL (START_IX_ERR - 33)
     (char *)"A leaf node is updated, but fail to unpin.",                                               // IX_HANDLE_UPDATE_LEAF_BUT_UNPIN_FAIL (START_IX_ERR - 34)
     (char *)"Nothing to update here, but unpinning fails magically.",                                   // IX_HANDLE_NOT_UPDATE_BUT_UNPIN_FAIL (START_IX_ERR - 35)
+    (char *)"Created an IX_Manager, but fail to close some file.",                                      // IX_MANAGER_CREATE_BUT_CLOSE_FILE_FAIL (START_IX_ERR - 36)
     (char *)"Error in Unix system call or library routine.",                                            // IX_UNIX (START_IX_ERR - 36)
 };
 
