@@ -52,7 +52,7 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
         IX_TryElseUnpin(indexFileHandle.MarkDirty(0ll), IX_MANAGER_CREATE_HEAD_FAIL_UNPIN_FAIL, IX_MANAGER_CREATE_HEAD_FAIL, indexFileHandle, 0ll);
         // Store header information into the header page
         *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType)) = attrType;
-        *(int *)(headerData + offsetof(IX_IndexHeader, attrLength)) = attrType;
+        *(int *)(headerData + offsetof(IX_IndexHeader, attrLength)) = attrLength;
         *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage)) = 1ll;
         *(PageNum *)(headerData + offsetof(IX_IndexHeader, pageTot)) = 2ll;
         IX_Try(indexFileHandle.UnpinPage(0ll), IX_MANAGER_CREATE_HEAD_BUT_UNPIN_FAIL);
