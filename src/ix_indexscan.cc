@@ -45,6 +45,7 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle, CompOp compOp,
     }
 
     open = true;
+    return OK_RC;
 }
 
 // Similar to [BPlus_Exists]
@@ -70,7 +71,7 @@ void IX_IndexScan::BPlus_Find(const IX_IndexHandle &indexHandle, PageNum nodePag
                     case NO_OP:
                         return true;
                     case EQ_OP:
-                        return (indexHandle.cmp(nodePageData + j, value) <= 0) && (i + 1 == childTot || indexHandle.cmp(nodePageData + j + indexHandle.header.innerEntryLength, value) > 0) || indexHandle.cmp(nodePageData + j, value) == 0 && indexHandle.cmp(nodePageData + j + indexHandle.header.innerEntryLength, value) == 0;
+                        return ((indexHandle.cmp(nodePageData + j, value) <= 0) && (i + 1 == childTot || indexHandle.cmp(nodePageData + j + indexHandle.header.innerEntryLength, value) > 0)) || (indexHandle.cmp(nodePageData + j, value) == 0 && indexHandle.cmp(nodePageData + j + indexHandle.header.innerEntryLength, value) == 0);
                     case LT_OP:
                         return indexHandle.cmp(nodePageData + j, value) < 0;
                     case LE_OP:
@@ -79,7 +80,10 @@ void IX_IndexScan::BPlus_Find(const IX_IndexHandle &indexHandle, PageNum nodePag
                         return i + 1 == childTot || indexHandle.cmp(nodePageData + j + indexHandle.header.innerEntryLength, value) > 0;
                     case GE_OP:
                         return i + 1 == childTot || indexHandle.cmp(nodePageData + j + indexHandle.header.innerEntryLength, value) > 0;
+                    case NE_OP:
+                        throw RC{IX_OPEN_SCAN_NE};
                     }
+                    return false; // meaningless return to avoid warning
                 }())
             {
                 BPlus_Find(indexHandle, *(PageNum *)(nodePageData + indexHandle.header.attrLength), compOp, value);
@@ -105,7 +109,10 @@ void IX_IndexScan::BPlus_Find(const IX_IndexHandle &indexHandle, PageNum nodePag
                         return indexHandle.cmp(nodePageData + j, value) <= 0;
                     case GE_OP:
                         return indexHandle.cmp(nodePageData + j, value) >= 0;
+                    case NE_OP:
+                        throw RC{IX_OPEN_SCAN_NE};
                     }
+                    return false; // meaningless return to avoid warning
                 }())
             {
                 scan.push_back(*(RID *)(nodePageData + j + indexHandle.header.attrLength));
@@ -121,17 +128,19 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
     {
         if (scan.empty())
             throw RC{IX_EOF};
-        rid = scan.front;
+        rid = scan.front();
         scan.pop_front();
     }
     catch (RC rc)
     {
         return rc;
     }
+    return OK_RC;
 }
 
 RC IX_IndexScan::CloseScan()
 {
     open = false;
     scan.clear();
+    return OK_RC;
 }

@@ -119,11 +119,10 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo, IX_IndexHandle &inde
         char *headerData;
         IX_Try(indexHandle.pFFileHandle.GetThisPage(0ll, headerPageHandle), IX_MANAGER_OPEN_FAIL);
         IX_TryElseUnpin(headerPageHandle.GetData(headerData), IX_MANAGER_OPEN_FAIL_UNPIN_FAIL, IX_MANAGER_OPEN_FAIL, indexHandle.pFFileHandle, 0ll);
-        indexHandle.header = {
-            *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType)),
-            *(int *)(headerData + offsetof(IX_IndexHeader, attrLength)),
-            *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage)),
-            *(PageNum *)(headerData + offsetof(IX_IndexHeader, pageTot))};
+        indexHandle.header.attrType = *(AttrType *)(headerData + offsetof(IX_IndexHeader, attrType));
+        indexHandle.header.attrLength = *(int *)(headerData + offsetof(IX_IndexHeader, attrLength));
+        indexHandle.header.rootPage = *(PageNum *)(headerData + offsetof(IX_IndexHeader, rootPage));
+        indexHandle.header.pageTot = *(PageNum *)(headerData + offsetof(IX_IndexHeader, pageTot));
         indexHandle.header.innerEntryLength = indexHandle.header.attrLength + sizeof(PageNum);
         indexHandle.header.leafEntryLength = indexHandle.header.attrLength + sizeof(RID);
         indexHandle.header.innerDeg = (PF_PAGE_SIZE - sizeof(bool) - sizeof(int)) / indexHandle.header.innerEntryLength;
