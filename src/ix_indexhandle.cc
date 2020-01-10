@@ -23,16 +23,16 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid)
         if (!open)
             throw RC{IX_HANDLE_CLOSED};
 
+#ifdef IX_LOG
+        printf("==== Insert: ");
+        Attr_Print(pData);
+        printf(" =====\n");
+#endif
+
         if (BPlus_Exists(header.rootPage, pData, rid))
             throw RC{IX_HANDLE_INSERT_EXISTS};
         else
         {
-#ifdef IX_LOG
-            printf("==== Insert: ");
-            Attr_Print(pData);
-            printf(" =====\n");
-#endif
-
             BPlus_Insert(header.rootPage, pData, rid);
         }
     }
