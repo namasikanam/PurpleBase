@@ -28,7 +28,7 @@ CFLAGS         = -g -O2 -Wall $(STATS_OPTION) $(LOG_OPTION) $(INC_DIRS) --std=c+
 # flag at all!
 STATS_OPTION   = -DPF_STATS
 
-LOG_OPTION = -DRM_LOG -DSM_LOG
+LOG_OPTION = -DSM_LOG
 # -DPF_LOG -DRM_LOG -DIX_LOG -DSM_LOG
 
 #
@@ -42,7 +42,7 @@ RM_SOURCES     = rm_manager.cc rm_error.cc rm_filehandle.cc \
 IX_SOURCES     = ix_manager.cc ix_indexhandle.cc ix_indexscan.cc \
 		 		 ix_error.cc
 SM_SOURCES     = sm_manager.cc sm_error.cc printer.cc
-QL_SOURCES     = ql_manager.cc ql_operators.cc ql_error.cc
+QL_SOURCES     = ql_manager.cc ql_error.cc
 EX_SOURCES	   = ex_commlayer.cc ex_error.cc
 UTILS_SOURCES  = dbcreate.cc dbdestroy.cc redbase.cc
 PARSER_SOURCES = scan.c parse.c nodes.c interp.c
@@ -69,7 +69,7 @@ LIBRARY_SM     = $(LIB_DIR)libsm.a
 LIBRARY_QL     = $(LIB_DIR)libql.a
 LIBRARY_EX     = $(LIB_DIR)libex.a
 LIBRARY_PARSER = $(LIB_DIR)libparser.a
-LIBRARIES      = $(LIBRARY_PF) $(LIBRARY_RM) $(LIBRARY_IX) $(LIBRARY_SM) $(LIBRARY_PARSER)
+LIBRARIES      = $(LIBRARY_PF) $(LIBRARY_RM) $(LIBRARY_IX) $(LIBRARY_SM) $(LIBRARY_QL) $(LIBRARY_PARSER)
 
 UTILS          = $(UTILS_SOURCES:.cc=)
 TESTS          = $(TESTER_SOURCES:.cc=)

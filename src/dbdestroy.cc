@@ -3,10 +3,10 @@
 //
 // Author: Aditya Bhandari (adityasb@stanford.edu)
 //
+// Improved by: Xingyu Xie (xiexy17@mails.tsinghua.edu.edu)
+//
 
-#include <iostream>
-#include <cstdio>
-#include <cstring>
+#include <bits/stdc++.h>
 #include <unistd.h>
 #include "sm.h"
 #include "redbase.h"
@@ -27,16 +27,15 @@ int main(int argc, char *argv[])
     // Look for 2 arguments. The first is always the name of the program
     // that was executed, and the second should be the name of the
     // database.
-    if (argc != 2) {
+    if (argc != 2)
+    {
         cerr << "Usage: " << argv[0] << " dbname \n";
         exit(1);
     }
 
-    // The database name is the second argument
-    dbname = argv[1];
-
     // Remove the subdirectory for the database
-    if (system (strcat(command,dbname)) != 0) {
+    if (system(strcat(command, argv[1])) != 0)
+    {
         cerr << argv[0] << " cannot destroy the database: " << dbname << "\n";
         exit(1);
     }

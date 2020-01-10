@@ -26,7 +26,7 @@ inline void SM_Try_IX(RC ix_rc, RC sm_rc)
 {
     if (ix_rc)
     {
-        RM_PrintError(ix_rc);
+        IX_PrintError(ix_rc);
         throw RC{sm_rc};
     }
 }

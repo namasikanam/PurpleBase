@@ -48,3 +48,6 @@ src/*
 !src/interp.c
 !src/scan.c
 !src/sm_internal.h
+!src/util_internal.h
+!src/ql.h
+!src/ql_manager.cc

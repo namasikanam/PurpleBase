@@ -13,32 +13,18 @@
 using namespace std;
 
 static char *SM_WarnMsg[] = {
-    (char *)"database does not exist",
-    (char *)"database cannot be closed",
-    (char *)"database is already open",
-    (char *)"database is closed",
-    (char *)"attribute count is wrong",
-    (char *)"null attribute pointer",
-    (char *)"invalid user-specified name",
-    (char *)"relation does not exist",
-    (char *)"relation exists",
-    (char *)"null relation name",
-    (char *)"null file name",
-    (char *)"invalid data file",
-    (char *)"incorrect index count",
-    (char *)"null parameters",
-    (char *)"invalid system parameter",
-    (char *)"invalid parameter value",
-    (char *)"index already exists",
-    (char *)"index does not exist",
-    (char *)"cannot change system catalog",
-    (char *)"invalid attribute",
-    (char *)"The database name to open is null."};
+    (char *)"The database does not exist.",
+    (char *)"The database name to open is null.", // SM_NULL_DATABASE_NAME (START_SM_WARN + 1)
+    (char *)"Trying to open an opened database.", // SM_DATABASE_OPEN (START_SM_WARN + 2)
+    (char *)"Trying to close a closed database.", // SM_DATABASE_CLOSED (START_SM_WARN + 3)
+};
 
 static char *SM_ErrorMsg[] = {
-    (char *)"invalid database name",
-    (char *)"Fail to open relcat, when opening a database.", // SM_OPEN_RELCAT_FAIL (START_SM_WARN - 1)
-    (char *)"Fail to open attrcat, when opening a database." // SM_OPEN_ATTRCAT_FAIL (START_SM_WARN - 2)
+    (char *)"Invalid database name",
+    (char *)"Fail to open relcat, when opening a database.",  // SM_OPEN_RELCAT_FAIL (START_SM_WARN - 1)
+    (char *)"Fail to open attrcat, when opening a database.", // SM_OPEN_ATTRCAT_FAIL (START_SM_WARN - 2)
+    (char *)"database cannot be closed",                      // SM_INVALID_DATABASE_CLOSE(START_SM_ERR - 5)
+    (char *)"Undefined function.",                            // SM_UNDEFINED (START_SM_WARN - 6)
 };
 
 //

@@ -23,19 +23,13 @@
     2) tupleLength - length of the tuples - integer
     3) attrCount - number of attributes - integer
     4) indexCount - number of indexes - integer
-    EX - 5) distributed - whether the relation is distributed - integer
-         6) attrName - attribute used for range partitioning - char*
 */
 struct SM_RelcatRecord
 {
-    char relName[MAXNAME + 1];
+    char relName[MAXNAME + 1]; // + 1 for coding convenience
     int tupleLength;
     int attrCount;
     int indexCount;
-
-    // EX - for distributed databases
-    int distributed;
-    char attrName[MAXNAME + 1];
 };
 
 // SM_AttrcatRecord - Records stored in the attrcat relation
@@ -49,8 +43,8 @@ struct SM_RelcatRecord
 */
 struct SM_AttrcatRecord
 {
-    char relName[MAXNAME + 1];
-    char attrName[MAXNAME + 1];
+    char relName[MAXNAME + 1];  // + 1 for coding convenience
+    char attrName[MAXNAME + 1]; // + 1 for coding convenience
     int offset;
     AttrType attrType;
     int attrLength;
@@ -58,7 +52,7 @@ struct SM_AttrcatRecord
 };
 
 // Constants
-#define SM_RELCAT_ATTR_COUNT 6
+#define SM_RELCAT_ATTR_COUNT 4
 #define SM_ATTRCAT_ATTR_COUNT 6
 
 //
@@ -96,12 +90,12 @@ public:
 
 private:
     // TODO: 这俩有什么用？
-    IX_Manager &ixManager; // IX_Manager object
-    RM_Manager &rmManager; // RM_Manager object
+    IX_Manager &iXManager; // IX_Manager object
+    RM_Manager &rMManager; // RM_Manager object
 
-    RM_FileHandle relcatFH;  // RM file handle for relcat
-    RM_FileHandle attrcatFH; // RM file handle for attrcat
-    bool isOpen;             // Flag whether the database is open
+    RM_FileHandle relcatRMFH;  // RM file handle for relcat
+    RM_FileHandle attrcatRMFH; // RM file handle for attrcat
+    bool isOpen;               // Flag whether the database is open
 };
 
 //
@@ -110,36 +104,23 @@ private:
 void SM_PrintError(RC rc);
 
 // Warnings
-#define SM_DATABASE_DOES_NOT_EXIST (START_SM_WARN + 0)   // Database does not exist
-#define SM_INVALID_DATABASE_CLOSE (START_SM_WARN + 1)    // Database cannot be closed
-#define SM_DATABASE_OPEN (START_SM_WARN + 2)             // Database is open
-#define SM_DATABASE_CLOSED (START_SM_WARN + 3)           // Database is closed
-#define SM_INCORRECT_ATTRIBUTE_COUNT (START_SM_WARN + 4) // Attribute count is wrong
-#define SM_NULL_ATTRIBUTES (START_SM_WARN + 5)           // Null attribute pointer
-#define SM_INVALID_NAME (START_SM_WARN + 6)              // Invalid name
-#define SM_TABLE_DOES_NOT_EXIST (START_SM_WARN + 7)      // Table does not exist
-#define SM_TABLE_ALREADY_EXISTS (START_SM_WARN + 8)      // Table already exists
-#define SM_NULL_RELATION (START_SM_WARN + 9)             // Null relation name
-#define SM_NULL_FILENAME (START_SM_WARN + 10)            // Null file name
-#define SM_INVALID_DATA_FILE (START_SM_WARN + 11)        // Invalid data file
-#define SM_INCORRECT_INDEX_COUNT (START_SM_WARN + 12)    // Incorrect index count
-#define SM_NULL_PARAMETERS (START_SM_WARN + 13)          // Null parameters
-#define SM_INVALID_SYSTEM_PARAMETER (START_SM_WARN + 14) // Invalid system parameter
-#define SM_INVALID_VALUE (START_SM_WARN + 15)            // Invalid value
-#define SM_INDEX_EXISTS (START_SM_WARN + 16)             // Index already exists
-#define SM_INDEX_DOES_NOT_EXIST (START_SM_WARN + 17)     // Index does not exist
-#define SM_SYSTEM_CATALOG (START_SM_WARN + 18)           // Cannot change system catalog
-#define SM_INVALID_ATTRIBUTE (START_SM_WARN + 19)        // Invalid attribute
-#define SM_NULL_DATABASE_NAME (START_SM_WARN + 20)       // Invalid attribute
-#define SM_LASTWARN SM_INVALID_ATTRIBUTE
+#define SM_DATABASE_DOES_NOT_EXIST (START_SM_WARN + 0) // Database does not exist
+#define SM_NULL_DATABASE_NAME (START_SM_WARN + 1)
+#define SM_DATABASE_OPEN (START_SM_WARN + 2)   // Database is open
+#define SM_DATABASE_CLOSED (START_SM_WARN + 3) // Database is closed
+#define SM_LASTWARN SM_DATABASE_CLOSED
 
 // Errors
 #define SM_INVALID_DATABASE_NAME (START_SM_ERR - 0) // Invalid database file name
-#define SM_OPEN_RELCAT_FAIL (START_SM_WARN - 1)     // Invalid attribute
-#define SM_OPEN_ATTRCAT_FAIL (START_SM_WARN - 2)    // Invalid attribute
+#define SM_OPEN_RELCAT_FAIL (START_SM_ERR - 1)      // Invalid attribute
+#define SM_OPEN_ATTRCAT_FAIL (START_SM_ERR - 2)     // Invalid attribute
+#define SM_CLOSE_RELCAT_FAIL (START_SM_ERR - 3)
+#define SM_CLOSE_ATTRCAT_FAIL (START_SM_ERR - 4)
+#define SM_INVALID_DATABASE_CLOSE (START_SM_ERR - 5) // Database cannot be closed
+#define SM_UNDEFINED (START_SM_WARN - 6)
 
 // Error in UNIX system call or library routine
-#define SM_UNIX (START_SM_ERR - 3) // Unix error
+#define SM_UNIX (START_SM_ERR - 7) // Unix error
 #define SM_LASTERROR SM_UNIX
 
 #endif

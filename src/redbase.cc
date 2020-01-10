@@ -8,16 +8,13 @@
 // Improved by: Xingyu Xie (xiexy17@mails.tsinghua.edu.cn)
 //
 
-#include <iostream>
-#include <cstdio>
-#include <cstring>
+#include <bits/stdc++.h>
 #include <unistd.h>
 #include "redbase.h"
 #include "rm.h"
 #include "sm.h"
 #include "ql.h"
-#include "ex.h"
-
+#include "util_internal.h"
 using namespace std;
 
 //
@@ -31,9 +28,6 @@ using namespace std;
 */
 int main(int argc, char *argv[])
 {
-    char *dbname;
-    RC rc;
-
     // Look for 2 arguments.  The first is always the name of the program
     // that was executed, and the second should be the name of the
     // database.
@@ -44,7 +38,7 @@ int main(int argc, char *argv[])
     }
 
     // The database name is the second argument
-    dbname = argv[1];
+    char *dbname = argv[1];
 
     // Initialize RedBase components
     PF_Manager pfm;
@@ -54,22 +48,14 @@ int main(int argc, char *argv[])
     QL_Manager qlm(smm, ixm, rmm);
 
     // Open the database
-    if ((rc = smm.OpenDb(dbname)))
-    {
-        SM_PrintError(rc);
-        return rc;
-    }
+    Try_SM(smm.OpenDb(dbname));
 
     // Call the parser
     RBparse(pfm, smm, qlm);
 
     // Close the database
-    if ((rc = smm.CloseDb()))
-    {
-        SM_PrintError(rc);
-        return rc;
-    }
+    Try_SM(smm.CloseDb());
 
-    cout << "Bye.\n";
+    cout << "Valar Morghulis.\n";
     return 0;
 }
