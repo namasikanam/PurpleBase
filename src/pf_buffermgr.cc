@@ -36,6 +36,8 @@ StatisticsMgr *pStatisticsMgr;
 
 #ifdef PF_LOG
 
+PF_PageHdr *pageHdr3 = nullptr;
+
 //
 // WriteLog
 //
@@ -48,37 +50,38 @@ static FILE *fLog = NULL;
 void WriteLog(const char *psMessage)
 {
     // The first time through we have to create a new Log file
-    if (fLog == NULL)
-    {
-        // This is the first time so I need to create a new log file.
-        // The log file will be named "PF_LOG.x" where x is the next
-        // available sequential number
-        int iLogNum = -1;
-        int bFound = FALSE;
-        char psFileName[10];
+    // if (fLog == NULL)
+    // {
+    //     // This is the first time so I need to create a new log file.
+    //     // The log file will be named "PF_LOG.x" where x is the next
+    //     // available sequential number
+    //     int iLogNum = -1;
+    //     int bFound = FALSE;
+    //     char psFileName[10];
 
-        while (iLogNum < 999 && bFound == FALSE)
-        {
-            iLogNum++;
-            sprintf(psFileName, "PF_LOG.%d", iLogNum);
-            fLog = fopen(psFileName, "r");
-            if (fLog == NULL)
-            {
-                bFound = TRUE;
-                fLog = fopen(psFileName, "w");
-            }
-            else
-                delete fLog;
-        }
+    //     while (iLogNum < 999 && bFound == FALSE)
+    //     {
+    //         iLogNum++;
+    //         sprintf(psFileName, "PF_LOG.%d", iLogNum);
+    //         fLog = fopen(psFileName, "r");
+    //         if (fLog == NULL)
+    //         {
+    //             bFound = TRUE;
+    //             fLog = fopen(psFileName, "w");
+    //         }
+    //         else
+    //             delete fLog;
+    //     }
 
-        if (!bFound)
-        {
-            cerr << "Cannot create a new log file!\n";
-            exit(1);
-        }
-    }
+    //     if (!bFound)
+    //     {
+    //         cerr << "Cannot create a new log file!\n";
+    //         exit(1);
+    //     }
+    // }
     // Now we have the log file open and ready for writing
-    fprintf(fLog, "%s", psMessage);
+    // fprintf(fLog, "%s", psMessage);
+    printf("%s", psMessage);
 }
 #endif
 
@@ -264,6 +267,10 @@ RC PF_BufferMgr::GetPage(int fd, PageNum pageNum, char **ppBuffer,
     // Point ppBuffer to page
     *ppBuffer = bufTable[slot].pData;
 
+#ifdef PF_LOG
+    printf("PF_BufferMgr::GetPage successful! (fd = %d, pageNum = %lld, *ppBuffer = %x)\n", fd, pageNum, *ppBuffer);
+#endif
+
     // Return ok
     return (0);
 }
@@ -284,7 +291,7 @@ RC PF_BufferMgr::AllocatePage(int fd, PageNum pageNum, char **ppBuffer)
 
 #ifdef PF_LOG
     char psMessage[100];
-    sprintf(psMessage, "Allocating a page for (%d,%lld)....", fd, pageNum);
+    sprintf(psMessage, "Allocating a page for (fd = %d, pageNum = %lld)....", fd, pageNum);
     WriteLog(psMessage);
 #endif
 
@@ -312,6 +319,14 @@ RC PF_BufferMgr::AllocatePage(int fd, PageNum pageNum, char **ppBuffer)
 
 #ifdef PF_LOG
     WriteLog("Succesfully allocated page.\n");
+    if (pageNum == 3)
+    {
+        pageHdr3 = (PF_PageHdr *)bufTable[slot].pData;
+    }
+    if (pageHdr3)
+    {
+        printf("The nextFree of page 3 is %d, which is expected to be %d\n", pageHdr3->nextFree, PF_PAGE_USED);
+    }
 #endif
 
     // cout << "Page pinned: " << pageNum << " count: " << bufTable[slot].pinCount << endl;
@@ -397,6 +412,11 @@ RC PF_BufferMgr::UnpinPage(int fd, PageNum pageNum)
     sprintf(psMessage, "Unpinning (%d,%lld). %d Pin count\n",
             fd, pageNum, bufTable[slot].pinCount - 1);
     WriteLog(psMessage);
+
+    if (pageHdr3)
+    {
+        printf("The nextFree of page 3 is %d, which is expected to be %d\n", pageHdr3->nextFree, PF_PAGE_USED);
+    }
 #endif
 
     // If unpinning the last pin, make it the most recently used page

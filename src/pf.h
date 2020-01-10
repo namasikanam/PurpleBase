@@ -32,7 +32,8 @@ typedef long long PageNum;
 // Unfortunately, we cannot use sizeof(PF_PageHdr) here, but it is an
 // int and we simply use that.
 //
-const int PF_PAGE_SIZE = 4096 - sizeof(int);
+// const int PF_PAGE_SIZE = 4096 - sizeof(int); // For deploy
+const int PF_PAGE_SIZE = 256 - sizeof(int); // For debug
 
 //
 // PF_PageHandle: PF page interface
