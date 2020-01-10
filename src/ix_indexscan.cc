@@ -37,6 +37,7 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle, CompOp compOp,
         if (compOp == NE_OP)
             throw RC{IX_OPEN_SCAN_NE};
 
+#ifdef IX_LOG
         printf("==== OpenScan: ");
         switch (compOp)
         {
@@ -50,6 +51,7 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle, CompOp compOp,
                 putchar(*((char *)value + i));
         }
         printf(" =====\n");
+#endif
 
         BPlus_Find(indexHandle, indexHandle.header.rootPage, compOp, value);
     }
