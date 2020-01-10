@@ -36,7 +36,7 @@ StatisticsMgr *pStatisticsMgr;
 
 #ifdef PF_LOG
 
-PF_PageHdr *pageHdr3 = nullptr;
+// PF_PageHdr *pageHdr3 = nullptr;
 
 //
 // WriteLog
@@ -319,14 +319,14 @@ RC PF_BufferMgr::AllocatePage(int fd, PageNum pageNum, char **ppBuffer)
 
 #ifdef PF_LOG
     WriteLog("Succesfully allocated page.\n");
-    if (pageNum == 3)
-    {
-        pageHdr3 = (PF_PageHdr *)bufTable[slot].pData;
-    }
-    if (pageHdr3)
-    {
-        printf("The nextFree of page 3 is %d, which is expected to be %d\n", pageHdr3->nextFree, PF_PAGE_USED);
-    }
+    // if (pageNum == 3)
+    // {
+    //     pageHdr3 = (PF_PageHdr *)bufTable[slot].pData;
+    // }
+    // if (pageHdr3)
+    // {
+    //     printf("The nextFree of page 3 is %d, which is expected to be %d\n", pageHdr3->nextFree, PF_PAGE_USED);
+    // }
 #endif
 
     // cout << "Page pinned: " << pageNum << " count: " << bufTable[slot].pinCount << endl;
@@ -413,10 +413,10 @@ RC PF_BufferMgr::UnpinPage(int fd, PageNum pageNum)
             fd, pageNum, bufTable[slot].pinCount - 1);
     WriteLog(psMessage);
 
-    if (pageHdr3)
-    {
-        printf("The nextFree of page 3 is %d, which is expected to be %d\n", pageHdr3->nextFree, PF_PAGE_USED);
-    }
+    // if (pageHdr3)
+    // {
+    //     printf("The nextFree of page 3 is %d, which is expected to be %d\n", pageHdr3->nextFree, PF_PAGE_USED);
+    // }
 #endif
 
     // If unpinning the last pin, make it the most recently used page

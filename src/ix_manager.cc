@@ -133,7 +133,7 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo, IX_IndexHandle &inde
         IX_Try(indexHandle.pFFileHandle.UnpinPage(0ll), IX_MANAGER_OPEN_BUT_UNPIN_FAIL);
 
         printf("Open an Index Manager.\n");
-        printf("innerDeg = %d, leafDeg = %d\n", indexHandle.header.innerDeg, indexHandle.header.leafDeg);
+        printf("innerEntryLength = %d, leafEntryLength = %d, innerDeg = %d, leafDeg = %d\n", indexHandle.header.innerEntryLength, indexHandle.header.leafEntryLength, indexHandle.header.innerDeg, indexHandle.header.leafDeg);
 
         indexHandle.open = true;
 

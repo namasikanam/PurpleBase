@@ -90,25 +90,24 @@ bool IX_IndexHandle::BPlus_Exists(PageNum nodePageNum, const void *pData, const 
 
     PF_PageHandle nodePageHandle;
     char *nodePageData;
-
-#ifdef IX_LOG
-    printf("IX_IndexHandle:: Get this page.\n");
-#endif
-
     IX_Try(pFFileHandle.GetThisPage(nodePageNum, nodePageHandle), IX_HANDLE_EXISTS_FAIL);
-
-#ifdef IX_LOG
-    printf("IX_IndexHandle:: Get data.\n");
-#endif
-
     IX_TryElseUnpin(nodePageHandle.GetData(nodePageData), IX_HANDLE_EXISTS_FAIL_UNPIN_FAIL, IX_HANDLE_EXISTS_FAIL, pFFileHandle, nodePageNum);
 
     bool isLeaf = *(bool *)nodePageData;
     int childTot = *(int *)(nodePageData + sizeof(bool));
+
+#ifdef IX_LOG
+    printf("IX_IndexHandle::BPlus_Exsits(nodePageNum = %d) isLeaf = %d, childTot = %d\n", nodePageNum, isLeaf, childTot);
+#endif
+
     if (!isLeaf)
     {
         for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
         {
+#ifdef IX_LOG
+            printf("IX_IndexHandle::BPlus_Exsits(nodePageNum = %d) isLeaf = %d, the page number of child %d is %lld\n", nodePageNum, isLeaf, i, *(nodePageData + j + header.attrLength));
+#endif
+
             if ((cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0)) || (i != childTot - 1 && cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0))
             { // Regular condition: [, )
                 if (BPlus_Exists(*(PageNum *)(nodePageData + j + header.attrLength), pData, rid))
@@ -183,7 +182,7 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
 
                 ++i, j += header.leafEntryLength;
                 // Now, the correct position has been found!
-                if (childTot + 1 < header.leafDeg)
+                if (childTot + 1 <= header.leafDeg)
                 { // There's some empty room remaining, just insert it!
                     // ++childTot
                     ++*(int *)(nodePageData + sizeof(bool));
@@ -357,7 +356,7 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
 
                     const void *pData = insertedChild.first;
                     PageNum pageNum = insertedChild.second;
-                    if (childTot + 1 < header.innerDeg)
+                    if (childTot + 1 <= header.innerDeg)
                     { // There's some emtpy room
                         // ++childTot
                         ++*(int *)(nodePageData + sizeof(bool));
@@ -387,13 +386,26 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
                         IX_TryElseUnpin(rightPageHandle.GetData(rightPageData), IX_HANDLE_INNER_SPLIT_FAIL_UNPIN_FAIL, IX_HANDLE_INNER_SPLIT_FAIL, pFFileHandle, rightPageNum);
                         header.modified = true;
 
-                        // printf("Trying to split an inner node.\n");
+#ifdef IX_LOG
+                        printf("Trying to split an inner node %lld.\n", nodePageNum);
+
+                        printf("Before split, the children of %lld are ", nodePageNum);
+                        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
+                        {
+                            printf("%d ", *(nodePageData + j + header.attrLength));
+                        }
+                        puts("");
+#endif
 
                         // Write the right data to the new page
                         *(bool *)rightPageData = false;
                         *(int *)(rightPageData + sizeof(bool)) = (header.innerDeg + 1) - (header.innerDeg + 1) / 2;
                         if (i >= (header.innerDeg + 1) / 2)
                         { // The inserted entry located in the right page
+#ifdef IX_LOG
+                            printf("IX_IndexHandle::BPlus_Insert(nodePageNum = %lld) The inserted entry located in the right page.\n", nodePageNum);
+#endif
+
                             // Copy entries before the inserted entry
                             memcpy(rightPageData + sizeof(bool) + sizeof(int), nodePageData + sizeof(bool) + sizeof(int) + (header.innerDeg + 1) / 2 * header.innerEntryLength, (i - (header.innerDeg + 1) / 2) * header.innerEntryLength);
 
@@ -403,6 +415,13 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
 
                             // Copy entries after the inserted entry
                             memcpy(rightPageData + j1 + header.innerEntryLength, nodePageData + j, (childTot - i) * header.innerEntryLength);
+
+#ifdef IX_LOG
+                            for (int i = 0, j = sizeof(bool) + sizeof(int); i < (header.innerDeg + 1) - (header.innerDeg + 1) / 2; ++i, j += header.innerEntryLength)
+                            {
+                                printf("IX_IndexHandle::BPlus_Insert(nodePageNum = %d) rightPageNum = %lld, after split, the child %d of page %lld is %d\n", nodePageNum, rightPageNum, i, rightPageNum, *(rightPageData + j + header.attrLength));
+                            }
+#endif
                         }
                         else
                         { // The inserted entry located in the left page
@@ -477,6 +496,11 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
                 }
                 else
                 {
+                    if (i == -1 && cmp(pData, nodePageData + j + header.innerEntryLength) < 0)
+                    {
+                        memcpy(nodePageData + j + header.innerEntryLength, pData, header.attrLength);
+                    }
+
                     IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_INSERT_BUT_UNPIN_FAIL);
                     return make_pair(nullptr, -1);
                 }
