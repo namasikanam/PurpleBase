@@ -27,13 +27,15 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid)
             throw RC{IX_HANDLE_INSERT_EXISTS};
         else
         {
-            // printf("==== Insert:");
-            // if (header.attrType == STRING)
-            // {
-            //     for (int i = 0; i < header.attrLength; ++i)
-            //         putchar(*((char *)pData + i));
-            // }
-            // printf(" =====\n");
+#ifdef IX_LOG
+            printf("==== Insert:");
+            if (header.attrType == STRING)
+            {
+                for (int i = 0; i < header.attrLength; ++i)
+                    putchar(*((char *)pData + i));
+            }
+            printf(" =====\n");
+#endif
 
             BPlus_Insert(header.rootPage, pData, rid);
         }
@@ -85,7 +87,7 @@ RC IX_IndexHandle::ForcePages()
 bool IX_IndexHandle::BPlus_Exists(PageNum nodePageNum, const void *pData, const RID &rid)
 {
 #ifdef IX_LOG
-    printf("IX_IndexHandle:: BPlus_Exists(nodePageNum = %lld)\n", nodePageNum);
+    // printf("IX_IndexHandle:: BPlus_Exists(nodePageNum = %lld)\n", nodePageNum);
 #endif
 
     PF_PageHandle nodePageHandle;
@@ -97,7 +99,7 @@ bool IX_IndexHandle::BPlus_Exists(PageNum nodePageNum, const void *pData, const 
     int childTot = *(int *)(nodePageData + sizeof(bool));
 
 #ifdef IX_LOG
-    printf("IX_IndexHandle::BPlus_Exsits(nodePageNum = %d) isLeaf = %d, childTot = %d\n", nodePageNum, isLeaf, childTot);
+    // printf("IX_IndexHandle::BPlus_Exsits(nodePageNum = %d) isLeaf = %d, childTot = %d\n", nodePageNum, isLeaf, childTot);
 #endif
 
     if (!isLeaf)
@@ -105,7 +107,7 @@ bool IX_IndexHandle::BPlus_Exists(PageNum nodePageNum, const void *pData, const 
         for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
         {
 #ifdef IX_LOG
-            printf("IX_IndexHandle::BPlus_Exsits(nodePageNum = %d) isLeaf = %d, the page number of child %d is %lld\n", nodePageNum, isLeaf, i, *(nodePageData + j + header.attrLength));
+            // printf("IX_IndexHandle::BPlus_Exsits(nodePageNum = %d) isLeaf = %d, the page number of child %d is %lld\n", nodePageNum, isLeaf, i, *(nodePageData + j + header.attrLength));
 #endif
 
             if ((cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0)) || (i != childTot - 1 && cmp(pData, nodePageData + j) == 0 && cmp(pData, nodePageData + j + header.innerEntryLength) == 0))
@@ -141,7 +143,7 @@ bool IX_IndexHandle::BPlus_Exists(PageNum nodePageNum, const void *pData, const 
     }
 
 #ifdef IX_LOG
-    printf("IX_IndexHandle::BPlus_Exists: does not exist!\n");
+    // printf("IX_IndexHandle::BPlus_Exists: does not exist!\n");
 #endif
 
     IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_NOT_EXISTS_BUT_UNPIN_FAIL);
@@ -186,8 +188,10 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
                 { // There's some empty room remaining, just insert it!
                     // ++childTot
                     ++*(int *)(nodePageData + sizeof(bool));
+
                     // Move the right ones by one unit
                     memmove(nodePageData + j + header.leafEntryLength, nodePageData + j, header.leafEntryLength * (childTot - i));
+
                     // Copy the inserting information
                     memcpy(nodePageData + j, pData, header.attrLength);
                     *(RID *)(nodePageData + j + header.attrLength) = rid;
@@ -196,11 +200,14 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
                     return make_pair(nullptr, -1);
                 }
                 else
-                { // No more room! A split is going on!
+                {   // No more room! A split is going on!
                     // Create a new node as the right one: [0, (leafDeg + 1) / 2)
                     // The original node will be the left one: [(leafDeg + 1) / 2, leafDeg + 1)
 
-                    // printf("A split starts!\n");
+#ifdef IX_LOG
+                    printf("A split of a CHILD starts!\n");
+                    printf("The data will be inserted at %d\n", i);
+#endif
 
                     // Allocate a new page
                     PF_PageHandle rightPageHandle;
@@ -349,7 +356,17 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
             // Find the correct child to insert
             if ((i == -1 && cmp(pData, nodePageData + j + header.innerEntryLength) < 0) || (i >= 0 && cmp(pData, nodePageData + j) >= 0 && (i == childTot - 1 || cmp(pData, nodePageData + j + header.innerEntryLength) < 0)))
             {
-                pair<const void *, PageNum> insertedChild = BPlus_Insert(*(PageNum *)(nodePageData + j + (i == -1 ? header.innerEntryLength : 0) + header.attrLength), pData, rid);
+#ifdef IX_LOG
+                printf("At page %d, insert in child %d (page %d).\n", nodePageNum, i, *(PageNum *)(nodePageData + j + (i == -1 ? header.innerEntryLength : 0) + header.attrLength));
+#endif
+                if (i == -1)
+                {
+                    ++i;
+                    j += header.innerEntryLength;
+                    memcpy(nodePageData + j, pData, header.attrLength);
+                }
+
+                pair<const void *, PageNum> insertedChild = BPlus_Insert(*(PageNum *)(nodePageData + j + header.attrLength), pData, rid);
                 if (insertedChild.first != nullptr)
                 { // If the inserted child splits
                     ++i, j += header.innerEntryLength;
@@ -496,11 +513,6 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
                 }
                 else
                 {
-                    if (i == -1 && cmp(pData, nodePageData + j + header.innerEntryLength) < 0)
-                    {
-                        memcpy(nodePageData + j + header.innerEntryLength, pData, header.attrLength);
-                    }
-
                     IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_INSERT_BUT_UNPIN_FAIL);
                     return make_pair(nullptr, -1);
                 }
@@ -608,6 +620,44 @@ bool IX_IndexHandle::BPlus_Update(PageNum nodePageNum, const void *pData, const 
     return false;
 }
 
+void IX_IndexHandle::BPlus_Print(PageNum nodePageNum)
+{
+    PF_PageHandle nodePageHandle;
+    char *nodePageData;
+    pFFileHandle.GetThisPage(nodePageNum, nodePageHandle);
+    nodePageHandle.GetData(nodePageData);
+
+    bool isLeaf = *(bool *)nodePageData;
+    int childTot = *(int *)(nodePageData + sizeof(bool));
+
+    printf("Page %lld is %s, the children are: ", nodePageNum, isLeaf ? "a child" : "an inner node");
+
+    if (!isLeaf)
+    {
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
+        {
+            InnerEntry_Print(nodePageData + j);
+            putchar(' ');
+        }
+        puts("");
+
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.innerEntryLength)
+        {
+            BPlus_Print(*(PageNum *)(nodePageData + j + header.attrLength));
+        }
+    }
+    else
+    {
+        for (int i = 0, j = sizeof(bool) + sizeof(int); i < childTot; ++i, j += header.leafEntryLength)
+        {
+            LeafEntry_Print(nodePageData + j);
+            putchar(' ');
+        }
+        puts("");
+    }
+    pFFileHandle.UnpinPage(nodePageNum);
+}
+
 int IX_IndexHandle::cmp(const void *data1, const void *data2) const
 {
     switch (header.attrType)
@@ -637,4 +687,48 @@ int IX_IndexHandle::cmp(const void *data1, const void *data2) const
         return 0;
     }
     return 0; // This command won't run if everything works normally
+}
+
+void IX_IndexHandle::InnerEntry_Print(void *data)
+{
+    printf("(");
+    switch (header.attrType)
+    {
+    case INT:
+        printf("%d", *(int *)data);
+        break;
+    case FLOAT:
+        printf("%f", *(float *)data);
+        break;
+    case STRING:
+        for (int k = 0; k < header.attrLength; ++k)
+        {
+            char c = *(char *)(data + k);
+            if (c != ' ')
+                putchar(c);
+        }
+    };
+    printf(", %lld)", *(PageNum *)(data + header.attrLength));
+}
+void IX_IndexHandle::LeafEntry_Print(void *data)
+{
+    printf("(");
+    switch (header.attrType)
+    {
+    case INT:
+        printf("%d", *(int *)data);
+        break;
+    case FLOAT:
+        printf("%f", *(float *)data);
+        break;
+    case STRING:
+        for (int k = 0; k < header.attrLength; ++k)
+        {
+            char c = *(char *)(data + k);
+            if (c != ' ')
+                putchar(c);
+        }
+    };
+    RID rid = *(RID *)(data + header.attrLength);
+    printf(", {pageNum = %lld, slotNum = %d, viable = %d}) ", rid.pageNum, rid.slotNum, rid.viable);
 }

@@ -37,7 +37,19 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle, CompOp compOp,
         if (compOp == NE_OP)
             throw RC{IX_OPEN_SCAN_NE};
 
-        printf("OpenScan: Find in the B+ tree.\n");
+        printf("==== OpenScan: ");
+        switch (compOp)
+        {
+        case EQ_OP:
+            printf("[EQ] ");
+            break;
+        }
+        if (indexHandle.header.attrType == STRING)
+        {
+            for (int i = 0; i < indexHandle.header.attrLength; ++i)
+                putchar(*((char *)value + i));
+        }
+        printf(" =====\n");
 
         BPlus_Find(indexHandle, indexHandle.header.rootPage, compOp, value);
     }

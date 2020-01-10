@@ -5,6 +5,7 @@
 //
 
 #include "rm_rid.h"
+#include <cstdio>
 
 // Default constructor
 RID::RID()
@@ -28,6 +29,8 @@ RID &RID::operator=(const RID &rid)
     // Check for self-assignment
     if (this != &rid)
     {
+        // printf("An assignment of rid {%lld, %d, %d} is triggered.\n", rid.pageNum, rid.slotNum, rid.viable);
+
         // Copy contents
         this->pageNum = rid.pageNum;
         this->slotNum = rid.slotNum;
