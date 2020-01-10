@@ -28,8 +28,8 @@ CFLAGS         = -g -O2 -Wall $(STATS_OPTION) $(LOG_OPTION) $(INC_DIRS) --std=c+
 # flag at all!
 STATS_OPTION   = -DPF_STATS
 
-LOG_OPTION = # -DIX_LOG
-# -DPF_LOG -DRM_LOG -DIX_LOG
+LOG_OPTION = -DRM_LOG -DSM_LOG
+# -DPF_LOG -DRM_LOG -DIX_LOG -DSM_LOG
 
 #
 # Students: Please modify SOURCES variables as needed.
@@ -46,7 +46,7 @@ QL_SOURCES     = ql_manager.cc ql_operators.cc ql_error.cc
 EX_SOURCES	   = ex_commlayer.cc ex_error.cc
 UTILS_SOURCES  = dbcreate.cc dbdestroy.cc redbase.cc
 PARSER_SOURCES = scan.c parse.c nodes.c interp.c
-TESTER_SOURCES = ix_test.cc
+TESTER_SOURCES = rm_test.cc
 #parser_test.cc pf_test1.cc pf_test2.cc pf_test3.cc rm_test.cc ix_test.cc
 
 PF_OBJECTS     = $(addprefix $(BUILD_DIR), $(PF_SOURCES:.cc=.o))
@@ -69,9 +69,7 @@ LIBRARY_SM     = $(LIB_DIR)libsm.a
 LIBRARY_QL     = $(LIB_DIR)libql.a
 LIBRARY_EX     = $(LIB_DIR)libex.a
 LIBRARY_PARSER = $(LIB_DIR)libparser.a
-LIBRARIES      = $(LIBRARY_PF) $(LIBRARY_RM) $(LIBRARY_IX)
-
-# $(LIBRARY_IX) $(LIBRARY_SM) $(LIBRARY_QL) $(LIBRARY_EX) $(LIBRARY_PARSER)
+LIBRARIES      = $(LIBRARY_PF) $(LIBRARY_RM) $(LIBRARY_IX) $(LIBRARY_SM) $(LIBRARY_PARSER)
 
 UTILS          = $(UTILS_SOURCES:.cc=)
 TESTS          = $(TESTER_SOURCES:.cc=)
