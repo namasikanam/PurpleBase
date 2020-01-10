@@ -132,8 +132,10 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo, IX_IndexHandle &inde
         indexHandle.header.leafDeg = (PF_PAGE_SIZE - sizeof(bool) - sizeof(int)) / indexHandle.header.leafEntryLength;
         IX_Try(indexHandle.pFFileHandle.UnpinPage(0ll), IX_MANAGER_OPEN_BUT_UNPIN_FAIL);
 
+#ifdef IX_LOG
         printf("Open an Index Manager.\n");
         printf("innerEntryLength = %d, leafEntryLength = %d, innerDeg = %d, leafDeg = %d\n", indexHandle.header.innerEntryLength, indexHandle.header.leafEntryLength, indexHandle.header.innerDeg, indexHandle.header.leafDeg);
+#endif
 
         indexHandle.open = true;
 

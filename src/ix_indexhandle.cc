@@ -28,12 +28,8 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid)
         else
         {
 #ifdef IX_LOG
-            printf("==== Insert:");
-            if (header.attrType == STRING)
-            {
-                for (int i = 0; i < header.attrLength; ++i)
-                    putchar(*((char *)pData + i));
-            }
+            printf("==== Insert: ");
+            Attr_Print(pData);
             printf(" =====\n");
 #endif
 
@@ -53,6 +49,12 @@ RC IX_IndexHandle::DeleteEntry(void *pData, const RID &rid)
     {
         if (!open)
             throw RC{IX_HANDLE_CLOSED};
+
+#ifdef IX_LOG
+        printf("==== Delete: ");
+        Attr_Print(pData);
+        printf(" =====\n");
+#endif
 
         // It's not necessary that check if [BPlus_Exists],
         // since the [BPlus_Delete] is almost the same as [BPlus_Exists].
@@ -620,7 +622,7 @@ bool IX_IndexHandle::BPlus_Update(PageNum nodePageNum, const void *pData, const 
     return false;
 }
 
-void IX_IndexHandle::BPlus_Print(PageNum nodePageNum)
+void IX_IndexHandle::BPlus_Print(PageNum nodePageNum) const
 {
     PF_PageHandle nodePageHandle;
     char *nodePageData;
@@ -689,30 +691,22 @@ int IX_IndexHandle::cmp(const void *data1, const void *data2) const
     return 0; // This command won't run if everything works normally
 }
 
-void IX_IndexHandle::InnerEntry_Print(void *data)
+void IX_IndexHandle::InnerEntry_Print(void *data) const
 {
     printf("(");
-    switch (header.attrType)
-    {
-    case INT:
-        printf("%d", *(int *)data);
-        break;
-    case FLOAT:
-        printf("%f", *(float *)data);
-        break;
-    case STRING:
-        for (int k = 0; k < header.attrLength; ++k)
-        {
-            char c = *(char *)(data + k);
-            if (c != ' ')
-                putchar(c);
-        }
-    };
+    Attr_Print(data);
     printf(", %lld)", *(PageNum *)(data + header.attrLength));
 }
-void IX_IndexHandle::LeafEntry_Print(void *data)
+void IX_IndexHandle::LeafEntry_Print(void *data) const
 {
     printf("(");
+    Attr_Print(data);
+    RID rid = *(RID *)(data + header.attrLength);
+    printf(", {pageNum = %lld, slotNum = %d, viable = %d}) ", rid.pageNum, rid.slotNum, rid.viable);
+}
+
+void IX_IndexHandle::Attr_Print(void *data) const
+{
     switch (header.attrType)
     {
     case INT:
@@ -729,6 +723,4 @@ void IX_IndexHandle::LeafEntry_Print(void *data)
                 putchar(c);
         }
     };
-    RID rid = *(RID *)(data + header.attrLength);
-    printf(", {pageNum = %lld, slotNum = %d, viable = %d}) ", rid.pageNum, rid.slotNum, rid.viable);
 }

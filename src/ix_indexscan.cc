@@ -45,11 +45,7 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle, CompOp compOp,
             printf("[EQ] ");
             break;
         }
-        if (indexHandle.header.attrType == STRING)
-        {
-            for (int i = 0; i < indexHandle.header.attrLength; ++i)
-                putchar(*((char *)value + i));
-        }
+        indexHandle.Attr_Print(value);
         printf(" =====\n");
 #endif
 
@@ -144,6 +140,8 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 {
     try
     {
+        while (!scan.empty() && !scan.front().viable)
+            scan.pop_front();
         if (scan.empty())
             throw RC{IX_EOF};
         rid = scan.front();

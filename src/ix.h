@@ -96,7 +96,7 @@ public:
     bool BPlus_Delete(PageNum nodePageNum, const void *pData, const RID &rid);
     bool BPlus_Update(PageNum nodePageNum, const void *pData, const RID &origin_rid, const RID &updated_rid);
 
-    void BPlus_Print(PageNum nodePageNum);
+    void BPlus_Print(PageNum nodePageNum) const;
 
     // Utilities
     // Compare two key of the current index.
@@ -105,8 +105,9 @@ public:
     //        0,  if [data1] == [data2]
     //        1,  if [data1] > [data2]
     int cmp(const void *data1, const void *data2) const;
-    void InnerEntry_Print(void *data);
-    void LeafEntry_Print(void *data);
+    void InnerEntry_Print(void *data) const;
+    void LeafEntry_Print(void *data) const;
+    void Attr_Print(void *data) const;
 };
 
 //
