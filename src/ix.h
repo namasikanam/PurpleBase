@@ -124,6 +124,10 @@ public:
                 CompOp compOp,
                 void *value,
                 ClientHint pinHint = NO_HINT);
+    // This is for test.
+    RC OpenScan(const IX_IndexHandle &indexHandle,
+                void *value,
+                ClientHint pinHint = NO_HINT);
 
     // Get the next matching entry return IX_EOF if no more matching
     // entries.

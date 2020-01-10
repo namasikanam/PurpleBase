@@ -136,6 +136,13 @@ void IX_IndexScan::BPlus_Find(const IX_IndexHandle &indexHandle, PageNum nodePag
     IX_Try(indexHandle.pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_NOT_EXISTS_BUT_UNPIN_FAIL);
 }
 
+RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
+                          void *value,
+                          ClientHint pinHint)
+{
+    return OpenScan(indexHandle, EQ_OP, value, pinHint);
+}
+
 RC IX_IndexScan::GetNextEntry(RID &rid)
 {
     try
