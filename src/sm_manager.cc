@@ -278,6 +278,10 @@ RC SM_Manager::CreateTable(const char *relName, int attrCount, AttrInfo *attribu
 
         // 4) Create a RM file for the relation
         SM_Try_RM(rMManager.CreateFile(relName, recordSize), SM_CREATE_TABLE_FAIL);
+
+        // Flush the system catalogs
+        SM_Try_RM(relcatRMFH.ForcePages(), SM_CREATE_TABLE_FAIL);
+        SM_Try_RM(attrcatRMFH.ForcePages(), SM_CREATE_TABLE_FAIL);
     }
     catch (RC rc)
     {
@@ -350,6 +354,13 @@ RC SM_Manager::DropTable(const char *relName)
                 // Check if index exists
                 SM_Try_RM_Or_Close_Scan(rec.GetData(recordData), attrcatFS, SM_DROP_TABLE_ATTR_CAT_SCAN_FAIL, SM_DROP_TABLE_ATTR_CAT_SCAN_FAIL_CLOSE_SCAN_FAIL);
                 SM_AttrcatRecord *acRecord = (SM_AttrcatRecord *)recordData;
+
+                if (debug)
+                {
+                    printf("When drop table %s,\n", relName);
+                    printf("THe indexNo of attr %s is %d\n", acRecord->attrName, acRecord->indexNo);
+                }
+
                 if (acRecord->indexNo != -1)
                 {
                     // Destroy the index
@@ -363,6 +374,10 @@ RC SM_Manager::DropTable(const char *relName)
 
         // 4) Destroy the RM file for the relation
         SM_Try_RM(rMManager.DestroyFile(relName), SM_DROP_TABLE_FAIL);
+
+        // Flush the system catalogs
+        SM_Try_RM(relcatRMFH.ForcePages(), SM_DROP_TABLE_FAIL);
+        SM_Try_RM(attrcatRMFH.ForcePages(), SM_DROP_TABLE_FAIL);
     }
     catch (RC rc)
     {
@@ -449,6 +464,10 @@ RC SM_Manager::CreateIndex(const char *relName, const char *attrName)
             }
         }
         SM_Try_RM(attrcatFS.CloseScan(), SM_CREATE_INDEX_ATTR_CAT_SCAN_FAIL);
+
+        // Flush the system catalogs
+        SM_Try_RM(relcatRMFH.ForcePages(), SM_CREATE_INDEX_FAIL);
+        SM_Try_RM(attrcatRMFH.ForcePages(), SM_CREATE_INDEX_FAIL);
 
         // Create and open the index file
         SM_Try_IX(iXManager.CreateIndex(relName, position, attrType, attrLength), SM_CREATE_INDEX_FAIL);
@@ -572,6 +591,10 @@ RC SM_Manager::DropIndex(const char *relName, const char *attrName)
 
         // Destroy the index file
         SM_Try_IX(iXManager.DestroyIndex(relName, position), SM_DROP_INDEX_ATTR_CAT_SCAN_FAIL);
+
+        // Flush the system catalogs
+        SM_Try_RM(relcatRMFH.ForcePages(), SM_DROP_INDEX_FAIL);
+        SM_Try_RM(attrcatRMFH.ForcePages(), SM_DROP_INDEX_FAIL);
     }
     catch (RC rc)
     {
@@ -624,6 +647,22 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
 
         DataAttrInfo attributes[attrCount];
         GetAttrInfo(relName, attrCount, (void *)attributes);
+
+        if (debug)
+        {
+            printf("Before load, the attributes = \n");
+            for (int i = 0; i < attrCount; ++i)
+            {
+                printf("{\n");
+                printf("\trelName = %s\n", attributes[i].relName);
+                printf("\tattrName = %s\n", attributes[i].attrName);
+                printf("\toffset = %d\n", attributes[i].offset);
+                printf("\tattrType = %s\n", attributes[i].attrType == INT ? "INT" : attributes[i].attrType == FLOAT ? "FLOAT" : "STRING");
+                printf("\tattrLength = %d\n", attributes[i].attrLength);
+                printf("\tindexNo = %d\n", attributes[i].indexNo);
+                printf("}\n");
+            }
+        }
 
         // Open the data file
         ifstream dataFile(fileName);
@@ -761,6 +800,9 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                 {
                     if (attributes[i].indexNo != -1)
                     {
+                        printf("After load %s from the data file %s, the index %d is updated as:\n", relName, fileName, attributes[i].indexNo);
+                        ixIH[i].BPlus_Print(ixIH[i].header.rootPage);
+
                         SM_Try_IX(iXManager.CloseIndex(ixIH[i]), SM_LOAD_FAIL_CLOSE_FAIL);
                     }
                 }

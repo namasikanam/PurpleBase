@@ -24,8 +24,9 @@ RC IX_IndexHandle::InsertEntry(const void *pData, const RID &rid)
             throw RC{IX_HANDLE_CLOSED};
 
 #ifdef IX_LOG
-        printf("==== Insert: ");
+        printf("==== Insert: pData = ");
         Attr_Print(pData);
+        printf(", rid = (%lld, %d)", rid.pageNum, rid.slotNum);
         printf(" =====\n");
 #endif
 
@@ -51,8 +52,9 @@ RC IX_IndexHandle::DeleteEntry(const void *pData, const RID &rid)
             throw RC{IX_HANDLE_CLOSED};
 
 #ifdef IX_LOG
-        printf("==== Delete: ");
+        printf("==== Delete: pData = ");
         Attr_Print(pData);
+        printf(", rid = (%lld, %d)", rid.pageNum, rid.slotNum);
         printf(" =====\n");
 #endif
 
@@ -566,6 +568,8 @@ bool IX_IndexHandle::BPlus_Delete(PageNum nodePageNum, const void *pData, const 
             if (cmp(pData, nodePageData + j) == 0 && ((RID *)(nodePageData + j + header.attrLength))->viable)
             {
                 ((RID *)(nodePageData + j + header.attrLength))->viable = false;
+
+                
                 IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_DELETE_LEAF_BUT_UNPIN_FAIL);
                 return true;
             }
@@ -705,20 +709,20 @@ void IX_IndexHandle::LeafEntry_Print(void *data) const
     printf(", {pageNum = %lld, slotNum = %d, viable = %d}) ", rid.pageNum, rid.slotNum, rid.viable);
 }
 
-void IX_IndexHandle::Attr_Print(void *data) const
+void IX_IndexHandle::Attr_Print(const void *data) const
 {
     switch (header.attrType)
     {
     case INT:
-        printf("%d", *(int *)data);
+        printf("%d", *(const int *)data);
         break;
     case FLOAT:
-        printf("%f", *(float *)data);
+        printf("%f", *(const float *)data);
         break;
     case STRING:
         for (int k = 0; k < header.attrLength; ++k)
         {
-            char c = *(char *)(data + k);
+            char c = *(const char *)(data + k);
             if (c != ' ')
                 putchar(c);
         }

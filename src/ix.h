@@ -107,7 +107,7 @@ public:
     int cmp(const void *data1, const void *data2) const;
     void InnerEntry_Print(void *data) const;
     void LeafEntry_Print(void *data) const;
-    void Attr_Print(void *data) const;
+    void Attr_Print(const void *data) const;
 };
 
 //

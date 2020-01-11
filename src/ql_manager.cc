@@ -953,7 +953,7 @@ DataAttrInfo QL_Manager::checkAttr(RelAttr &attr, const char *relName, int attrC
     }
     else
     {
-        strcpy(attr.relName, relName);
+        attr.relName = (char *)relName;
         for (int i = attrCount; i--;)
             if (strcmp(attributes[i].attrName, attr.attrName) == 0)
             {
