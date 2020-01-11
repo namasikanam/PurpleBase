@@ -461,7 +461,7 @@ RC SM_Manager::CreateIndex(const char *relName, const char *attrName)
         SM_Try_RM(rmFS.OpenScan(rmFH, INT, 4, 0, NO_OP, NULL), SM_CREATE_INDEX_RM_SCAN_FAIL);
         for (RC rc = OK_RC; rc != RM_EOF;)
         {
-            rc = attrcatFS.GetNextRec(rec);
+            rc = rmFS.GetNextRec(rec);
             if (rc != 0 && rc != RM_EOF)
             {
                 RM_PrintError(rc);
@@ -528,7 +528,7 @@ RC SM_Manager::DropIndex(const char *relName, const char *attrName)
         RM_FileScan relcatFS;
         RM_Record rec;
         SM_Try_RM(relcatFS.OpenScan(relcatRMFH, STRING, MAXNAME, 0, EQ_OP, relName), SM_DROP_INDEX_REL_CAT_SCAN_FAIL);
-        SM_Try_RM_Or_Close_Scan(relcatFS.GetNextRec(rec), relcatFS, SM_DROP_INDEX_REL_CAT_SCAN_FAIL, SM_DROP_INDEX_REL_CAT_SCAN_FAIL_CLOSE_SCAN_FAIL, RM_EOF);
+        SM_Try_RM_Or_Close_Scan(relcatFS.GetNextRec(rec), relcatFS, SM_DROP_INDEX_REL_CAT_SCAN_FAIL, SM_DROP_INDEX_REL_CAT_SCAN_FAIL_CLOSE_SCAN_FAIL);
         char *recordData;
         SM_Try_RM_Or_Close_Scan(rec.GetData(recordData), relcatFS, SM_DROP_INDEX_REL_CAT_SCAN_FAIL, SM_DROP_INDEX_REL_CAT_SCAN_FAIL_CLOSE_SCAN_FAIL);
         --((SM_RelcatRecord *)recordData)->indexCount;
