@@ -16,7 +16,7 @@
 /*
  * size of buffer of strings
  */
-#define MAXCHAR		5000
+#define MAXCHAR 5000
 
 /*
  * buffer for string allocation
@@ -32,17 +32,18 @@ static char *mk_string(char *s, int len);
  */
 static char *string_alloc(int len)
 {
-   char *s;
+    char *s;
 
-   if(charptr + len > MAXCHAR){
-      fprintf(stderr, "out of memory\n");
-      exit(1);
-   }
+    if (charptr + len > MAXCHAR)
+    {
+        fprintf(stderr, "out of memory\n");
+        exit(1);
+    }
 
-   s = charpool + charptr;
-   charptr += len;
+    s = charpool + charptr;
+    charptr += len;
 
-   return s;
+    return s;
 }
 
 /*
@@ -76,83 +77,87 @@ void reset_scanner(void)
  */
 static int get_id(char *s)
 {
-   static char string[MAXSTRINGLEN];
-   int len;
+    static char string[MAXSTRINGLEN];
+    int len;
 
-   if((len = lower(string, s, MAXSTRINGLEN)) == MAXSTRINGLEN)
-      return NOTOKEN;
+    if ((len = lower(string, s, MAXSTRINGLEN)) == MAXSTRINGLEN)
+        return NOTOKEN;
 
-   /*  SM layer lexemes */
+    /*  SM layer lexemes */
 
-   if(!strcmp(string, "create"))
-      return yylval.ival = RW_CREATE;
-   if(!strcmp(string, "drop"))
-      return yylval.ival = RW_DROP;
-   if(!strcmp(string, "table"))
-      return yylval.ival = RW_TABLE;
-   if(!strcmp(string, "index"))
-      return yylval.ival = RW_INDEX;
-   if(!strcmp(string, "load"))
-      return yylval.ival = RW_LOAD;
-   if(!strcmp(string, "help"))
-      return yylval.ival = RW_HELP;
-   if(!strcmp(string, "exit"))
-      return yylval.ival = RW_EXIT;
-   if(!strcmp(string, "print"))
-      return yylval.ival = RW_PRINT;
-   if(!strcmp(string, "set"))
-      return yylval.ival = RW_SET;
+    if (!strcmp(string, "create"))
+        return yylval.ival = RW_CREATE;
+    if (!strcmp(string, "drop"))
+        return yylval.ival = RW_DROP;
+    if (!strcmp(string, "table"))
+        return yylval.ival = RW_TABLE;
+    if (!strcmp(string, "database"))
+        return yylval.ival = RW_DATABASE;
+    if (!strcmp(string, "index"))
+        return yylval.ival = RW_INDEX;
+    if (!strcmp(string, "load"))
+        return yylval.ival = RW_LOAD;
+    if (!strcmp(string, "help"))
+        return yylval.ival = RW_HELP;
+    if (!strcmp(string, "show"))
+        return yylval.ival = RW_SHOW;
+    if (!strcmp(string, "exit"))
+        return yylval.ival = RW_EXIT;
+    if (!strcmp(string, "print"))
+        return yylval.ival = RW_PRINT;
+    if (!strcmp(string, "set"))
+        return yylval.ival = RW_SET;
 
-   if(!strcmp(string, "and"))
-      return yylval.ival = RW_AND;
+    if (!strcmp(string, "and"))
+        return yylval.ival = RW_AND;
 
-   if(!strcmp(string, "into"))
-      return yylval.ival = RW_INTO;
-   if(!strcmp(string, "values"))
-      return yylval.ival = RW_VALUES;
+    if (!strcmp(string, "into"))
+        return yylval.ival = RW_INTO;
+    if (!strcmp(string, "values"))
+        return yylval.ival = RW_VALUES;
 
+    /*  QL layer lexemes */
+    if (!strcmp(string, "select"))
+        return yylval.ival = RW_SELECT;
+    if (!strcmp(string, "from"))
+        return yylval.ival = RW_FROM;
+    if (!strcmp(string, "where"))
+        return yylval.ival = RW_WHERE;
+    if (!strcmp(string, "insert"))
+        return yylval.ival = RW_INSERT;
+    if (!strcmp(string, "delete"))
+        return yylval.ival = RW_DELETE;
+    if (!strcmp(string, "update"))
+        return yylval.ival = RW_UPDATE;
 
-   /*  QL layer lexemes */
-   if(!strcmp(string, "select"))
-      return yylval.ival = RW_SELECT;
-   if(!strcmp(string, "from"))
-      return yylval.ival = RW_FROM;
-   if(!strcmp(string, "where"))
-      return yylval.ival = RW_WHERE;
-   if(!strcmp(string, "insert"))
-      return yylval.ival = RW_INSERT;
-   if(!strcmp(string, "delete"))
-      return yylval.ival = RW_DELETE;
-   if(!strcmp(string, "update"))
-      return yylval.ival = RW_UPDATE;
+    /* EX lexemes */
+    if (!strcmp(string, "distribute"))
+    {
+        return yylval.ival = RW_DISTRIBUTED;
+    }
 
-   /* EX lexemes */
-   if (!strcmp(string, "distribute")) {
-      return yylval.ival = RW_DISTRIBUTED;
-   }
+    /* IO Statistics lexemes */
+    if (!strcmp(string, "reset"))
+        return yylval.ival = RW_RESET;
+    if (!strcmp(string, "io"))
+        return yylval.ival = RW_IO;
 
-   /* IO Statistics lexemes */
-   if(!strcmp(string, "reset"))
-      return yylval.ival = RW_RESET;
-   if(!strcmp(string, "io"))
-      return yylval.ival = RW_IO;
+    if (!strcmp(string, "resize"))
+        return yylval.ival = RW_RESIZE;
+    if (!strcmp(string, "buffer"))
+        return yylval.ival = RW_BUFFER;
 
-   if(!strcmp(string, "resize"))
-      return yylval.ival = RW_RESIZE;
-   if(!strcmp(string, "buffer"))
-      return yylval.ival = RW_BUFFER;
+    if (!strcmp(string, "queryplans"))
+        return yylval.ival = RW_QUERY_PLAN;
+    if (!strcmp(string, "on"))
+        return yylval.ival = RW_ON;
+    if (!strcmp(string, "off"))
+        return yylval.ival = RW_OFF;
 
-   if(!strcmp(string, "queryplans"))
-      return yylval.ival = RW_QUERY_PLAN;
-   if(!strcmp(string, "on"))
-      return yylval.ival = RW_ON;
-   if(!strcmp(string, "off"))
-      return yylval.ival = RW_OFF;
+    /*  unresolved lexemes are strings */
 
-   /*  unresolved lexemes are strings */
-
-   yylval.sval = mk_string(s, len);
-   return T_STRING;
+    yylval.sval = mk_string(s, len);
+    return T_STRING;
 }
 
 /*
@@ -165,16 +170,17 @@ static int get_id(char *s)
  */
 static int lower(char *dst, char *src, int max)
 {
-   int len;
+    int len;
 
-   for(len = 0; len < max && src[len] != '\0'; ++len){
-      dst[len] = src[len];
-      if(src[len] >= 'A' && src[len] <= 'Z')
-         dst[len] += 'a' - 'A';
-   }
-   dst[len] = '\0';
+    for (len = 0; len < max && src[len] != '\0'; ++len)
+    {
+        dst[len] = src[len];
+        if (src[len] >= 'A' && src[len] <= 'Z')
+            dst[len] += 'a' - 'A';
+    }
+    dst[len] = '\0';
 
-   return len;
+    return len;
 }
 
 /*
@@ -186,11 +192,11 @@ static int lower(char *dst, char *src, int max)
  */
 static char *get_qstring(char *qstring, int len)
 {
-   /* replace ending quote with \0 */
-   qstring[len - 1] = '\0';
+    /* replace ending quote with \0 */
+    qstring[len - 1] = '\0';
 
-   /* copy everything following beginning quote */
-   return mk_string(qstring + 1, len - 2);
+    /* copy everything following beginning quote */
+    return mk_string(qstring + 1, len - 2);
 }
 
 /*
@@ -202,15 +208,16 @@ static char *get_qstring(char *qstring, int len)
  */
 static char *mk_string(char *s, int len)
 {
-   char *copy;
+    char *copy;
 
-   /* allocate space for new string */
-   if((copy = string_alloc(len + 1)) == NULL){
-      printf("out of string space\n");
-      exit(1);
-   }
+    /* allocate space for new string */
+    if ((copy = string_alloc(len + 1)) == NULL)
+    {
+        printf("out of string space\n");
+        exit(1);
+    }
 
-   /* copy the string */
-   strncpy(copy, s, len + 1);
-   return copy;
+    /* copy the string */
+    strncpy(copy, s, len + 1);
+    return copy;
 }

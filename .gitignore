@@ -41,7 +41,6 @@ src/*
 !src/dbdestroy.cc
 !src/parser.h
 !src/parse.y
-!src/parse.c
 !src/scan.l
 !src/scanhelp.c
 !src/parser_internal.h

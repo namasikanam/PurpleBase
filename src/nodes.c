@@ -18,7 +18,7 @@
 /*
  * total number of nodes available for a given parse-tree
  */
-#define MAXNODE		100
+#define MAXNODE 100
 
 static NODE nodepool[MAXNODE];
 static int nodeptr = 0;
@@ -46,8 +46,8 @@ void new_query(void)
 {
     nodeptr = 0;
     reset_charptr();
-    if(cleanup_func != NULL)
-	(*cleanup_func)();
+    if (cleanup_func != NULL)
+        (*cleanup_func)();
 }
 
 void register_cleanup_function(void (*func)())
@@ -64,9 +64,10 @@ NODE *newnode(NODEKIND kind)
     NODE *n;
 
     /* if we've used up all of the nodes then error */
-    if(nodeptr == MAXNODE){
-	fprintf(stderr, "out of memory\n");
-	exit(1);
+    if (nodeptr == MAXNODE)
+    {
+        fprintf(stderr, "out of memory\n");
+        exit(1);
     }
 
     /* get the next node */
@@ -74,7 +75,7 @@ NODE *newnode(NODEKIND kind)
     ++nodeptr;
 
     /* initialize the `kind' field */
-    n -> kind = kind;
+    n->kind = kind;
     return n;
 }
 
@@ -86,9 +87,9 @@ NODE *create_table_node(char *relname, NODE *attrlist, NODE *distribute_data)
 {
     NODE *n = newnode(N_CREATETABLE);
 
-    n -> u.CREATETABLE.relname = relname;
-    n -> u.CREATETABLE.attrlist = attrlist;
-    n -> u.CREATETABLE.distribute_data = distribute_data;
+    n->u.CREATETABLE.relname = relname;
+    n->u.CREATETABLE.attrlist = attrlist;
+    n->u.CREATETABLE.distribute_data = distribute_data;
     return n;
 }
 
@@ -100,8 +101,8 @@ NODE *create_index_node(char *relname, char *attrname)
 {
     NODE *n = newnode(N_CREATEINDEX);
 
-    n -> u.CREATEINDEX.relname = relname;
-    n -> u.CREATEINDEX.attrname = attrname;
+    n->u.CREATEINDEX.relname = relname;
+    n->u.CREATEINDEX.attrname = attrname;
     return n;
 }
 
@@ -113,8 +114,8 @@ NODE *drop_index_node(char *relname, char *attrname)
 {
     NODE *n = newnode(N_DROPINDEX);
 
-    n -> u.DROPINDEX.relname = relname;
-    n -> u.DROPINDEX.attrname = attrname;
+    n->u.DROPINDEX.relname = relname;
+    n->u.DROPINDEX.attrname = attrname;
     return n;
 }
 
@@ -126,7 +127,7 @@ NODE *drop_table_node(char *relname)
 {
     NODE *n = newnode(N_DROPTABLE);
 
-    n -> u.DROPTABLE.relname = relname;
+    n->u.DROPTABLE.relname = relname;
     return n;
 }
 
@@ -138,8 +139,8 @@ NODE *load_node(char *relname, char *filename)
 {
     NODE *n = newnode(N_LOAD);
 
-    n -> u.LOAD.relname = relname;
-    n -> u.LOAD.filename = filename;
+    n->u.LOAD.relname = relname;
+    n->u.LOAD.filename = filename;
     return n;
 }
 
@@ -151,8 +152,8 @@ NODE *set_node(char *paramName, char *string)
 {
     NODE *n = newnode(N_SET);
 
-    n -> u.SET.paramName = paramName;
-    n -> u.SET.string = string;
+    n->u.SET.paramName = paramName;
+    n->u.SET.string = string;
     return n;
 }
 
@@ -164,7 +165,30 @@ NODE *help_node(char *relname)
 {
     NODE *n = newnode(N_HELP);
 
-    n -> u.HELP.relname = relname;
+    n->u.HELP.relname = relname;
+    return n;
+}
+
+/*
+ * show_database_node: allocates, initializes, and returns a pointer to a new
+ * show database node having the indicated values.
+ */
+NODE *show_database_node()
+{
+    NODE *n = newnode(N_SHOWDATABASE);
+
+    return n;
+}
+
+/*
+ * show_table_node: allocates, initializes, and returns a pointer to a new
+ * show table node having the indicated values.
+ */
+NODE *show_table_node(char *relname)
+{
+    NODE *n = newnode(N_SHOWTABLE);
+
+    n->u.SHOWTABLE.relname = relname;
     return n;
 }
 
@@ -176,7 +200,7 @@ NODE *print_node(char *relname)
 {
     NODE *n = newnode(N_PRINT);
 
-    n -> u.PRINT.relname = relname;
+    n->u.PRINT.relname = relname;
     return n;
 }
 
@@ -225,7 +249,7 @@ NODE *delete_node(char *relname, NODE *conditionlist)
  * update node having the indicated values.
  */
 NODE *update_node(char *relname, NODE *relattr, NODE *relorvalue,
-		  NODE *conditionlist)
+                  NODE *conditionlist)
 {
     NODE *n = newnode(N_UPDATE);
 
@@ -236,7 +260,6 @@ NODE *update_node(char *relname, NODE *relattr, NODE *relorvalue,
     return n;
 }
 
-
 /*
  * relattr_node: allocates, initializes, and returns a pointer to a new
  * relattr node having the indicated values.
@@ -245,8 +268,8 @@ NODE *relattr_node(char *relname, char *attrname)
 {
     NODE *n = newnode(N_RELATTR);
 
-    n -> u.RELATTR.relname = relname;
-    n -> u.RELATTR.attrname = attrname;
+    n->u.RELATTR.relname = relname;
+    n->u.RELATTR.attrname = attrname;
     return n;
 }
 
@@ -261,9 +284,9 @@ NODE *condition_node(NODE *lhsRelattr, CompOp op, NODE *rhsRelattrOrValue)
     n->u.CONDITION.lhsRelattr = lhsRelattr;
     n->u.CONDITION.op = op;
     n->u.CONDITION.rhsRelattr =
-      rhsRelattrOrValue->u.RELATTR_OR_VALUE.relattr;
+        rhsRelattrOrValue->u.RELATTR_OR_VALUE.relattr;
     n->u.CONDITION.rhsValue =
-      rhsRelattrOrValue->u.RELATTR_OR_VALUE.value;
+        rhsRelattrOrValue->u.RELATTR_OR_VALUE.value;
     return n;
 }
 
@@ -276,16 +299,17 @@ NODE *value_node(AttrType type, void *value)
     NODE *n = newnode(N_VALUE);
 
     n->u.VALUE.type = type;
-    switch (type) {
+    switch (type)
+    {
     case INT:
-      n->u.VALUE.ival = *(int *)value;
-      break;
+        n->u.VALUE.ival = *(int *)value;
+        break;
     case FLOAT:
-      n->u.VALUE.rval = *(float *)value;
-      break;
+        n->u.VALUE.rval = *(float *)value;
+        break;
     case STRING:
-      n->u.VALUE.sval = (char *)value;
-      break;
+        n->u.VALUE.sval = (char *)value;
+        break;
     }
     return n;
 }
@@ -311,8 +335,8 @@ NODE *attrtype_node(char *attrname, char *type)
 {
     NODE *n = newnode(N_ATTRTYPE);
 
-    n -> u.ATTRTYPE.attrname = attrname;
-    n -> u.ATTRTYPE.type = type;
+    n->u.ATTRTYPE.attrname = attrname;
+    n->u.ATTRTYPE.type = type;
     return n;
 }
 
@@ -336,8 +360,8 @@ NODE *list_node(NODE *n)
 {
     NODE *list = newnode(N_LIST);
 
-    list -> u.LIST.curr = n;
-    list -> u.LIST.next = NULL;
+    list->u.LIST.curr = n;
+    list->u.LIST.next = NULL;
     return list;
 }
 
@@ -350,8 +374,8 @@ NODE *prepend(NODE *n, NODE *list)
 {
     NODE *newlist = newnode(N_LIST);
 
-    newlist -> u.LIST.curr = n;
-    newlist -> u.LIST.next = list;
+    newlist->u.LIST.curr = n;
+    newlist->u.LIST.next = list;
     return newlist;
 }
 
@@ -360,7 +384,7 @@ NODE *prepend(NODE *n, NODE *list)
  * creates a distribute table node with attribute name, attribute type
  * and list of values for the partition vector
  */
-NODE *distribute_node(char* attrName, NODE* value_list)
+NODE *distribute_node(char *attrName, NODE *value_list)
 {
     NODE *n = newnode(N_DISTRIBUTE);
 

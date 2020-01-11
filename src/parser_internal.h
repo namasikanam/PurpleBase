@@ -20,7 +20,7 @@ typedef float real;
 /*
  * the prompt
  */
-#define PROMPT "\nPURPLEBASE >> "
+#define PROMPT "\n\x1B[35mPURPLE\033[0m\x1B[33mBASE\033[0m >> "
 
 /*
  * REL_ATTR: describes a qualified attribute (relName.attrName)
@@ -54,6 +54,8 @@ typedef enum
     N_LOAD,
     N_SET,
     N_HELP,
+    N_SHOWDATABASE,
+    N_SHOWTABLE,
     N_PRINT,
     N_QUERY,
     N_INSERT,
@@ -106,6 +108,17 @@ typedef struct node
         {
             char *relname;
         } DROPTABLE;
+
+        /* show database node */
+        struct
+        {
+        } SHOWDATABASE;
+
+        /* show table node */
+        struct
+        {
+            char *relname;
+        } SHOWTABLE;
 
         /* load node */
         struct
@@ -238,6 +251,8 @@ NODE *drop_table_node(char *relname);
 NODE *load_node(char *relname, char *filename);
 NODE *set_node(char *paramName, char *string);
 NODE *help_node(char *relname);
+NODE *show_database_node();
+NODE *show_table_node(char *relname);
 NODE *print_node(char *relname);
 NODE *query_node(NODE *relattrlist, NODE *rellist, NODE *conditionlist);
 NODE *insert_node(char *relname, NODE *valuelist);

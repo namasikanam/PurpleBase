@@ -84,6 +84,8 @@ QL_Manager *pQlm;          // QL component manager
       RW_LOAD
       RW_SET
       RW_HELP
+      RW_DATABASE
+      RW_SHOW
       RW_PRINT
       RW_EXIT
       RW_SELECT
@@ -135,6 +137,8 @@ QL_Manager *pQlm;          // QL component manager
       load
       set
       help
+      showdatabase
+      showtable
       print
       exit
       query
@@ -223,6 +227,8 @@ utility
    | exit
    | set
    | help
+   | showdatabase
+   | showtable
    | print
    | buffer
    | statistics
@@ -340,6 +346,20 @@ help
       $$ = help_node($2);
    }
    ;
+
+showdatabase
+   : RW_SHOW RW_DATABASE
+   {
+      $$ = show_database_node();
+   }
+   ;
+
+showtable
+    : RW_SHOW RW_TABLE T_STRING
+    {
+        $$ = show_table_node($3);
+    }
+    ;
 
 print
    : RW_PRINT T_STRING

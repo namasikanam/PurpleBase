@@ -105,11 +105,9 @@ RC interp(NODE *n)
         bool found = false;
         char *attrName = NULL;
         int nValues = 0;
-        int isDistributed = 0;
 
         if (n->u.CREATETABLE.distribute_data != NULL)
         {
-            isDistributed = 1;
             attrName = (n->u.CREATETABLE.distribute_data)->u.DISTRIBUTE.attrName;
             for (int i = 0; i < nattrs; i++)
             {
@@ -174,6 +172,16 @@ RC interp(NODE *n)
             errval = pSmm->Help(n->u.HELP.relname);
         else
             errval = pSmm->Help();
+        break;
+
+    case N_SHOWTABLE: /* for Help() */
+
+        errval = pSmm->Help(n->u.SHOWTABLE.relname);
+        break;
+
+    case N_SHOWDATABASE: /* for Help() */
+
+        errval = pSmm->Help();
         break;
 
     case N_PRINT: /* for Print() */
