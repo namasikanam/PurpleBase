@@ -243,12 +243,12 @@ RC SM_Manager::CreateTable(const char *relName, int attrCount, AttrInfo *attribu
 
         { // 2) Check whether the table already exists
             RM_FileScan rmfs;
-            SM_Try_RM(rmfs.OpenScan(relcatRMFH, STRING, MAXNAME, offsetof(SM_RelcatRecord, relName), EQ_OP, relName), SM_CREATE_TABLE_SCAN_FAIL);
+            SM_Try_RM(rmfs.OpenScan(relcatRMFH, STRING, MAXNAME, offsetof(SM_RelcatRecord, relName), EQ_OP, relName), SM_CREATE_TABLE_FAIL);
             {
                 RM_Record rec;
-                SM_Try_RM_Or_Close_Scan(rmfs.GetNextRec(rec), rmfs, SM_CREATE_TABLE_SCAN_FAIL, SM_CREATE_TABLE_SCAN_FAIL_CLOSE_SCAN_FAIL, RM_EOF);
+                SM_Try_RM_Or_Close_Scan(rmfs.GetNextRec(rec), rmfs, SM_CREATE_TABLE_EXIST, SM_CREATE_TABLE_SCAN_FAIL_CLOSE_SCAN_FAIL, RM_EOF);
             }
-            SM_Try_RM(rmfs.CloseScan(), SM_CREATE_TABLE_SCAN_FAIL);
+            SM_Try_RM(rmfs.CloseScan(), SM_CREATE_TABLE_FAIL);
         }
 
         // 3) Update the system catalogs
@@ -308,6 +308,8 @@ RC SM_Manager::DropTable(const char *relName)
         {
             throw RC{SM_DROP_TABLE_CLOSED};
         }
+        // Check if the table exists
+        GetRelInfo(relName);
         // 2) Delete the entry from relcat
         RM_FileScan relcatFS;
         {
@@ -672,6 +674,14 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                     {
                         cout << "Load data: stoi(" << dataValue << "),";
                     }
+                    try
+                    {
+                        stoi(dataValue);
+                    }
+                    catch (...)
+                    {
+                        throw SM_LOAD_BAD_INT;
+                    }
                     *(int *)(tupleData + attributes[i].offset) = stoi(dataValue);
                     break;
                 case FLOAT:
@@ -679,12 +689,24 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                     {
                         cout << "Load data: stof(" << dataValue << ")\n";
                     }
+                    try
+                    {
+                        stof(dataValue);
+                    }
+                    catch (...)
+                    {
+                        throw SM_LOAD_BAD_FLOAT;
+                    }
                     *(float *)(tupleData + attributes[i].offset) = stof(dataValue);
                     break;
                 case STRING:
                     if (debug)
                     {
                         cout << "Load data: stoi(" << dataValue << ")\n";
+                    }
+                    if (dataValue.size() > attributes[i].attrLength)
+                    {
+                        throw SM_LOAD_STRING_TOO_LONG;
                     }
                     strcpy(tupleData + attributes[i].offset, dataValue.c_str());
                     break;
@@ -746,7 +768,10 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                 throw RC{SM_LOAD_FAIL};
             }
 
-            cout << "Loaded a line\n";
+            if (debug)
+            {
+                cout << "Loaded a line\n";
+            }
         }
 
         // Close the RM file
@@ -869,6 +894,10 @@ RC SM_Manager::Help(const char *relName)
         }
 
         // Check if the relation exists
+        if (debug)
+        {
+            printf("Help %s\n", relName);
+        }
         GetRelInfo(relName);
 
         // Fill the attributes structure
@@ -953,13 +982,13 @@ RC SM_Manager::Print(const char *relName)
         // Check that the database is open
         if (!open)
         {
-            return SM_PRINT_CLOSED;
+            throw SM_PRINT_CLOSED;
         }
 
         // Check the parameters
         if (relName == nullptr)
         {
-            return SM_NULLPTR_REL_NAME;
+            throw SM_NULLPTR_REL_NAME;
         }
 
         // Fill the attribute structure
@@ -1026,10 +1055,14 @@ RC SM_Manager::Set(const char *paramName, const char *value)
         if (strcmp(value, "TRUE") == 0)
         {
             debug = true;
+
+            printf("[[debug]] is set true.\n");
         }
         else if (strcmp(value, "FALSE") == 0)
         {
             debug = false;
+
+            printf("[[debug]] is set false.\n");
         }
         else
         {
@@ -1203,6 +1236,11 @@ SM_RelcatRecord SM_Manager::GetRelInfo(const char *relName)
 
     // Close the scan
     SM_Try_RM(relcatFS.CloseScan(), SM_GET_REL_INFO_FAIL);
+
+    if (debug)
+    {
+        printf("Successfully GetRelInfo!\n");
+    }
 
     // Fill the relation data
     return rcRecord;
