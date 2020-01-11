@@ -42,7 +42,6 @@ src/*
 !src/parser.h
 !src/parse.y
 !src/parse.c
-!src/Parser.HowTo
 !src/scan.l
 !src/scanhelp.c
 !src/parser_internal.h
@@ -57,3 +56,5 @@ src/*
 !src/ql_error.cc
 !src/printer.h
 !src/printer.cc
+!src/statistics.cc
+!src/statistics.h
