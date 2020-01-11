@@ -657,7 +657,7 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
             char tupleData[tupleLength];
             memset(tupleData, 0, sizeof(tupleData));
 
-            for (int i = 0, pos = 0; i < attrCount; ++i)
+            for (int i = 0, pos = -1; i < attrCount; ++i)
             {
                 // Parse the line
                 int next_pos = line.find(',', pos + 1);
@@ -668,12 +668,24 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                 switch (attributes[i].attrType)
                 {
                 case INT:
+                    if (debug)
+                    {
+                        cout << "Load data: stoi(" << dataValue << "),";
+                    }
                     *(int *)(tupleData + attributes[i].offset) = stoi(dataValue);
                     break;
                 case FLOAT:
+                    if (debug)
+                    {
+                        cout << "Load data: stof(" << dataValue << ")\n";
+                    }
                     *(float *)(tupleData + attributes[i].offset) = stof(dataValue);
                     break;
                 case STRING:
+                    if (debug)
+                    {
+                        cout << "Load data: stoi(" << dataValue << ")\n";
+                    }
                     strcpy(tupleData + attributes[i].offset, dataValue.c_str());
                     break;
                 }
@@ -733,6 +745,8 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
 
                 throw RC{SM_LOAD_FAIL};
             }
+
+            cout << "Loaded a line\n";
         }
 
         // Close the RM file
