@@ -9,6 +9,7 @@
 
 #include <string>
 #include <stdlib.h>
+#include <cstdio>
 #include <memory>
 #include "redbase.h"
 #include "parser.h"
@@ -80,6 +81,8 @@ inline bool compare(AttrType type, CompOp op, const void *x, const void *y)
     switch (type)
     {
     case INT:
+        // printf("compare(%d, %d)\n", *(int *)x, *(int *)y);
+
         switch (op)
         {
         case NO_OP:
@@ -99,6 +102,8 @@ inline bool compare(AttrType type, CompOp op, const void *x, const void *y)
         }
         break;
     case FLOAT:
+        // printf("compare(%f, %f)\n", *(float *)x, *(float *)y);
+
         switch (op)
         {
         case NO_OP:
@@ -118,6 +123,8 @@ inline bool compare(AttrType type, CompOp op, const void *x, const void *y)
         }
         break;
     case STRING:
+        // printf("compare(%s, %s)\n", (const char *)x, (const char *)y);
+
         switch (op)
         {
         case NO_OP:

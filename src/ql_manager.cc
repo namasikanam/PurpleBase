@@ -120,8 +120,8 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
                 indexRelOfPrintAttr[i] = indexOfRel(acRecord.relName, nRelations, relations);
                 offsetOfPrintAttr[i] = acRecord.offset;
 
-                strcmp(printAttrs[i].relName, acRecord.relName);
-                strcmp(printAttrs[i].attrName, acRecord.attrName);
+                strcpy(printAttrs[i].relName, acRecord.relName);
+                strcpy(printAttrs[i].attrName, acRecord.attrName);
                 printAttrs[i].attrType = acRecord.attrType;
                 printAttrs[i].attrLength = acRecord.attrLength;
                 printAttrs[i].indexNo = acRecord.indexNo;
@@ -290,30 +290,50 @@ void QL_Manager::scanRelations(int id, int nRelations, const char *const relatio
 
             if (id + 1 == nRelations)
             {
+                if (smManager.debug)
+                {
+                    printf("It's time to check condition.\n");
+                }
                 // Check condition
+                bool satisfied = true;
                 for (int i = 0; i < nConditions; ++i)
                 {
+                    if (smManager.debug)
+                    {
+                        printf("Check condition %d\n", i);
+                    }
+
                     if (conditions[i].bRhsIsAttr)
                     {
                         if (!compare(conditions[i].rhsValue.type, conditions[i].op, records[indexRelOfCondLHS[i]] + offsetOfCondLHS[i], records[indexRelOfCondRHS[i]] + offsetOfCondRHS[i]))
                         {
-                            return;
+                            satisfied = false;
+                            break;
                         }
                     }
                     else
                     {
-                        if (!compare(conditions[i].rhsValue.type, conditions[i].op, records[indexRelOfCondLHS[i]] + offsetOfCondLHS[i], records[indexRelOfCondRHS[i]] + offsetOfCondRHS[i]))
+                        if (!compare(conditions[i].rhsValue.type, conditions[i].op, records[indexRelOfCondLHS[i]] + offsetOfCondLHS[i], conditions[i].rhsValue.data))
                         {
-                            return;
+                            satisfied = false;
+                            break;
                         }
                     }
+                }
+                if (!satisfied)
+                    continue;
+                if (smManager.debug)
+                {
+                    printf("It's time to print!\n");
                 }
                 // Print
                 for (int i = 0; i < nSelAttrs; ++i)
                 {
                     if (smManager.debug)
                     {
-                        printf("Select an attr (indexRel = %d, offset = %d): ", indexRelOfPrintAttr[i], offsetOfPrintAttr[i]);
+                        printf("Select an attr (indexRel = %d, ", indexRelOfPrintAttr[i]);
+                        printf("offset = %d): ", offsetOfPrintAttr[i]);
+
                         switch (printAttrs[i].attrType)
                         {
                         case INT:
@@ -331,6 +351,10 @@ void QL_Manager::scanRelations(int id, int nRelations, const char *const relatio
 
                     memcpy(buf + printAttrs[i].offset, records[indexRelOfPrintAttr[i]] + offsetOfPrintAttr[i], printAttrs[i].attrLength);
                 }
+                if (smManager.debug)
+                {
+                    printf("It's printed!\n");
+                }
                 p.Print(cout, buf);
             }
             else
@@ -345,7 +369,7 @@ int QL_Manager::indexOfRel(const char *relName, int nRelations, const char *cons
 {
     int i = 0;
     for (; i < nRelations; ++i)
-        if (strcmp(relName, relations[i]))
+        if (strcmp(relName, relations[i]) == 0)
             return i;
     return i;
 }
@@ -865,11 +889,11 @@ RC QL_Manager::Update(const char *relName,
                     memset(recordData + offsetLHS, 0, lengthLHS);
                     if (bIsValue)
                     {
-                        memcpy(recordData + offsetLHS, recordData + offsetRHS, lengthRHS);
+                        memcpy(recordData + offsetLHS, rhsValue.data, lengthRHS);
                     }
                     else
                     {
-                        memcpy(recordData + offsetLHS, rhsValue.data, lengthRHS);
+                        memcpy(recordData + offsetLHS, recordData + offsetRHS, lengthRHS);
                     }
 
                     // Update the tuple
