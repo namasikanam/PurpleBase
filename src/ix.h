@@ -74,10 +74,10 @@ public:
     ~IX_IndexHandle();
 
     // Insert a new index entry
-    RC InsertEntry(void *pData, const RID &rid);
+    RC InsertEntry(const void *pData, const RID &rid);
 
     // Delete a new index entry
-    RC DeleteEntry(void *pData, const RID &rid);
+    RC DeleteEntry(const void *pData, const RID &rid);
 
     // Force index files to disk
     RC ForcePages();

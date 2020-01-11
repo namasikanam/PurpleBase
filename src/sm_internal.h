@@ -31,4 +31,24 @@ inline void SM_Try_IX(RC ix_rc, RC sm_rc)
     }
 }
 
+inline void SM_Try_RM_Or_Close_Scan(RC rm_rc, RM_FileScan rmfs, RC succ_rc, RC fail_rc, RC aim_rm_rc = OK_RC)
+{
+    if (rm_rc != aim_rm_rc)
+    {
+        RM_PrintError(rm_rc);
+        SM_Try_RM(rmfs.CloseScan(), fail_rc);
+        throw RC{succ_rc};
+    }
+}
+
+inline void SM_Try_IX_Or_Close_Scan(RC ix_rc, RM_FileScan rmfs, RC succ_rc, RC fail_rc)
+{
+    if (ix_rc)
+    {
+        IX_PrintError(ix_rc);
+        SM_Try_IX(rmfs.CloseScan(), fail_rc);
+        throw RC{succ_rc};
+    }
+}
+
 #endif

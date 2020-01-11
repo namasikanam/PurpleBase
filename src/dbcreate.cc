@@ -58,20 +58,19 @@ int main(int argc, char *argv[])
 
     PF_Manager pfManager;
     RM_Manager rmManager(pfManager);
+    char relcatName[] = "relcat";
+    char attrcatName[] = "attrcat";
 
     // Create the system catalogs
-    const char *relcatFileName = "relcat";
-    const char *attrcatFileName = "attrcat";
-
     // Create RM files for relcat and attrcat
-    Try_RM(rmManager.CreateFile(relcatFileName, sizeof(SM_RelcatRecord)));
-    Try_RM(rmManager.CreateFile(attrcatFileName, sizeof(SM_AttrcatRecord)));
+    Try_RM(rmManager.CreateFile(relcatName, sizeof(SM_RelcatRecord)));
+    Try_RM(rmManager.CreateFile(attrcatName, sizeof(SM_AttrcatRecord)));
 
     // Open the files
     RM_FileHandle relcatFH;
     RM_FileHandle attrcatFH;
-    Try_RM(rmManager.OpenFile(relcatFileName, relcatFH));
-    Try_RM(rmManager.OpenFile(attrcatFileName, attrcatFH));
+    Try_RM(rmManager.OpenFile(relcatName, relcatFH));
+    Try_RM(rmManager.OpenFile(attrcatName, attrcatFH));
 
     // Insert relcat record in relcat
     RID rid;

@@ -115,10 +115,10 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
             throw RC{RM_FILE_HANDLE_CLOSED};
 
 #ifdef RM_LOG
-        // printf("Insert: ");
-        // for (int i = 0; i < recordSize; ++i)
-        //     putchar(pData[i]);
-        // printf(", num = %d\n", *(int *)(pData + 32));
+        printf("Insert: ");
+        for (int i = 0; i < 20; ++i)
+            putchar(pData[i]);
+        puts("");
 #endif
 
         // Declare three variables that will be used often later.

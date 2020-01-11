@@ -16,7 +16,7 @@ IX_IndexHandle::IX_IndexHandle() : open(false) {}
 // Destructor
 IX_IndexHandle::~IX_IndexHandle() {}
 
-RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid)
+RC IX_IndexHandle::InsertEntry(const void *pData, const RID &rid)
 {
     try
     {
@@ -43,7 +43,7 @@ RC IX_IndexHandle::InsertEntry(void *pData, const RID &rid)
     return OK_RC;
 }
 
-RC IX_IndexHandle::DeleteEntry(void *pData, const RID &rid)
+RC IX_IndexHandle::DeleteEntry(const void *pData, const RID &rid)
 {
     try
     {

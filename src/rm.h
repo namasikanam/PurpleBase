@@ -120,7 +120,7 @@ public:
                 int attrLength,
                 int attrOffset,
                 CompOp compOp,
-                void *value,
+                const void *value,
                 ClientHint pinHint = NO_HINT); // Initialize a file scan
     RC GetNextRec(RM_Record &rec);             // Get next matching record
     RC CloseScan();                            // Close the scan
@@ -131,7 +131,7 @@ private:
     int attrLength;
     int attrOffset;
     CompOp compOp;
-    void *value;
+    const void *value;
 
     bool open;
 
@@ -156,7 +156,7 @@ public:
     RC CloseFile(RM_FileHandle &fileHandle);
 
 private:
-    PF_Manager& pFManager; // PF_Manager object
+    PF_Manager &pFManager; // PF_Manager object
 };
 
 //
@@ -220,7 +220,7 @@ void RM_PrintError(RC rc);
 #define RM_MANAGER_OPEN_BUT_UNPIN_FAIL (START_RM_ERR - 6)
 #define RM_MANAGER_CREATE_BUT_CLOSE_FAIL (START_RM_ERR - 7)
 
-#define RM_UNIX (START_IX_ERR - 8)                    // Unix error
-#define RM_LASTERROR RM_UNIX // Mark the last error, to be update.
+#define RM_UNIX (START_IX_ERR - 8) // Unix error
+#define RM_LASTERROR RM_UNIX       // Mark the last error, to be update.
 
 #endif
