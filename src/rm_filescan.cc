@@ -31,7 +31,11 @@ RC RM_FileScan::OpenScan(const RM_FileHandle &fileHandle, AttrType attrType, int
     this->attrOffset = attrOffset;
     this->compOp = compOp;
 
-    if (attrType == STRING && value != nullptr)
+    if (value == nullptr)
+    {
+        this->value = nullptr;
+    }
+    else if (attrType == STRING)
     {
 #ifdef RM_LOG
         printf("Open scan with %s\n", (const char *)value);
@@ -45,7 +49,10 @@ RC RM_FileScan::OpenScan(const RM_FileHandle &fileHandle, AttrType attrType, int
         this->value = s;
     }
     else
-        this->value = value;
+    {
+        this->value = (void *)(new char[attrLength]);
+        memcpy(this->value, value, attrLength);
+    }
 
     open = true;
 
@@ -90,7 +97,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)
             {
             case OK_RC:
 #ifdef RM_LOG
-                printf("Scan find something at (%lld, %d)\n", curPageNum, curSlotNum);
+                // printf("Scan find something at (%lld, %d)\n", curPageNum, curSlotNum);
 #endif
 
                 nextSlot(curPageNum, curSlotNum, rMFileHandle.slotNumPerPage);
@@ -105,7 +112,13 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)
                         RM_ChangeRC(rec.GetData(pData), RM_SCAN_NEXT_FAIL);
 
 #ifdef RM_LOG
-                        printf("recData = ");
+                    // printf("pData[1: 50) = \n");
+                    // puts("");
+                    // for (int i = 0; i < 10; ++i)
+                    //     printf("%d: %c\n", i, pData[i]);
+                    // for (int i = 25; i < 35; ++i)
+                    //     printf("%d: %c\n", i, pData[i]);
+                    // puts("");
 #endif
                         switch (attrType)
                         {
@@ -114,7 +127,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)
                             int recData = *(int *)(pData + attrOffset), scanData = *(int *)value;
 
 #ifdef RM_LOG
-                            printf("%d\n", recData);
+                        // printf("%d\n", recData);
 #endif
 
                             switch (compOp)
@@ -141,7 +154,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)
                             float recData = *(float *)(pData + attrOffset), scanData = *(float *)value;
 
 #ifdef RM_LOG
-                            printf("%f\n", recData);
+                        // printf("%f\n", recData);
 #endif
 
                             switch (compOp)
@@ -168,9 +181,10 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)
                             char *recData = pData + attrOffset, *scanData = (char *)value;
 
 #ifdef RM_LOG
-                            for (int i = 0; i < attrLength; ++i)
-                                putchar(recData[i]);
-                            puts("");
+                        // puts("");
+                        // for (int i = 0; i < 50; ++i)
+                        //     printf("%d: %c\n", i, pData[i]);
+                        // puts("");
 #endif
 
                             switch (compOp)
@@ -228,9 +242,9 @@ RC RM_FileScan::CloseScan()
 {
     open = false;
 
-    if (attrType == STRING && value != nullptr)
+    if (value != nullptr)
     {
-        delete[] value;
+        delete[](char *) value;
     }
 
     return OK_RC;

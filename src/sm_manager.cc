@@ -66,6 +66,8 @@ SM_AttrcatRecord::SM_AttrcatRecord(char *_relName, char *_attrName, int _offset,
     }
     memset(attrName, 0, sizeof(attrName));
     strcpy(attrName, _attrName);
+
+    // printf("When constructing, attrName = %s\n", attrName);
 }
 
 SM_AttrcatRecord::SM_AttrcatRecord(const char *_relName, char *_attrName, int _offset, AttrType _attrType, int _attrLength, int _indexNo) : offset(_offset), attrType(_attrType), attrLength(_attrLength), indexNo(_indexNo)
@@ -91,6 +93,8 @@ SM_AttrcatRecord::SM_AttrcatRecord(const char *_relName, char *_attrName, int _o
     }
     memset(attrName, 0, sizeof(attrName));
     strcpy(attrName, _attrName);
+
+    // printf("When constructing, attrName = %s\n", attrName);
 }
 
 SM_AttrcatRecord::SM_AttrcatRecord(const char *_relName, const char *_attrName, int _offset, AttrType _attrType, int _attrLength, int _indexNo) : offset(_offset), attrType(_attrType), attrLength(_attrLength), indexNo(_indexNo)
@@ -116,6 +120,8 @@ SM_AttrcatRecord::SM_AttrcatRecord(const char *_relName, const char *_attrName, 
     }
     memset(attrName, 0, sizeof(attrName));
     strcpy(attrName, _attrName);
+
+    // printf("When constructing, attrName = %s\n", attrName);
 }
 
 // Constructor
@@ -855,6 +861,23 @@ RC SM_Manager::Help(const char *relName)
         DataAttrInfo attributes[SM_ATTRCAT_ATTR_COUNT];
         GetAttrInfo("attrcat", SM_ATTRCAT_ATTR_COUNT, (void *)attributes);
 
+        if (debug)
+        {
+            printf("========= Help %s =========\n", relName);
+            printf("attributes = \n");
+            for (int i = 0; i < SM_ATTRCAT_ATTR_COUNT; ++i)
+            {
+                printf("{\n");
+                printf("\trelName = %s\n", attributes[i].relName);
+                printf("\tattrName = %s\n", attributes[i].attrName);
+                printf("\toffset = %d\n", attributes[i].offset);
+                printf("\tattrType = %s\n", attributes[i].attrType == INT ? "INT" : attributes[i].attrType == FLOAT ? "FLOAT" : "STRING");
+                printf("\tattrLength = %d\n", attributes[i].attrLength);
+                printf("\tindexNo = %d\n", attributes[i].indexNo);
+                printf("}\n");
+            }
+        }
+
         // Create a Printer object
         Printer p(attributes, SM_ATTRCAT_ATTR_COUNT);
 
@@ -863,7 +886,7 @@ RC SM_Manager::Help(const char *relName)
 
         // Start the attrcat file scan
         RM_FileScan attrcatFS;
-        SM_Try_RM(attrcatFS.OpenScan(relcatRMFH, STRING, MAXNAME, 0, EQ_OP, relName), SM_HELP_REL_CAT_SCAN_FAIL);
+        SM_Try_RM(attrcatFS.OpenScan(attrcatRMFH, STRING, MAXNAME, 0, EQ_OP, relName), SM_HELP_REL_CAT_SCAN_FAIL);
 
         // Print each tuple
         RM_Record rec;
@@ -1027,8 +1050,9 @@ void SM_Manager::GetAttrInfo(const char *relName, int attrCount, void *_attribut
     DataAttrInfo *attributes = (DataAttrInfo *)_attributes;
 
     // Start file scan
-    if (debug) {
-        printf("At GetAttrInfo, openscan with %s\n", relName);
+    if (debug)
+    {
+        // printf("At GetAttrInfo, openscan with %s\n", relName);
     }
 
     SM_Try_RM(attrcatFS.OpenScan(attrcatRMFH, STRING, MAXNAME, 0, EQ_OP, relName), SM_GET_ALL_ATTR_INFO_SCAN_FAIL);
@@ -1036,7 +1060,7 @@ void SM_Manager::GetAttrInfo(const char *relName, int attrCount, void *_attribut
     // Get all the attribute tuples
     if (debug)
     {
-        cout << "GetAttrInfo(" << relName << ", " << attrCount << ")\n";
+        // cout << "GetAttrInfo(" << relName << ", " << attrCount << ")\n";
     }
     for (int i = 0; rc != RM_EOF; ++i)
     {
@@ -1052,7 +1076,7 @@ void SM_Manager::GetAttrInfo(const char *relName, int attrCount, void *_attribut
         {
             if (debug)
             {
-                cout << "GetAttrInfo(" << relName << ", " << attrCount << "): Now attributes[" << i << "]\n";
+                // cout << "GetAttrInfo(" << relName << ", " << attrCount << "): Now attributes[" << i << "]\n";
             }
 
             if (i == attrCount)

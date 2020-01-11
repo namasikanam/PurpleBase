@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
     acRecord = SM_AttrcatRecord{
         "attrcat",
         "attrType",
-        offsetof(SM_AttrcatRecord, attrName),
+        offsetof(SM_AttrcatRecord, attrType),
         INT,
         4,
         -1};

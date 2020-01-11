@@ -55,9 +55,9 @@ RC RM_FileHandle::GetRec(const RID &rid, RM_Record &rec) const
         RM_ChangeRC(rid.GetSlotNum(slotNum), RM_FILE_GET_FAIL);
         if (pageNum < 0 || pageNum >= pageTot || slotNum < 0 || slotNum >= slotNumPerPage)
             throw RC{RM_FILE_GET_ILLEGAL_RID};
-        
+
 #ifdef RM_LOG
-        // printf("To get record at RID(%lld, %d)\n", pageNum, slotNum);
+            // printf("To get record at RID(%lld, %d)\n", pageNum, slotNum);
 #endif
 
         // Fetch the data of the destination page
@@ -65,7 +65,8 @@ RC RM_FileHandle::GetRec(const RID &rid, RM_Record &rec) const
         char *pageData;
         RM_ChangeRC(pFFileHandle.GetThisPage(pageNum + 1, pFPageHandle), RM_FILE_GET_FAIL);
         RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_GET_FAIL_UNPIN_FAIL, RM_FILE_GET_FAIL, pFFileHandle, pageNum + 1);
-        if (~pageData[slotNum / 8] >> slotNum % 8 & 1) {
+        if (~pageData[slotNum / 8] >> slotNum % 8 & 1)
+        {
             RM_ChangeRC(pFFileHandle.UnpinPage(pageNum + 1), RM_FILE_GET_NOT_FOUND_UNPIN_FAIL);
             throw RC{RM_FILE_GET_NOT_FOUND};
         }
@@ -115,10 +116,12 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
             throw RC{RM_FILE_HANDLE_CLOSED};
 
 #ifdef RM_LOG
-        printf("Insert: ");
-        for (int i = 0; i < 20; ++i)
-            putchar(pData[i]);
-        puts("");
+            // printf("Insert: ");
+            // for (int i = 0; i < 50; ++i)
+            // {
+            //     printf("%d: %c\n", i, pData[i]);
+            // }
+            // puts("");
 #endif
 
         // Declare three variables that will be used often later.
@@ -130,9 +133,8 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
         // The actual insertion step
         auto insertAt = [this, &pageNum, &pData, &rid, &pageData, &pageAvailableIterator](SlotNum slotNum) {
 #ifdef RM_LOG
-            // printf("insert at (%lld, %d)\n", pageNum, slotNum);
+        // printf("insert at (%lld, %d)\n", pageNum, slotNum);
 #endif
-
             // The exactly RID is found.
             rid = RID(pageNum, slotNum);
 
@@ -146,7 +148,8 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
                         if (~pageData[slotNumIt / 8] >> slotNumIt % 8 & 1)
                             return 0;
                     return 1;
-                }()) {
+                }())
+            {
 #ifdef RM_LOG
                 // printf("Page %lld is not available now.\n", pageNum);
 #endif
@@ -183,7 +186,7 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
                     // I've managed to find an available page!
 
 #ifdef RM_LOG
-                // printf("Try to get page %lld\n", pageNum);
+                    // printf("Try to get page %lld\n", pageNum);
 #endif
 
                 // Get the available page.
@@ -213,21 +216,21 @@ RC RM_FileHandle::InsertRec(const char *pData, RID &rid)
 
                         insertAt(slotNum);
                     }
-                
+
 #ifdef RM_LOG
-                // printf("\nTry to insert (num = %d)\n", *(int *)(pData + 32));
-                // printf("bitmap of the page (slotNumPerPage = %d): ", slotNumPerPage);
-                // for (SlotNum slotNum = 0; slotNum < slotNumPerPage; ++slotNum)
-                //     putchar('0' ^ (pageData[slotNum / 8] >> slotNum % 8 & 1));
-                // puts("");
+                    // printf("\nTry to insert (num = %d)\n", *(int *)(pData + 32));
+                    // printf("bitmap of the page (slotNumPerPage = %d): ", slotNumPerPage);
+                    // for (SlotNum slotNum = 0; slotNum < slotNumPerPage; ++slotNum)
+                    //     putchar('0' ^ (pageData[slotNum / 8] >> slotNum % 8 & 1));
+                    // puts("");
 #endif
 
                 throw RC{RM_FILE_INSERT_NO_AVAILABLE_SLOT_IN_AVAILABLE_PAGES};
             }
 
 #ifdef RM_LOG
-        // printf("No, we have to insert a new page at %lld\n", pageTot);
-        // printf("At this time, num = %d\n", *(int *)(pData + 32));
+            // printf("No, we have to insert a new page at %lld\n", pageTot);
+            // printf("At this time, num = %d\n", *(int *)(pData + 32));
 #endif
 
         // If there's no available page.
@@ -299,7 +302,8 @@ RC RM_FileHandle::DeleteRec(const RID &rid)
         RM_ChangeRC(pFFileHandle.GetThisPage(pageNum + 1, pFPageHandle), RM_FILE_DELETE_FAIL);
         RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_DELETE_FAIL_UNPIN_FAIL, RM_FILE_DELETE_FAIL, pFFileHandle, pageNum + 1);
         RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum + 1), RM_FILE_INSERT_OLD_FAIL_UNPIN_FAIL, RM_FILE_INSERT_OLD_FAIL, pFFileHandle, pageNum + 1);
-        if (~pageData[slotNum / 8] >> slotNum % 8 & 1) {
+        if (~pageData[slotNum / 8] >> slotNum % 8 & 1)
+        {
             RM_ChangeRC(pFFileHandle.UnpinPage(pageNum + 1), RM_FILE_DELETE_NOT_FOUND_UNPIN_FAIL);
             throw RC{RM_FILE_DELETE_NOT_FOUND};
         }
@@ -356,7 +360,8 @@ RC RM_FileHandle::UpdateRec(const RM_Record &rec)
         RM_ChangeRC(pFFileHandle.GetThisPage(pageNum + 1, pFPageHandle), RM_FILE_UPDATE_FAIL);
         RM_TryElseUnpin(pFPageHandle.GetData(pageData), RM_FILE_UPDATE_FAIL_UNPIN_FAIL, RM_FILE_UPDATE_FAIL, pFFileHandle, pageNum + 1);
         RM_TryElseUnpin(pFFileHandle.MarkDirty(pageNum + 1), RM_FILE_UPDATE_FAIL_UNPIN_FAIL, RM_FILE_UPDATE_FAIL, pFFileHandle, pageNum + 1);
-        if (~pageData[slotNum / 8] >> slotNum % 8 & 1) {
+        if (~pageData[slotNum / 8] >> slotNum % 8 & 1)
+        {
             RM_ChangeRC(pFFileHandle.UnpinPage(pageNum + 1), RM_FILE_UPDATE_NOT_FOUND_UNPIN_FAIL);
             throw RC{RM_FILE_UPDATE_NOT_FOUND};
         }

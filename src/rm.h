@@ -131,7 +131,7 @@ private:
     int attrLength;
     int attrOffset;
     CompOp compOp;
-    const void *value;
+    void *value;
 
     bool open;
 
