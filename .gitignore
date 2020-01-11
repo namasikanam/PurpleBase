@@ -2,6 +2,7 @@
 # makesure the code reserved can be compiled and run successfully
 build/*
 lib/*
+.vscode/*
 src/*
 !src/Makefile
 !src/pf.h
