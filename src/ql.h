@@ -48,10 +48,9 @@ public:
               int nConditions,               // # conditions in where clause
               const Condition conditions[]); // conditions in where clause
 
-private:
-    RM_Manager &rmManager; // RM_Manager object
-    IX_Manager &ixManager; // IX_Manager object
     SM_Manager &smManager; // SM_Manager object
+    IX_Manager &ixManager; // IX_Manager object
+    RM_Manager &rmManager; // RM_Manager object
 };
 
 //

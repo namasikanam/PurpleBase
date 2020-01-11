@@ -4,8 +4,7 @@
 // Authors:     Xingyu Xie (xiexy17@mails.tsinghua.edu.cn)
 //
 
-#include <cstdio>
-#include <iostream>
+#include <bits/stdc++.h>
 #include <sys/times.h>
 #include <sys/types.h>
 #include <cassert>
@@ -19,6 +18,7 @@
 #include "rm.h"
 #include "printer.h"
 #include "parser.h"
+#include "ql_internal.h"
 
 using namespace std;
 
@@ -45,13 +45,18 @@ QL_Manager::~QL_Manager()
     5) Form the physical operator tree
     6) Get the tuples from the root node
     7) Print the physical query plan
-
 */
 RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
                       int nRelations, const char *const relations[],
                       int nConditions, const Condition conditions[])
 {
-    return QL_UNDEFINED;
+    // Check whether database is open
+    if (!smManager.open)
+    {
+        return QL_DATABASE_CLOSED;
+    }
+
+    // Check if the relations exist
 }
 
 /************ INSERT ************/
