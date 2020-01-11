@@ -966,13 +966,14 @@ RC SM_Manager::Print(const char *relName)
 
         // Start the relcat file scan
         RM_FileScan rmFS;
-        SM_Try_RM(rmFS.OpenScan(rmFH, INT, 4, 0, NO_OP, nullptr), SM_RELCAT_ATTR_COUNT);
+        SM_Try_RM(rmFS.OpenScan(rmFH, INT, 4, 0, NO_OP, nullptr), SM_PRINT_SCAN_FAIL);
 
         // Print each tuple
         RM_Record rec;
         char *recordData;
         for (RC rc = OK_RC; rc != RM_EOF;)
         {
+            rc = rmFS.GetNextRec(rec);
             if (rc != 0 && rc != RM_EOF)
             {
                 RM_PrintError(rc);

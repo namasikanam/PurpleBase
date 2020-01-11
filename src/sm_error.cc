@@ -38,6 +38,8 @@ static char *SM_ErrorMsg[] = {
     (char *)"Invalid database name",
     (char *)"Fail to open relcat, when opening a database.",      // SM_OPEN_RELCAT_FAIL (START_SM_WARN - 1)
     (char *)"Fail to open attrcat, when opening a database.",     // SM_OPEN_ATTRCAT_FAIL (START_SM_WARN - 2)
+    (char *)"SM_CLOSE_RELCAT_FAIL",                               // SM_CLOSE_RELCAT_FAIL (START_SM_ERR - 3)
+    (char *)"SM_CLOSE_RELCAT_FAIL",                               // SM_CLOSE_ATTRCAT_FAIL (START_SM_ERR - 4)
     (char *)"database cannot be closed",                          // SM_INVALID_DATABASE_CLOSE(START_SM_ERR - 5)
     (char *)"Undefined function.",                                // SM_UNDEFINED (START_SM_WARN - 6)
     (char *)"SM_TOO_LONG_RELNAME",                                // SM_TOO_LONG_RELNAME (START_SM_ERR - 7)

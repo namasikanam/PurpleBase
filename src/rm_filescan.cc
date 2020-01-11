@@ -108,6 +108,9 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)
 
                 // Check if this record is satisfied.
                 if ([this, &rec]() -> bool {
+                        if (compOp == NO_OP)
+                            return true;
+
                         char *pData;
                         RM_ChangeRC(rec.GetData(pData), RM_SCAN_NEXT_FAIL);
 
