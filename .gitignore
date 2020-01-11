@@ -17,7 +17,7 @@ src/*
 !src/pf_buffermgr.h
 !src/pf_buffermgr.cc
 !src/rm.h
-!src/redbase.h
+!src/purplebase.h
 !src/rm_rid.h
 !src/rm_rid.cc
 !src/rm_record.cc
@@ -36,7 +36,7 @@ src/*
 !src/sm.h
 !src/sm_error.cc
 !src/sm_manager.cc
-!src/redbase.cc
+!src/purplebase.cc
 !src/dbcreate.cc
 !src/dbdestroy.cc
 !src/parser.h
@@ -56,5 +56,4 @@ src/*
 !src/ql_internal.h
 !src/ql_error.cc
 !src/printer.h
-!src/y.tab.h
 !src/printer.cc

@@ -138,7 +138,7 @@ How to make the Parser read the input from some file and write the
 output to a file (or do just one of the two). 
 The changes required on a file-by-file basis are outlined here: 
 
-1. redbase.cc 
+1. purplebase.cc 
 ==============
 
 (1.1) Define the input and output file pointers globally (so that they
@@ -231,7 +231,7 @@ int my_yyinput(char * buf, int max_size) {
 #endif
 
    (2). Look at the interp(parse_tree) call in the RBparse() function. It is 
-      this function which actually interprets each redbase command. 
+      this function which actually interprets each purplebase command. 
       The function is defined in interp.c. If you want to do output 
       redirection, you would want to pass the output file pointer
       into this function, which requires changing the function

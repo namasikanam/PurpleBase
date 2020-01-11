@@ -1,9 +1,9 @@
 //
-// redbase.h
+// purplebase.h
 //   global declarations
 //
-#ifndef REDBASE_H
-#define REDBASE_H
+#ifndef PURPLEBASE_H
+#define PURPLEBASE_H
 
 // Please DO NOT include any other files in this file.
 

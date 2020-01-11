@@ -1,5 +1,5 @@
 //
-// redbase.cc
+// purplebase.cc
 //
 // Author: Jason McHugh (mchughj@cs.stanford.edu)
 //
@@ -10,7 +10,7 @@
 
 #include <bits/stdc++.h>
 #include <unistd.h>
-#include "redbase.h"
+#include "purplebase.h"
 #include "rm.h"
 #include "sm.h"
 #include "ql.h"
@@ -21,7 +21,7 @@ using namespace std;
 // main
 //
 /* Steps:
-    1) Initialize redbase components
+    1) Initialize purplebase components
     2) Open the database
     3) Call the parser
     4) Close the database
@@ -50,12 +50,14 @@ int main(int argc, char *argv[])
     // Open the database
     Try_SM(smm.OpenDb(dbname));
 
+    cout << "Valar Morghulis.\n";
+
     // Call the parser
     RBparse(pfm, smm, qlm);
 
     // Close the database
     Try_SM(smm.CloseDb());
 
-    cout << "Valar Morghulis.\n";
+    cout << "Valar Dohaeris.\n";
     return 0;
 }

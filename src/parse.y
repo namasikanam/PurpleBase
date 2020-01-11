@@ -21,14 +21,13 @@
 #include <sys/types.h>
 #include <cstdlib>
 #include <unistd.h>
-#include "redbase.h"
+#include "purplebase.h"
 #include "parser_internal.h"
 #include "pf.h"     // for PF_PrintError
 #include "rm.h"     // for RM_PrintError
 #include "ix.h"     // for IX_PrintError
 #include "sm.h"
 #include "ql.h"
-#include "ex.h"
 
 using namespace std;
 
@@ -590,8 +589,6 @@ void PrintError(RC rc)
       SM_PrintError(rc);
    else if (abs(rc) <= END_QL_WARN)
       QL_PrintError(rc);
-   else if (abs(rc) <= END_EX_WARN)
-      EX_PrintError(rc);
    else
       cerr << "Error code out of range: " << rc << "\n";
 }
@@ -599,7 +596,7 @@ void PrintError(RC rc)
 //
 // RBparse
 //
-// Desc: Parse redbase commands
+// Desc: Parse purplebase commands
 //
 void RBparse(PF_Manager &pfm, SM_Manager &smm, QL_Manager &qlm)
 {

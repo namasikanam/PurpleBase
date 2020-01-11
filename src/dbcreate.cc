@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include "rm.h"
 #include "sm.h"
-#include "redbase.h"
+#include "purplebase.h"
 #include "util_internal.h"
 using namespace std;
 

@@ -20,30 +20,33 @@ typedef float real;
 /*
  * the prompt
  */
-#define PROMPT	"\nREDBASE >> "
+#define PROMPT "\nPURPLEBASE >> "
 
 /*
  * REL_ATTR: describes a qualified attribute (relName.attrName)
  */
-typedef struct{
-    char *relName;      /* relation name        */
-    char *attrName;     /* attribute name       */
+typedef struct
+{
+    char *relName;  /* relation name        */
+    char *attrName; /* attribute name       */
 } REL_ATTR;
 
 /*
  * ATTR_VAL: <attribute, value> pair
  */
-typedef struct{
-    char *attrName;     /* attribute name       */
-    AttrType valType;   /* type of value        */
-    int valLength;      /* length if type = STRING */
-    void *value;        /* value for attribute  */
+typedef struct
+{
+    char *attrName;   /* attribute name       */
+    AttrType valType; /* type of value        */
+    int valLength;    /* length if type = STRING */
+    void *value;      /* value for attribute  */
 } ATTR_VAL;
 
 /*
  * all the available kinds of nodes
  */
-typedef enum{
+typedef enum
+{
     N_CREATETABLE,
     N_CREATEINDEX,
     N_DROPTABLE,
@@ -70,145 +73,165 @@ typedef enum{
 /*
  * structure of parse tree nodes
  */
-typedef struct node{
-   NODEKIND kind;
+typedef struct node
+{
+    NODEKIND kind;
 
-   union{
-      /* SM component nodes */
-      /* create table node */
-      struct{
-         char *relname;
-         struct node *attrlist;
-         struct node *distribute_data;
-      } CREATETABLE;
+    union {
+        /* SM component nodes */
+        /* create table node */
+        struct
+        {
+            char *relname;
+            struct node *attrlist;
+            struct node *distribute_data;
+        } CREATETABLE;
 
-      /* create index node */
-      struct{
-         char *relname;
-         char *attrname;
-      } CREATEINDEX;
+        /* create index node */
+        struct
+        {
+            char *relname;
+            char *attrname;
+        } CREATEINDEX;
 
-      /* drop index node */
-      struct{
-         char *relname;
-         char *attrname;
-      } DROPINDEX;
+        /* drop index node */
+        struct
+        {
+            char *relname;
+            char *attrname;
+        } DROPINDEX;
 
-      /* drop table node */
-      struct{
-         char *relname;
-      } DROPTABLE;
+        /* drop table node */
+        struct
+        {
+            char *relname;
+        } DROPTABLE;
 
-      /* load node */
-      struct{
-         char *relname;
-         char *filename;
-      } LOAD;
+        /* load node */
+        struct
+        {
+            char *relname;
+            char *filename;
+        } LOAD;
 
-      /* set node */
-      struct{
-         char *paramName;
-         char *string;
-      } SET;
+        /* set node */
+        struct
+        {
+            char *paramName;
+            char *string;
+        } SET;
 
-      /* help node */
-      struct{
-         char *relname;
-      } HELP;
+        /* help node */
+        struct
+        {
+            char *relname;
+        } HELP;
 
-      /* print node */
-      struct{
-         char *relname;
-      } PRINT;
+        /* print node */
+        struct
+        {
+            char *relname;
+        } PRINT;
 
-      /* QL component nodes */
-      /* query node */
-      struct{
-         struct node *relattrlist;
-         struct node *rellist;
-         struct node *conditionlist;
-      } QUERY;
+        /* QL component nodes */
+        /* query node */
+        struct
+        {
+            struct node *relattrlist;
+            struct node *rellist;
+            struct node *conditionlist;
+        } QUERY;
 
-      /* insert node */
-      struct{
-         char *relname;
-         struct node *valuelist;
-      } INSERT;
+        /* insert node */
+        struct
+        {
+            char *relname;
+            struct node *valuelist;
+        } INSERT;
 
-      /* delete node */
-      struct{
-         char *relname;
-         struct node *conditionlist;
-      } DELETE;
+        /* delete node */
+        struct
+        {
+            char *relname;
+            struct node *conditionlist;
+        } DELETE;
 
-      /* update node */
-      struct{
-         char *relname;
-         struct node *relattr;
-         struct node *relorvalue;
-         struct node *conditionlist;
-      } UPDATE;
+        /* update node */
+        struct
+        {
+            char *relname;
+            struct node *relattr;
+            struct node *relorvalue;
+            struct node *conditionlist;
+        } UPDATE;
 
-      /* command support nodes */
-      /* relation attribute node */
-      struct{
-         char *relname;
-         char *attrname;
-      } RELATTR;
+        /* command support nodes */
+        /* relation attribute node */
+        struct
+        {
+            char *relname;
+            char *attrname;
+        } RELATTR;
 
-      /* condition node */
-      struct{
-         struct node *lhsRelattr;
-         CompOp op;
-         struct node *rhsRelattr;
-         struct node *rhsValue;
-      } CONDITION;
+        /* condition node */
+        struct
+        {
+            struct node *lhsRelattr;
+            CompOp op;
+            struct node *rhsRelattr;
+            struct node *rhsValue;
+        } CONDITION;
 
-      /* relation-attribute or value */
-      struct{
-         struct node *relattr;
-         struct node *value;
-      } RELATTR_OR_VALUE;
+        /* relation-attribute or value */
+        struct
+        {
+            struct node *relattr;
+            struct node *value;
+        } RELATTR_OR_VALUE;
 
-      /* <attribute, type> pair */
-      struct{
-         char *attrname;
-         char *type;
-      } ATTRTYPE;
+        /* <attribute, type> pair */
+        struct
+        {
+            char *attrname;
+            char *type;
+        } ATTRTYPE;
 
-      /* <value, type> pair */
-      struct{
-         AttrType type;
-         int  ival;
-         real rval;
-         char *sval;
-      } VALUE;
+        /* <value, type> pair */
+        struct
+        {
+            AttrType type;
+            int ival;
+            real rval;
+            char *sval;
+        } VALUE;
 
-      /* relation node */
-      struct{
-         char *relname;
-      } RELATION;
+        /* relation node */
+        struct
+        {
+            char *relname;
+        } RELATION;
 
-      /* list node */
-      struct{
-         struct node *curr;
-         struct node *next;
-      } LIST;
+        /* list node */
+        struct
+        {
+            struct node *curr;
+            struct node *next;
+        } LIST;
 
-      /* distribute node */
-      struct{
-        char* attrName;
-        struct node *value_list;
-      } DISTRIBUTE;
-   } u;
+        /* distribute node */
+        struct
+        {
+            char *attrName;
+            struct node *value_list;
+        } DISTRIBUTE;
+    } u;
 } NODE;
-
 
 /*
  * function prototypes
  */
 NODE *newnode(NODEKIND kind);
-NODE *create_table_node(char *relname, NODE *attrlist, NODE* distribute_data);
+NODE *create_table_node(char *relname, NODE *attrlist, NODE *distribute_data);
 NODE *create_index_node(char *relname, char *attrname);
 NODE *drop_index_node(char *relname, char *attrname);
 NODE *drop_table_node(char *relname);
@@ -220,7 +243,7 @@ NODE *query_node(NODE *relattrlist, NODE *rellist, NODE *conditionlist);
 NODE *insert_node(char *relname, NODE *valuelist);
 NODE *delete_node(char *relname, NODE *conditionlist);
 NODE *update_node(char *relname, NODE *relattr, NODE *value,
-		  NODE *conditionlist);
+                  NODE *conditionlist);
 NODE *relattr_node(char *relname, char *attrname);
 NODE *condition_node(NODE *lhsRelattr, CompOp op, NODE *rhsRelattrOrValue);
 NODE *value_node(AttrType type, void *value);
@@ -230,17 +253,13 @@ NODE *relation_node(char *relname);
 NODE *list_node(NODE *n);
 NODE *prepend(NODE *n, NODE *list);
 // EX
-NODE *distribute_node(char* attrName, NODE* value_list);
+NODE *distribute_node(char *attrName, NODE *value_list);
 
 void reset_scanner(void);
 void reset_charptr(void);
 void new_query(void);
-RC   interp(NODE *n);
-int  yylex(void);
-int  yyparse(void);
+RC interp(NODE *n);
+int yylex(void);
+int yyparse(void);
 
 #endif
-
-
-
-
