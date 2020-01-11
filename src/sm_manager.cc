@@ -357,8 +357,8 @@ RC SM_Manager::DropTable(const char *relName)
 
                 if (debug)
                 {
-                    printf("When drop table %s,\n", relName);
-                    printf("THe indexNo of attr %s is %d\n", acRecord->attrName, acRecord->indexNo);
+                    // printf("When drop table %s,\n", relName);
+                    // printf("THe indexNo of attr %s is %d\n", acRecord->attrName, acRecord->indexNo);
                 }
 
                 if (acRecord->indexNo != -1)
@@ -650,18 +650,18 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
 
         if (debug)
         {
-            printf("Before load, the attributes = \n");
-            for (int i = 0; i < attrCount; ++i)
-            {
-                printf("{\n");
-                printf("\trelName = %s\n", attributes[i].relName);
-                printf("\tattrName = %s\n", attributes[i].attrName);
-                printf("\toffset = %d\n", attributes[i].offset);
-                printf("\tattrType = %s\n", attributes[i].attrType == INT ? "INT" : attributes[i].attrType == FLOAT ? "FLOAT" : "STRING");
-                printf("\tattrLength = %d\n", attributes[i].attrLength);
-                printf("\tindexNo = %d\n", attributes[i].indexNo);
-                printf("}\n");
-            }
+            // printf("Before load, the attributes = \n");
+            // for (int i = 0; i < attrCount; ++i)
+            // {
+            //     printf("{\n");
+            //     printf("\trelName = %s\n", attributes[i].relName);
+            //     printf("\tattrName = %s\n", attributes[i].attrName);
+            //     printf("\toffset = %d\n", attributes[i].offset);
+            //     printf("\tattrType = %s\n", attributes[i].attrType == INT ? "INT" : attributes[i].attrType == FLOAT ? "FLOAT" : "STRING");
+            //     printf("\tattrLength = %d\n", attributes[i].attrLength);
+            //     printf("\tindexNo = %d\n", attributes[i].indexNo);
+            //     printf("}\n");
+            // }
         }
 
         // Open the data file
@@ -697,12 +697,14 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
 
             char tupleData[tupleLength];
             memset(tupleData, 0, sizeof(tupleData));
+            string dataValues[attrCount];
 
             for (int i = 0, pos = -1; i < attrCount; ++i)
             {
                 // Parse the line
                 int next_pos = line.find(',', pos + 1);
                 string dataValue = line.substr(pos + 1, next_pos - pos - 1);
+                dataValues[i] = dataValue;
                 pos = next_pos;
 
                 // Build the tuple of the relation
@@ -750,8 +752,28 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                     strcpy(tupleData + attributes[i].offset, dataValue.c_str());
                     break;
                 }
+            }
 
-                // Insert the entries into the indexes
+            // Insert the tuple into the relation
+            if ((rc = rmFH.InsertRec(tupleData, rid)))
+            {
+                IX_PrintError(rc);
+
+                SM_Try_RM(rMManager.CloseFile(rmFH), SM_LOAD_FAIL_CLOSE_FAIL);
+                for (int i = 0; i < attrCount; ++i)
+                {
+                    if (attributes[i].indexNo != -1)
+                    {
+                        SM_Try_IX(iXManager.CloseIndex(ixIH[i]), SM_LOAD_FAIL_CLOSE_FAIL);
+                    }
+                }
+
+                throw RC{SM_LOAD_FAIL};
+            }
+
+            // Insert the entries into the indexes
+            for (int i = 0; i < attrCount; ++i)
+            {
                 if (attributes[i].indexNo != -1)
                 {
                     void *value;
@@ -760,16 +782,16 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                     switch (attributes[i].attrType)
                     {
                     case INT:
-                        valueINT = stoi(dataValue);
+                        valueINT = stoi(dataValues[i]);
                         value = &valueINT;
                         break;
                     case FLOAT:
-                        valueFLOAT = stof(dataValue);
+                        valueFLOAT = stof(dataValues[i]);
                         value = &valueFLOAT;
                         break;
                     case STRING:
                         value = malloc(attributes[i].attrLength + 1);
-                        strcpy((char *)value, dataValue.c_str());
+                        strcpy((char *)value, dataValues[i].c_str());
                         break;
                     }
                     if ((rc = ixIH[i].InsertEntry(value, rid)))
@@ -787,27 +809,13 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
 
                         throw RC{SM_LOAD_FAIL};
                     }
-                }
-            }
 
-            // Insert the tuple into the relation
-            if ((rc = rmFH.InsertRec(tupleData, rid)))
-            {
-                IX_PrintError(rc);
-
-                SM_Try_RM(rMManager.CloseFile(rmFH), SM_LOAD_FAIL_CLOSE_FAIL);
-                for (int i = 0; i < attrCount; ++i)
-                {
-                    if (attributes[i].indexNo != -1)
+                    if (debug)
                     {
-                        printf("After load %s from the data file %s, the index %d is updated as:\n", relName, fileName, attributes[i].indexNo);
-                        ixIH[i].BPlus_Print(ixIH[i].header.rootPage);
-
-                        SM_Try_IX(iXManager.CloseIndex(ixIH[i]), SM_LOAD_FAIL_CLOSE_FAIL);
+                        // printf("After Insert, the index %d is updated as:\n", relName, fileName, attributes[i].indexNo);
+                        // ixIH[i].BPlus_Print(ixIH[i].header.rootPage);
                     }
                 }
-
-                throw RC{SM_LOAD_FAIL};
             }
 
             if (debug)
@@ -824,6 +832,12 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
         {
             if (attributes[i].indexNo != -1)
             {
+                if (debug)
+                {
+                    // printf("After load %s from the data file %s, the index %d is updated as:\n", relName, fileName, attributes[i].indexNo);
+                    // ixIH[i].BPlus_Print(ixIH[i].header.rootPage);
+                }
+
                 SM_Try_IX(iXManager.CloseIndex(ixIH[i]), SM_LOAD_FAIL);
             }
         }
@@ -948,19 +962,19 @@ RC SM_Manager::Help(const char *relName)
 
         if (debug)
         {
-            printf("========= Help %s =========\n", relName);
-            printf("attributes = \n");
-            for (int i = 0; i < SM_ATTRCAT_ATTR_COUNT; ++i)
-            {
-                printf("{\n");
-                printf("\trelName = %s\n", attributes[i].relName);
-                printf("\tattrName = %s\n", attributes[i].attrName);
-                printf("\toffset = %d\n", attributes[i].offset);
-                printf("\tattrType = %s\n", attributes[i].attrType == INT ? "INT" : attributes[i].attrType == FLOAT ? "FLOAT" : "STRING");
-                printf("\tattrLength = %d\n", attributes[i].attrLength);
-                printf("\tindexNo = %d\n", attributes[i].indexNo);
-                printf("}\n");
-            }
+            // printf("========= Help %s =========\n", relName);
+            // printf("attributes = \n");
+            // for (int i = 0; i < SM_ATTRCAT_ATTR_COUNT; ++i)
+            // {
+            //     printf("{\n");
+            //     printf("\trelName = %s\n", attributes[i].relName);
+            //     printf("\tattrName = %s\n", attributes[i].attrName);
+            //     printf("\toffset = %d\n", attributes[i].offset);
+            //     printf("\tattrType = %s\n", attributes[i].attrType == INT ? "INT" : attributes[i].attrType == FLOAT ? "FLOAT" : "STRING");
+            //     printf("\tattrLength = %d\n", attributes[i].attrLength);
+            //     printf("\tindexNo = %d\n", attributes[i].indexNo);
+            //     printf("}\n");
+            // }
         }
 
         // Create a Printer object

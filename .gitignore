@@ -40,7 +40,8 @@ src/*
 !src/dbcreate.cc
 !src/dbdestroy.cc
 !src/parser.h
-!src/parser.y
+!src/parse.y
+!src/parse.c
 !src/Parser.HowTo
 !src/scan.l
 !src/scanhelp.c
@@ -53,3 +54,7 @@ src/*
 !src/ql.h
 !src/ql_manager.cc
 !src/ql_internal.h
+!src/ql_error.cc
+!src/printer.h
+!src/y.tab.h
+!src/printer.cc

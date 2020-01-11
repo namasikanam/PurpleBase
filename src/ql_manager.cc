@@ -473,7 +473,7 @@ RC QL_Manager::Insert(const char *relName,
     {
         if (QL_PrintRC(rc))
         {
-            return QL_INSERT_FAIL;
+            return QL_INSERT_NOT_EXIST;
         }
         else
         {
