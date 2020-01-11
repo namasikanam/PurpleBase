@@ -1239,7 +1239,7 @@ SM_RelcatRecord SM_Manager::GetRelInfo(const char *relName)
 
     if (debug)
     {
-        printf("Successfully GetRelInfo!\n");
+        // printf("Successfully GetRelInfo!\n");
     }
 
     // Fill the relation data

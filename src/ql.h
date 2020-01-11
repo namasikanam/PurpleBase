@@ -56,7 +56,7 @@ public:
     // Utilities
     SM_AttrcatRecord checkAttr(RelAttr &attr, int nRelations, const char *const relations[]);
     DataAttrInfo checkAttr(RelAttr &attr, const char *relName, int attrCount, DataAttrInfo attributes[]);
-    void scanRelations(int id, int nRelations, const char *const relations[], char *records[], int nConditions, Condition conditions[], int indexRelOfCondLHS[], int offsetOfCondLHS[], int indexRelOfCondRHS[], int offsetOfCondRHS[], int nSelAttrs, DataAttrInfo printAttrs[], int indexRelOfPrintAttr[], int offsetOfPrintAttr[], Printer p, char *buf);
+    void scanRelations(int id, int nRelations, const char *const relations[], char *records[], int nConditions, Condition conditions[], int indexRelOfCondLHS[], int offsetOfCondLHS[], int indexRelOfCondRHS[], int offsetOfCondRHS[], int nSelAttrs, DataAttrInfo printAttrs[], int indexRelOfPrintAttr[], int offsetOfPrintAttr[], Printer &p, char *buf);
     int indexOfRel(const char *relName, int nRelations, const char *const relations[]);
 };
 

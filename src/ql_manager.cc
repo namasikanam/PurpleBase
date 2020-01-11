@@ -70,13 +70,9 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 
         // Check every relation is distinguishable
         for (int i = 0; i < nRelations; ++i)
-            if (indexOfRel(relations[i], nRelations, relations) != nRelations)
-                throw QL_SAME_REL_APPEAR_AGAIN;
-
-        // The informations of attributes
-        int indexRelOfPrintAttr[nSelAttrs];
-        int offsetOfPrintAttr[nSelAttrs]; // offset in the original record
-        DataAttrInfo printAttrs[nSelAttrs];
+            for (int j = i + 1; j < nRelations; ++j)
+                if (strcmp(relations[i], relations[j]) == 0)
+                    throw QL_SAME_REL_APPEAR_AGAIN;
 
         // Validate the select attributes
         RelAttr *changedSelAttrs;
@@ -88,6 +84,15 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
             {
                 nSelAttrs += rcRecord[i].attrCount;
             }
+        }
+
+        // The informations of attributes
+        int indexRelOfPrintAttr[nSelAttrs];
+        int offsetOfPrintAttr[nSelAttrs]; // offset in the original record
+        DataAttrInfo printAttrs[nSelAttrs];
+
+        if (nSelAttrs >= 1 && strcmp(selAttrs[0].attrName, "*") == 0)
+        {
             changedSelAttrs = new RelAttr[nSelAttrs];
             for (int i = 0, k = 0; i < nRelations; ++i)
             {
@@ -122,6 +127,11 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
                 printAttrs[i].indexNo = acRecord.indexNo;
                 printAttrs[i].offset = i == 0 ? 0 : printAttrs[i - 1].offset + (printAttrs[i - 1].attrType == STRING ? printAttrs[i - 1].attrLength + 1 : 4);
             }
+        }
+
+        if (smManager.debug)
+        {
+            printf("nConditions = %d\n", nConditions);
         }
 
         int indexRelOfCondLHS[nConditions];
@@ -161,6 +171,11 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
                 throw QL_TYPES_INCOMPATIBLE;
             }
             changedConditions[i].rhsValue.type = lhsType;
+        }
+
+        if (smManager.debug)
+        {
+            // printf("Before building printer, indexRelOfPrintAttr[0] = %d\n", indexRelOfPrintAttr[0]);
         }
 
         Printer p(printAttrs, nSelAttrs);
@@ -240,8 +255,14 @@ SM_AttrcatRecord QL_Manager::checkAttr(RelAttr &attr, int nRelations, const char
     return ans;
 }
 
-void QL_Manager::scanRelations(int id, int nRelations, const char *const relations[], char *records[], int nConditions, Condition conditions[], int indexRelOfCondLHS[], int offsetOfCondLHS[], int indexRelOfCondRHS[], int offsetOfCondRHS[], int nSelAttrs, DataAttrInfo printAttrs[], int indexRelOfPrintAttr[], int offsetOfPrintAttr[], Printer p, char *buf)
+void QL_Manager::scanRelations(int id, int nRelations, const char *const relations[], char *records[], int nConditions, Condition conditions[], int indexRelOfCondLHS[], int offsetOfCondLHS[], int indexRelOfCondRHS[], int offsetOfCondRHS[], int nSelAttrs, DataAttrInfo printAttrs[], int indexRelOfPrintAttr[], int offsetOfPrintAttr[], Printer &p, char *buf)
 {
+    if (smManager.debug)
+    {
+        // printf("Entering scanRelations, indexRelOfPrintAttr[0] = %d\n", indexRelOfPrintAttr[0]);
+        printf("scanRelations(%d)\n", id);
+    }
+
     // Open the relation RM file
     RM_FileHandle rmFH;
     QL_Try(rmManager.OpenFile(relations[id], rmFH), QL_RELS_SCAN_FAIL);
@@ -290,6 +311,24 @@ void QL_Manager::scanRelations(int id, int nRelations, const char *const relatio
                 // Print
                 for (int i = 0; i < nSelAttrs; ++i)
                 {
+                    if (smManager.debug)
+                    {
+                        printf("Select an attr (indexRel = %d, offset = %d): ", indexRelOfPrintAttr[i], offsetOfPrintAttr[i]);
+                        switch (printAttrs[i].attrType)
+                        {
+                        case INT:
+                            printf("(INT)%d,", *(int *)(records[indexRelOfPrintAttr[i]] + offsetOfPrintAttr[i]));
+                            break;
+                        case FLOAT:
+                            printf("(FLOAT)%f,", *(float *)(records[indexRelOfPrintAttr[i]] + offsetOfPrintAttr[i]));
+                            break;
+                        case STRING:
+                            printf("(STRING)%s,", records[indexRelOfPrintAttr[i]] + offsetOfPrintAttr[i]);
+                            break;
+                        }
+                        puts("");
+                    }
+
                     memcpy(buf + printAttrs[i].offset, records[indexRelOfPrintAttr[i]] + offsetOfPrintAttr[i], printAttrs[i].attrLength);
                 }
                 p.Print(cout, buf);

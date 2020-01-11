@@ -33,7 +33,7 @@ struct SM_RelcatRecord
 
     SM_RelcatRecord(char *_relName, int _tupleLength, int _attrCount, int _indexCount);
     SM_RelcatRecord(const char *_relName, int _tupleLength, int _attrCount, int _indexCount);
-    SM_RelcatRecord(){}
+    SM_RelcatRecord() {}
 };
 
 // SM_AttrcatRecord - Records stored in the attrcat relation
@@ -109,7 +109,7 @@ public:
     SM_AttrcatRecord GetAttrInfo(const char *relName, const char *attrName);
     SM_RelcatRecord GetRelInfo(const char *relName);
 
-    bool debug = false;
+    bool debug = true;
 };
 
 //
