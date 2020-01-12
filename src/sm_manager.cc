@@ -681,9 +681,6 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
         {
             RC rc;
 
-            // for uniformity
-            line += ",";
-
             char tupleData[tupleLength];
             memset(tupleData, 0, sizeof(tupleData));
             string dataValues[attrCount];
@@ -691,7 +688,7 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
             for (int i = 0, pos = -1; i < attrCount; ++i)
             {
                 // Parse the line
-                int next_pos = line.find(',', pos + 1);
+                int next_pos = line.find('|', pos + 1);
                 string dataValue = line.substr(pos + 1, next_pos - pos - 1);
                 dataValues[i] = dataValue;
                 pos = next_pos;

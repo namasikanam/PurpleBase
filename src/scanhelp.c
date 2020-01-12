@@ -93,6 +93,8 @@ static int get_id(char *s)
         return yylval.ival = RW_TABLE;
     if (!strcmp(string, "database"))
         return yylval.ival = RW_DATABASE;
+    if (!strcmp(string, "tables"))
+        return yylval.ival = RW_DATABASE;
     if (!strcmp(string, "index"))
         return yylval.ival = RW_INDEX;
     if (!strcmp(string, "load"))
@@ -172,6 +174,10 @@ static int get_id(char *s)
         return yylval.ival = RW_ON;
     if (!strcmp(string, "off"))
         return yylval.ival = RW_OFF;
+
+    for (int i = strlen(s); i--;)
+        if (s[i] >= 'A' && s[i] <= 'Z')
+            s[i] = s[i] - 'A' + 'a';
 
     /*  unresolved lexemes are strings */
 
