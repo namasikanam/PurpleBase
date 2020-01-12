@@ -660,7 +660,8 @@ ostream &operator<<(ostream &s, const AttrInfo &ai)
       s << " attrName=" << ai.attrName
       << " attrType=" <<
       (ai.attrType == INT ? "INT" :
-       ai.attrType == FLOAT ? "FLOAT" : "STRING")
+       ai.attrType == FLOAT ? "FLOAT" :
+       ai.attrType == STRING ? "STRING": "DATE")
       << " attrLength=" << ai.attrLength;
 }
 
@@ -693,6 +694,9 @@ ostream &operator<<(ostream &s, const Value &v)
          s << " *(float *)data=" << *(float *)v.data;
          break;
       case STRING:
+         s << " (char *)data=" << (char *)v.data;
+         break;
+      case DATE:
          s << " (char *)data=" << (char *)v.data;
          break;
    }
@@ -738,6 +742,9 @@ ostream &operator<<(ostream &s, const AttrType &at)
          break;
       case STRING:
          s << "STRING";
+         break;
+      case DATE:
+         s << "DATE";
          break;
    }
    return s;

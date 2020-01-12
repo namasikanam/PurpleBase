@@ -33,6 +33,7 @@ extern QL_Manager *pQlm;
 #define E_TOOLONG -9
 #define E_STRINGTOOLONG -10
 #define E_INVATTRNAME -11
+#define E_INVDATESIZE -12
 
 /*
  * file pointer to which error messages are printed
@@ -510,6 +511,9 @@ static void mk_value(NODE *node, Value &value)
     case STRING:
         value.data = (void *)node->u.VALUE.sval;
         break;
+    case DATE:
+        value.data = (void *)node->u.VALUE.sval;
+        break;
     }
 }
 
@@ -569,6 +573,10 @@ static int parse_format_string(char *format_string, AttrType *type, int *len)
         case 's':
         case 'c':
             return E_NOLENGTH;
+        case 'd':
+            *type = DATE;
+            *len = 10;
+            break;
         default:
             return E_INVFORMATSTRING;
         }
@@ -596,6 +604,11 @@ static int parse_format_string(char *format_string, AttrType *type, int *len)
             *type = STRING;
             if (*len < 1 || *len > MAXSTRINGLEN)
                 return E_INVSTRLEN;
+            break;
+        case 'd':
+            *type = DATE;
+            if (*len < 1 || *len != 10)
+                return E_INVDATESIZE;
             break;
         default:
             return E_INVFORMATSTRING;
@@ -642,7 +655,7 @@ static void print_error(char *errmsg, RC errval)
         fprintf(ERRFP, "invalid format string\n");
         break;
     case E_INVSTRLEN:
-        fprintf(ERRFP, "invalid length for string attribute\n");
+        fprintf(ERRFP, "invalid length for STRING attribute\n");
         break;
     case E_DUPLICATEATTR:
         fprintf(ERRFP, "duplicated attribute name\n");
@@ -655,6 +668,9 @@ static void print_error(char *errmsg, RC errval)
         break;
     case E_INVATTRNAME:
         fprintf(stderr, "attribute name for distribute is not valid\n");
+        break;
+    case E_INVDATESIZE:
+        fprintf(ERRFP, "invalid length for DATE attribute\n");
         break;
     default:
         fprintf(ERRFP, "unrecognized errval: %d\n", errval);
@@ -818,6 +834,9 @@ static void print_value(NODE *n)
         break;
     case STRING:
         printf(" \"%s\"", n->u.VALUE.sval);
+        break;
+    case DATE:
+        printf(" %s", n->u.VALUE.sval);
         break;
     }
 }

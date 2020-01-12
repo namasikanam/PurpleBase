@@ -42,7 +42,7 @@ Printer::Printer(const DataAttrInfo *attributes_, const int attrCount_)
     attrCount = attrCount_;
     attributes = new DataAttrInfo[attrCount];
 
-    for (int i=0; i < attrCount; i++)
+    for (int i = 0; i < attrCount; i++)
         attributes[i] = attributes_[i];
 
     // Number of tuples printed
@@ -55,21 +55,23 @@ Printer::Printer(const DataAttrInfo *attributes_, const int attrCount_)
     // this line broke when using CC
     // changing to use malloc and free instead of new and delete
     // psHeader = (char **) new (char *)[attrCount];
-    psHeader = (char**)malloc(attrCount * sizeof(char*));
+    psHeader = (char **)malloc(attrCount * sizeof(char *));
 
     // Also figure out the number of spaces between each attribute
     spaces = new int[attrCount];
 
-    for (int i=0; i < attrCount; i++ ) {
+    for (int i = 0; i < attrCount; i++)
+    {
         // Try to find the attribute in another column
         int bFound = 0;
         psHeader[i] = new char[MAXPRINTSTRING];
-        memset(psHeader[i],0,MAXPRINTSTRING);
+        memset(psHeader[i], 0, MAXPRINTSTRING);
 
-        for (int j=0; j < attrCount; j++)
+        for (int j = 0; j < attrCount; j++)
             if (j != i &&
                 strcmp(attributes[i].attrName,
-                       attributes[j].attrName) == 0) {
+                       attributes[j].attrName) == 0)
+            {
                 bFound = 1;
                 break;
             }
@@ -80,7 +82,7 @@ Printer::Printer(const DataAttrInfo *attributes_, const int attrCount_)
         else
             strcpy(psHeader[i], attributes[i].attrName);
 
-        if (attributes[i].attrType==STRING)
+        if (attributes[i].attrType == STRING)
             spaces[i] = min(attributes[i].attrLength, MAXPRINTSTRING);
         else
             spaces[i] = max(12, strlen(psHeader[i]));
@@ -91,14 +93,14 @@ Printer::Printer(const DataAttrInfo *attributes_, const int attrCount_)
 
         // If there are negative (or zero) spaces, then insert a single
         // space.
-        if (spaces[i] < 1) {
+        if (spaces[i] < 1)
+        {
             // The psHeader will give us the space we need
             spaces[i] = 0;
-            strcat(psHeader[i]," ");
+            strcat(psHeader[i], " ");
         }
     }
 }
-
 
 //
 // Destructor
@@ -106,24 +108,25 @@ Printer::Printer(const DataAttrInfo *attributes_, const int attrCount_)
 Printer::~Printer()
 {
     for (int i = 0; i < attrCount; i++)
-        delete [] psHeader[i];
+        delete[] psHeader[i];
 
-    delete [] spaces;
+    delete[] spaces;
     //delete [] psHeader;
-    free (psHeader);
-    delete [] attributes;
+    free(psHeader);
+    delete[] attributes;
 }
 
 //
 // PrintHeader
 //
-void Printer::PrintHeader( ostream &c ) const
+void Printer::PrintHeader(ostream &c) const
 {
     int dashes = 0;
     int iLen;
-    int i,j;
+    int i, j;
 
-    for (i = 0; i < attrCount; i++) {
+    for (i = 0; i < attrCount; i++)
+    {
         // Print out the header information name
         c << psHeader[i];
         iLen = strlen(psHeader[i]);
@@ -136,7 +139,8 @@ void Printer::PrintHeader( ostream &c ) const
     }
 
     c << "\n";
-    for (i = 0; i < dashes; i++) c << "-";
+    for (i = 0; i < dashes; i++)
+        c << "-";
     c << "\n";
 }
 
@@ -158,7 +162,7 @@ void Printer::PrintFooter(ostream &c) const
 //  Unfortunately, this is essentially the same as the other Print
 //  routine.
 //
-void Printer::Print(ostream &c, const void * const data[])
+void Printer::Print(ostream &c, const void *const data[])
 {
     char str[MAXPRINTSTRING], strSpace[50];
     int i, a;
@@ -167,39 +171,54 @@ void Printer::Print(ostream &c, const void * const data[])
     // Increment the number of tuples printed
     iCount++;
 
-    for (i = 0; i<attrCount; i++) {
-        if (attributes[i].attrType == STRING) {
+    for (i = 0; i < attrCount; i++)
+    {
+        if (attributes[i].attrType == STRING)
+        {
             // We will only print out the first MAXNAME+10 characters of
             // the string value.
-            memset(str,0,MAXPRINTSTRING);
+            memset(str, 0, MAXPRINTSTRING);
 
-            if (attributes[i].attrLength>MAXPRINTSTRING) {
-                strncpy(str, (char *)data[i], MAXPRINTSTRING-1);
-                str[MAXPRINTSTRING-3] ='.';
-                str[MAXPRINTSTRING-2] ='.';
+            if (attributes[i].attrLength > MAXPRINTSTRING)
+            {
+                strncpy(str, (char *)data[i], MAXPRINTSTRING - 1);
+                str[MAXPRINTSTRING - 3] = '.';
+                str[MAXPRINTSTRING - 2] = '.';
                 c << str;
                 Spaces(MAXPRINTSTRING, strlen(str));
-            } else {
+            }
+            else
+            {
                 strncpy(str, (char *)data[i], attributes[i].attrLength);
                 c << str;
-                if (attributes[i].attrLength < (int) strlen(psHeader[i]))
+                if (attributes[i].attrLength < (int)strlen(psHeader[i]))
                     Spaces(strlen(psHeader[i]), strlen(str));
                 else
                     Spaces(attributes[i].attrLength, strlen(str));
             }
         }
-        if (attributes[i].attrType == INT) {
-            memcpy (&a, data[i], sizeof(int));
-            sprintf(strSpace, "%d",a);
+        if (attributes[i].attrType == DATE)
+        {
+            memset(str, 0, sizeof(str));
+
+            strncpy(str, (char *)data[i], 10);
+            c << str;
+            Spaces(12, 10);
+        }
+        if (attributes[i].attrType == INT)
+        {
+            memcpy(&a, data[i], sizeof(int));
+            sprintf(strSpace, "%d", a);
             c << a;
             if (strlen(psHeader[i]) < 12)
                 Spaces(12, strlen(strSpace));
             else
                 Spaces(strlen(psHeader[i]), strlen(strSpace));
         }
-        if (attributes[i].attrType == FLOAT) {
-            memcpy (&b, data[i], sizeof(float));
-            sprintf(strSpace, "%f",b);
+        if (attributes[i].attrType == FLOAT)
+        {
+            memcpy(&b, data[i], sizeof(float));
+            sprintf(strSpace, "%.2f", b);
             c << strSpace;
             if (strlen(psHeader[i]) < 12)
                 Spaces(12, strlen(strSpace));
@@ -219,7 +238,7 @@ void Printer::Print(ostream &c, const void * const data[])
 //  attempt is made to keep the tuple constrained to some number of
 //  characters.
 //
-void Printer::Print(ostream &c, const char * const data)
+void Printer::Print(ostream &c, const char *const data)
 {
     char str[MAXPRINTSTRING], strSpace[50];
     int i, a;
@@ -231,39 +250,54 @@ void Printer::Print(ostream &c, const char * const data)
     // Increment the number of tuples printed
     iCount++;
 
-    for (i = 0; i<attrCount; i++) {
-        if (attributes[i].attrType == STRING) {
+    for (i = 0; i < attrCount; i++)
+    {
+        if (attributes[i].attrType == STRING)
+        {
             // We will only print out the first MAXNAME+10 characters of
             // the string value.
-            memset(str,0,MAXPRINTSTRING);
+            memset(str, 0, MAXPRINTSTRING);
 
-            if (attributes[i].attrLength>MAXPRINTSTRING) {
-                strncpy(str, data+attributes[i].offset, MAXPRINTSTRING-1);
-                str[MAXPRINTSTRING-3] ='.';
-                str[MAXPRINTSTRING-2] ='.';
+            if (attributes[i].attrLength > MAXPRINTSTRING)
+            {
+                strncpy(str, data + attributes[i].offset, MAXPRINTSTRING - 1);
+                str[MAXPRINTSTRING - 3] = '.';
+                str[MAXPRINTSTRING - 2] = '.';
                 c << str;
                 Spaces(MAXPRINTSTRING, strlen(str));
-            } else {
-                strncpy(str, data+attributes[i].offset, attributes[i].attrLength);
+            }
+            else
+            {
+                strncpy(str, data + attributes[i].offset, attributes[i].attrLength);
                 c << str;
-                if (attributes[i].attrLength < (int) strlen(psHeader[i]))
+                if (attributes[i].attrLength < (int)strlen(psHeader[i]))
                     Spaces(strlen(psHeader[i]), strlen(str));
                 else
                     Spaces(attributes[i].attrLength, strlen(str));
             }
         }
-        if (attributes[i].attrType == INT) {
-            memcpy (&a, (data+attributes[i].offset), sizeof(int));
-            sprintf(strSpace, "%d",a);
+        if (attributes[i].attrType == DATE)
+        {
+            memset(str, 0, MAXPRINTSTRING);
+
+            strncpy(str, data + attributes[i].offset, 10);
+            c << str;
+            Spaces(12, 10);
+        }
+        if (attributes[i].attrType == INT)
+        {
+            memcpy(&a, (data + attributes[i].offset), sizeof(int));
+            sprintf(strSpace, "%d", a);
             c << a;
             if (strlen(psHeader[i]) < 12)
                 Spaces(12, strlen(strSpace));
             else
                 Spaces(strlen(psHeader[i]), strlen(strSpace));
         }
-        if (attributes[i].attrType == FLOAT) {
-            memcpy (&b, (data+attributes[i].offset), sizeof(float));
-            sprintf(strSpace, "%f",b);
+        if (attributes[i].attrType == FLOAT)
+        {
+            memcpy(&b, (data + attributes[i].offset), sizeof(float));
+            sprintf(strSpace, "%.2f", b);
             c << strSpace;
             if (strlen(psHeader[i]) < 12)
                 Spaces(12, strlen(strSpace));

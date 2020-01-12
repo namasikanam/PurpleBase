@@ -35,7 +35,7 @@ RC RM_FileScan::OpenScan(const RM_FileHandle &fileHandle, AttrType attrType, int
     {
         this->value = nullptr;
     }
-    else if (attrType == STRING)
+    else if (attrType == STRING || attrType == DATE)
     {
 #ifdef RM_LOG
         printf("Open scan with %s\n", (const char *)value);
@@ -61,24 +61,6 @@ RC RM_FileScan::OpenScan(const RM_FileHandle &fileHandle, AttrType attrType, int
 
 #ifdef RM_LOG
     printf("scanvalue = ");
-    if (this->value != nullptr)
-    {
-        switch (attrType)
-        {
-        case INT:
-            printf("%d", *(int *)(this->value));
-            break;
-        case FLOAT:
-            printf("%f", *(float *)(this->value));
-            break;
-        case STRING:
-            for (int i = 0; i < attrLength; ++i)
-                putchar(((char *)(this->value))[i]);
-            break;
-        }
-    }
-    else
-        printf("nullptr");
     putchar('\n');
 #endif
 
@@ -179,6 +161,8 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)
                             }
                             break;
                         }
+                        case DATE:
+                            attrLength = 10;
                         case STRING:
                         {
                             char *recData = pData + attrOffset, *scanData = (char *)value;

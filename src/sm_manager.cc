@@ -13,6 +13,7 @@
 #include "printer.h"
 #include "parser.h"
 #include "sm_internal.h"
+#include <ctime>
 using namespace std;
 
 SM_RelcatRecord::SM_RelcatRecord(char *_relName, int _tupleLength, int _attrCount, int _indexCount) : tupleLength(_tupleLength), attrCount(_attrCount), indexCount(_indexCount)
@@ -650,18 +651,6 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
 
         if (debug)
         {
-            // printf("Before load, the attributes = \n");
-            // for (int i = 0; i < attrCount; ++i)
-            // {
-            //     printf("{\n");
-            //     printf("\trelName = %s\n", attributes[i].relName);
-            //     printf("\tattrName = %s\n", attributes[i].attrName);
-            //     printf("\toffset = %d\n", attributes[i].offset);
-            //     printf("\tattrType = %s\n", attributes[i].attrType == INT ? "INT" : attributes[i].attrType == FLOAT ? "FLOAT" : "STRING");
-            //     printf("\tattrLength = %d\n", attributes[i].attrLength);
-            //     printf("\tindexNo = %d\n", attributes[i].indexNo);
-            //     printf("}\n");
-            // }
         }
 
         // Open the data file
@@ -713,7 +702,7 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                 case INT:
                     if (debug)
                     {
-                        cout << "Load data: stoi(" << dataValue << "),";
+                        // cout << "Load data: stoi(" << dataValue << "),";
                     }
                     try
                     {
@@ -728,7 +717,7 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                 case FLOAT:
                     if (debug)
                     {
-                        cout << "Load data: stof(" << dataValue << ")\n";
+                        // cout << "Load data: stof(" << dataValue << ")\n";
                     }
                     try
                     {
@@ -743,13 +732,25 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                 case STRING:
                     if (debug)
                     {
-                        cout << "Load data: stoi(" << dataValue << ")\n";
+                        // cout << "Load data: stoi(" << dataValue << ")\n";
                     }
                     if (dataValue.size() > attributes[i].attrLength)
                     {
                         throw SM_LOAD_STRING_TOO_LONG;
                     }
                     strcpy(tupleData + attributes[i].offset, dataValue.c_str());
+                    break;
+                case DATE:
+                    if (dataValue.size() != 10)
+                    {
+                        throw SM_LOAD_DATE_INV_LEN;
+                    }
+                    struct tm tm;
+                    if (!strptime(dataValue.c_str(), "%Y-%m-%d", &tm))
+                    {
+                        throw SM_LOAD_DATE_INV_FORMAT;
+                    }
+                    strncpy(tupleData + attributes[i].offset, dataValue.c_str(), 10);
                     break;
                 }
             }
@@ -792,6 +793,10 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                     case STRING:
                         value = malloc(attributes[i].attrLength + 1);
                         strcpy((char *)value, dataValues[i].c_str());
+                        break;
+                    case DATE:
+                        value = malloc(10);
+                        strncpy((char *)value, dataValues[i].c_str(), 10);
                         break;
                     }
                     if ((rc = ixIH[i].InsertEntry(value, rid)))
@@ -876,10 +881,10 @@ RC SM_Manager::Help()
 
         if (debug)
         {
-            for (int i = 0; i < SM_RELCAT_ATTR_COUNT; ++i)
-            {
-                cout << "attr(" << i << ") = (relName = " << attributes[i].relName << "), (attrName = " << attributes[i].attrName << ")\n";
-            }
+            // for (int i = 0; i < SM_RELCAT_ATTR_COUNT; ++i)
+            // {
+            //     cout << "attr(" << i << ") = (relName = " << attributes[i].relName << "), (attrName = " << attributes[i].attrName << ")\n";
+            // }
         }
 
         // Create a Printer object
@@ -959,23 +964,6 @@ RC SM_Manager::Help(const char *relName)
         // Fill the attributes structure
         DataAttrInfo attributes[SM_ATTRCAT_ATTR_COUNT];
         GetAttrInfo("attrcat", SM_ATTRCAT_ATTR_COUNT, (void *)attributes);
-
-        if (debug)
-        {
-            // printf("========= Help %s =========\n", relName);
-            // printf("attributes = \n");
-            // for (int i = 0; i < SM_ATTRCAT_ATTR_COUNT; ++i)
-            // {
-            //     printf("{\n");
-            //     printf("\trelName = %s\n", attributes[i].relName);
-            //     printf("\tattrName = %s\n", attributes[i].attrName);
-            //     printf("\toffset = %d\n", attributes[i].offset);
-            //     printf("\tattrType = %s\n", attributes[i].attrType == INT ? "INT" : attributes[i].attrType == FLOAT ? "FLOAT" : "STRING");
-            //     printf("\tattrLength = %d\n", attributes[i].attrLength);
-            //     printf("\tindexNo = %d\n", attributes[i].indexNo);
-            //     printf("}\n");
-            // }
-        }
 
         // Create a Printer object
         Printer p(attributes, SM_ATTRCAT_ATTR_COUNT);

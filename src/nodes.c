@@ -14,6 +14,8 @@
 #include "purplebase.h"
 #include "parser_internal.h"
 #include "y.tab.h"
+#include "ctype.h"
+#include "time.h"
 
 /*
  * total number of nodes available for a given parse-tree
@@ -308,6 +310,20 @@ NODE *value_node(AttrType type, void *value)
         n->u.VALUE.rval = *(float *)value;
         break;
     case STRING:
+    {
+        char *s = (char *)value;
+        if (strlen(s) == 10)
+        {
+            struct tm tm;
+            if (strptime(s, "%Y-%m-%d", &tm))
+            {
+                n->u.VALUE.type = DATE;
+            }
+        }
+        n->u.VALUE.sval = s;
+    }
+    break;
+    case DATE:
         n->u.VALUE.sval = (char *)value;
         break;
     }

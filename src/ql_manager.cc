@@ -106,7 +106,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
                     offsetOfPrintAttr[k] = attributes[i][j].offset;
 
                     printAttrs[k] = attributes[i][j];
-                    printAttrs[k].offset = k == 0 ? 0 : printAttrs[k - 1].offset + (printAttrs[k - 1].attrType == STRING ? printAttrs[k - 1].attrLength + 1 : 4);
+                    printAttrs[k].offset = k == 0 ? 0 : printAttrs[k - 1].offset + printAttrs[k - 1].attrLength + (printAttrs[k - 1].attrType == STRING);
                 }
             }
         }
@@ -125,7 +125,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
                 printAttrs[i].attrType = acRecord.attrType;
                 printAttrs[i].attrLength = acRecord.attrLength;
                 printAttrs[i].indexNo = acRecord.indexNo;
-                printAttrs[i].offset = i == 0 ? 0 : printAttrs[i - 1].offset + (printAttrs[i - 1].attrType == STRING ? printAttrs[i - 1].attrLength + 1 : 4);
+                printAttrs[i].offset = i == 0 ? 0 : printAttrs[i - 1].offset + printAttrs[i - 1].attrLength + (printAttrs[i - 1].attrType == STRING);
             }
         }
 
@@ -334,18 +334,6 @@ void QL_Manager::scanRelations(int id, int nRelations, const char *const relatio
                         printf("Select an attr (indexRel = %d, ", indexRelOfPrintAttr[i]);
                         printf("offset = %d): ", offsetOfPrintAttr[i]);
 
-                        switch (printAttrs[i].attrType)
-                        {
-                        case INT:
-                            printf("(INT)%d,", *(int *)(records[indexRelOfPrintAttr[i]] + offsetOfPrintAttr[i]));
-                            break;
-                        case FLOAT:
-                            printf("(FLOAT)%f,", *(float *)(records[indexRelOfPrintAttr[i]] + offsetOfPrintAttr[i]));
-                            break;
-                        case STRING:
-                            printf("(STRING)%s,", records[indexRelOfPrintAttr[i]] + offsetOfPrintAttr[i]);
-                            break;
-                        }
                         puts("");
                     }
 
@@ -762,7 +750,7 @@ RC QL_Manager::Update(const char *relName,
             else
             {
                 rhsType = changedupdCond.rhsValue.type;
-                lengthRHS = rhsType == STRING ? strlen((char *)changedupdCond.rhsValue.data) : 4;
+                lengthRHS = rhsType == STRING ? strlen((char *)changedupdCond.rhsValue.data) : rhsType == DATE ? 10 : 4;
             }
 
             // Check if the types of LHS and RHS are compatible (same)

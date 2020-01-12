@@ -191,9 +191,11 @@ void SM_PrintError(RC rc);
 #define SM_HELP_REL_CAT_SCAN_FAIL_CLOSE_SCAN_FAIL (START_SM_ERR - 34)
 #define SM_PRINT_FAIL (START_SM_ERR - 35)
 #define SM_PRINT_SCAN_FAIL (START_SM_ERR - 36)
+#define SM_LOAD_DATE_INV_LEN (START_SM_ERR - 37)
+#define SM_LOAD_DATE_INV_FORMAT (START_SM_ERR - 38)
 
 // Error in UNIX system call or library routine
-#define SM_UNIX (START_SM_ERR - 37) // Unix error
+#define SM_UNIX (START_SM_ERR - 39) // Unix error
 #define SM_LASTERROR SM_UNIX
 
 #endif

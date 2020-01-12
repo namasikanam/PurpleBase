@@ -143,6 +143,25 @@ inline bool compare(AttrType type, CompOp op, const void *x, const void *y)
             return strcmp((const char *)x, (const char *)y) >= 0;
         }
         break;
+    case DATE:
+        switch (op)
+        {
+        case NO_OP:
+            return true;
+        case EQ_OP:
+            return strncmp((const char *)x, (const char *)y, 10) == 0;
+        case NE_OP:
+            return strncmp((const char *)x, (const char *)y, 10) != 0;
+        case LT_OP:
+            return strncmp((const char *)x, (const char *)y, 10) < 0;
+        case GT_OP:
+            return strncmp((const char *)x, (const char *)y, 10) > 0;
+        case LE_OP:
+            return strncmp((const char *)x, (const char *)y, 10) <= 0;
+        case GE_OP:
+            return strncmp((const char *)x, (const char *)y, 10) >= 0;
+        }
+        break;
     }
 }
 

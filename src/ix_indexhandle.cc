@@ -339,6 +339,10 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
                             key = new char[header.attrLength];
                             memcpy(key, rightPageData + sizeof(bool) + sizeof(int), header.attrLength);
                             break;
+                        case DATE:
+                            key = new char[10];
+                            memcpy(key, rightPageData + sizeof(bool) + sizeof(int), 10);
+                            break;
                         }
 
                         IX_Try(pFFileHandle.UnpinPage(rightPageNum), IX_HANDLE_INSERT_LEAF_SPLIT_BUT_UNPIN_RIGHT_FAIL);
@@ -507,6 +511,10 @@ const pair<const void *, PageNum> IX_IndexHandle::BPlus_Insert(PageNum nodePageN
                                 key = new char[header.attrLength];
                                 memcpy(key, rightPageData + sizeof(bool) + sizeof(int), header.attrLength);
                                 break;
+                            case DATE:
+                                key = new char[10];
+                                memcpy(key, rightPageData + sizeof(bool) + sizeof(int), 10);
+                                break;
                             }
 
                             IX_Try(pFFileHandle.UnpinPage(rightPageNum), IX_HANDLE_INSERT_INNER_SPLIT_BUT_UNPIN_RIGHT_FAIL);
@@ -569,7 +577,6 @@ bool IX_IndexHandle::BPlus_Delete(PageNum nodePageNum, const void *pData, const 
             {
                 ((RID *)(nodePageData + j + header.attrLength))->viable = false;
 
-                
                 IX_Try(pFFileHandle.UnpinPage(nodePageNum), IX_HANDLE_DELETE_LEAF_BUT_UNPIN_FAIL);
                 return true;
             }
@@ -691,6 +698,15 @@ int IX_IndexHandle::cmp(const void *data1, const void *data2) const
                 return char1 < char2 ? -1 : 1;
         }
         return 0;
+    case DATE:
+        for (int i = 0; i < 10; ++i)
+        {
+            char char1 = ((const char *)data1)[i];
+            char char2 = ((const char *)data2)[i];
+            if (char1 != char2)
+                return char1 < char2 ? -1 : 1;
+        }
+        return 0;
     }
     return 0; // This command won't run if everything works normally
 }
@@ -726,5 +742,13 @@ void IX_IndexHandle::Attr_Print(const void *data) const
             if (c != ' ')
                 putchar(c);
         }
+        break;
+    case DATE:
+        for (int k = 0; k < 10; ++k)
+        {
+            char c = *(const char *)(data + k);
+            putchar(c);
+        }
+        break;
     };
 }
