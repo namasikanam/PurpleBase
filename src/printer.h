@@ -10,9 +10,9 @@
 
 #include <iostream>
 #include <cstring>
-#include "purplebase.h"      // For definition of MAXNAME
+#include "purplebase.h" // For definition of MAXNAME
 
-#define MAXPRINTSTRING  ((2*MAXNAME) + 5)
+#define MAXPRINTSTRING ((2 * MAXNAME) + 5)
 
 //
 // DataAttrInfo
@@ -24,45 +24,51 @@
 struct DataAttrInfo
 {
     // Default constructor
-    DataAttrInfo() {
-       memset(relName, 0, MAXNAME + 1);
-       memset(attrName, 0, MAXNAME + 1);
+    DataAttrInfo()
+    {
+        memset(relName, 0, MAXNAME + 1);
+        memset(attrName, 0, MAXNAME + 1);
     };
 
     // Copy constructor
-    DataAttrInfo( const DataAttrInfo &d ) {
-       strcpy (relName, d.relName);
-       strcpy (attrName, d.attrName);
-       offset = d.offset;
-       attrType = d.attrType;
-       attrLength = d.attrLength;
-       indexNo = d.indexNo;
+    DataAttrInfo(const DataAttrInfo &d)
+    {
+        strcpy(relName, d.relName);
+        strcpy(attrName, d.attrName);
+        offset = d.offset;
+        attrType = d.attrType;
+        attrLength = d.attrLength;
+        indexNo = d.indexNo;
     };
 
-    DataAttrInfo& operator=(const DataAttrInfo &d) {
-       if (this != &d) {
-          strcpy (relName, d.relName);
-          strcpy (attrName, d.attrName);
-          offset = d.offset;
-          attrType = d.attrType;
-          attrLength = d.attrLength;
-          indexNo = d.indexNo;
-       }
-       return (*this);
+    DataAttrInfo &operator=(const DataAttrInfo &d)
+    {
+        if (this != &d)
+        {
+            strcpy(relName, d.relName);
+            strcpy(attrName, d.attrName);
+            offset = d.offset;
+            attrType = d.attrType;
+            attrLength = d.attrLength;
+            indexNo = d.indexNo;
+        }
+        return (*this);
     };
 
-    char     relName[MAXNAME+1];    // Relation name
-    char     attrName[MAXNAME+1];   // Attribute name
-    int      offset;                // Offset of attribute
-    AttrType attrType;              // Type of attribute
-    int      attrLength;            // Length of attribute
-    int      indexNo;               // Index number of attribute
+    char relName[MAXNAME + 1];  // Relation name
+    char attrName[MAXNAME + 1]; // Attribute name
+    int offset;                 // Offset of attribute
+    AttrType attrType;          // Type of attribute
+    int attrLength;             // Length of attribute
+    int indexNo;                // Index number of attribute
+    bool NotNULL;               // Can it be null?
 };
 
 // Print some number of spaces
 void Spaces(int maxLength, int printedSoFar);
 
-class Printer {
+class Printer
+{
 public:
     // Constructor.  Takes as arguments an array of attributes along with
     // the length of the array.
@@ -75,8 +81,8 @@ public:
     // data and is useful when the data corresponds to a single record in
     // a table -- since in this situation you can just send in the
     // RecData.  The second will be useful in the QL layer.
-    void Print(std::ostream &c, const char * const data);
-    void Print(std::ostream &c, const void * const data[]);
+    void Print(std::ostream &c, const char *const data);
+    void Print(std::ostream &c, const void *const data[]);
 
     void PrintFooter(std::ostream &c) const;
 
@@ -93,13 +99,12 @@ private:
     int iCount;
 };
 
-
 #ifndef min
-#define min(a,b) (((a) < (b)) ? (a) : (b))
+#define min(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
 #ifndef max
-#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define max(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 
 #endif

@@ -172,29 +172,6 @@ NODE *help_node(char *relname)
 }
 
 /*
- * show_database_node: allocates, initializes, and returns a pointer to a new
- * show database node having the indicated values.
- */
-NODE *show_database_node()
-{
-    NODE *n = newnode(N_SHOWDATABASE);
-
-    return n;
-}
-
-/*
- * show_table_node: allocates, initializes, and returns a pointer to a new
- * show table node having the indicated values.
- */
-NODE *show_table_node(char *relname)
-{
-    NODE *n = newnode(N_SHOWTABLE);
-
-    n->u.SHOWTABLE.relname = relname;
-    return n;
-}
-
-/*
  * print_node: allocates, initializes, and returns a pointer to a new
  * print node having the indicated values.
  */
@@ -347,12 +324,15 @@ NODE *relattr_or_value_node(NODE *relattr, NODE *value)
  * attrtype_node: allocates, initializes, and returns a pointer to a new
  * attrtype node having the indicated values.
  */
-NODE *attrtype_node(char *attrname, char *type)
+NODE *attrtype_node(AttrType type, char *attrname, int attrLength)
 {
+    // printf("attrtypr_node(type = %d, attrname = %s, attrLength = %d)\n", type, attrname, attrLength);
+
     NODE *n = newnode(N_ATTRTYPE);
 
     n->u.ATTRTYPE.attrname = attrname;
     n->u.ATTRTYPE.type = type;
+    n->u.ATTRTYPE.attrLength = attrLength;
     return n;
 }
 

@@ -109,7 +109,7 @@ public:
     SM_AttrcatRecord GetAttrInfo(const char *relName, const char *attrName);
     SM_RelcatRecord GetRelInfo(const char *relName);
 
-    bool debug = true;
+    bool bDebug = false;
 };
 
 //

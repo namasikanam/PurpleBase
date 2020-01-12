@@ -44,7 +44,6 @@ extern QL_Manager *pQlm;
  * local functions
  */
 static int mk_attr_infos(NODE *list, int max, AttrInfo attrInfos[]);
-static int parse_format_string(char *format_string, AttrType *type, int *len);
 static int mk_rel_attrs(NODE *list, int max, RelAttr relAttrs[]);
 static void mk_rel_attr(NODE *node, RelAttr &relAttr);
 static int mk_relations(NODE *list, int max, char *relations[]);
@@ -173,16 +172,6 @@ RC interp(NODE *n)
             errval = pSmm->Help(n->u.HELP.relname);
         else
             errval = pSmm->Help();
-        break;
-
-    case N_SHOWTABLE: /* for Help() */
-
-        errval = pSmm->Help(n->u.SHOWTABLE.relname);
-        break;
-
-    case N_SHOWDATABASE: /* for Help() */
-
-        errval = pSmm->Help();
         break;
 
     case N_PRINT: /* for Print() */
@@ -333,10 +322,7 @@ RC interp(NODE *n)
 static int mk_attr_infos(NODE *list, int max, AttrInfo attrInfos[])
 {
     int i;
-    int len;
-    AttrType type;
     NODE *attr;
-    RC errval;
 
     /* for each element of the list... */
     for (i = 0; list != NULL; ++i, list = list->u.LIST.next)
@@ -352,15 +338,10 @@ static int mk_attr_infos(NODE *list, int max, AttrInfo attrInfos[])
         if (strlen(attr->u.ATTRTYPE.attrname) > MAXNAME)
             return E_TOOLONG;
 
-        /* interpret the format string */
-        errval = parse_format_string(attr->u.ATTRTYPE.type, &type, &len);
-        if (errval != E_OK)
-            return errval;
-
         /* add it to the list */
         attrInfos[i].attrName = attr->u.ATTRTYPE.attrname;
-        attrInfos[i].attrType = type;
-        attrInfos[i].attrLength = len;
+        attrInfos[i].attrType = attr->u.ATTRTYPE.type;
+        attrInfos[i].attrLength = attr->u.ATTRTYPE.attrLength;
     }
 
     return i;
@@ -537,92 +518,6 @@ static int mk_partition_vector(NODE *value_list, int max, Value partition_vector
 }
 
 /*
- * parse_format_string: deciphers a format string of the form: xl
- * where x is a type specification (one of `i' INTEGER, `r' REAL,
- * `s' STRING, or `c' STRING (character)) and l is a length (l is
- * optional for `i' and `r'), and stores the type in *type and the
- * length in *len.
- *
- * Returns
- *    E_OK on success
- *    error code otherwise
- */
-static int parse_format_string(char *format_string, AttrType *type, int *len)
-{
-    int n;
-    char c;
-
-    /* extract the components of the format string */
-    n = sscanf(format_string, "%c%d", &c, len);
-
-    /* if no length given... */
-    if (n == 1)
-    {
-
-        switch (c)
-        {
-        case 'i':
-            *type = INT;
-            *len = sizeof(int);
-            break;
-        case 'f':
-        case 'r':
-            *type = FLOAT;
-            *len = sizeof(float);
-            break;
-        case 's':
-        case 'c':
-            return E_NOLENGTH;
-        case 'd':
-            *type = DATE;
-            *len = 10;
-            break;
-        default:
-            return E_INVFORMATSTRING;
-        }
-    }
-
-    /* if both are given, make sure the length is valid */
-    else if (n == 2)
-    {
-
-        switch (c)
-        {
-        case 'i':
-            *type = INT;
-            if (*len != sizeof(int))
-                return E_INVINTSIZE;
-            break;
-        case 'f':
-        case 'r':
-            *type = FLOAT;
-            if (*len != sizeof(float))
-                return E_INVREALSIZE;
-            break;
-        case 's':
-        case 'c':
-            *type = STRING;
-            if (*len < 1 || *len > MAXSTRINGLEN)
-                return E_INVSTRLEN;
-            break;
-        case 'd':
-            *type = DATE;
-            if (*len < 1 || *len != 10)
-                return E_INVDATESIZE;
-            break;
-        default:
-            return E_INVFORMATSTRING;
-        }
-    }
-
-    /* otherwise it's not a valid format string */
-    else
-        return E_INVFORMATSTRING;
-
-    return E_OK;
-}
-
-/*
  * print_error: prints an error message corresponding to errval
  */
 static void print_error(char *errmsg, RC errval)
@@ -780,7 +675,22 @@ static void print_attrtypes(NODE *n)
     for (; n != NULL; n = n->u.LIST.next)
     {
         attr = n->u.LIST.curr;
-        printf("%s = %s", attr->u.ATTRTYPE.attrname, attr->u.ATTRTYPE.type);
+        printf("%s = ", attr->u.ATTRTYPE.attrname);
+        switch (attr->u.ATTRTYPE.type)
+        {
+        case INT:
+            puts("INT");
+            break;
+        case FLOAT:
+            puts("FLOAT");
+            break;
+        case STRING:
+            puts("STRING");
+            break;
+        case DATE:
+            puts("DATE");
+            break;
+        }
         if (n->u.LIST.next != NULL)
             printf(", ");
     }

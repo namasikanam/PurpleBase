@@ -129,7 +129,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
             }
         }
 
-        if (smManager.debug)
+        if (smManager.bDebug)
         {
             printf("nConditions = %d\n", nConditions);
         }
@@ -173,9 +173,22 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
             changedConditions[i].rhsValue.type = lhsType;
         }
 
-        if (smManager.debug)
+        if (smManager.bDebug)
         {
             // printf("Before building printer, indexRelOfPrintAttr[0] = %d\n", indexRelOfPrintAttr[0]);
+        }
+        if (bQueryPlans)
+        {
+            cout << "\x1B[31mSelect\033[0m\n";
+            cout << "  nSelAttrs = " << nSelAttrs << "\n";
+            for (int i = 0; i < nSelAttrs; i++)
+                cout << "    selAttrs[" << i << "]:" << changedSelAttrs[i] << "\n";
+            cout << "  nRelations = " << nRelations << "\n";
+            for (int i = 0; i < nRelations; i++)
+                cout << "    relations[" << i << "] " << relations[i] << "\n";
+            cout << "  nCondtions = " << nConditions << "\n";
+            for (int i = 0; i < nConditions; i++)
+                cout << "    conditions[" << i << "]:" << changedConditions[i] << "\n";
         }
 
         Printer p(printAttrs, nSelAttrs);
@@ -257,7 +270,7 @@ SM_AttrcatRecord QL_Manager::checkAttr(RelAttr &attr, int nRelations, const char
 
 void QL_Manager::scanRelations(int id, int nRelations, const char *const relations[], char *records[], int nConditions, Condition conditions[], int indexRelOfCondLHS[], int offsetOfCondLHS[], int indexRelOfCondRHS[], int offsetOfCondRHS[], int nSelAttrs, DataAttrInfo printAttrs[], int indexRelOfPrintAttr[], int offsetOfPrintAttr[], Printer &p, char *buf)
 {
-    if (smManager.debug)
+    if (smManager.bDebug)
     {
         // printf("Entering scanRelations, indexRelOfPrintAttr[0] = %d\n", indexRelOfPrintAttr[0]);
         printf("scanRelations(%d)\n", id);
@@ -290,7 +303,7 @@ void QL_Manager::scanRelations(int id, int nRelations, const char *const relatio
 
             if (id + 1 == nRelations)
             {
-                if (smManager.debug)
+                if (smManager.bDebug)
                 {
                     printf("It's time to check condition.\n");
                 }
@@ -298,7 +311,7 @@ void QL_Manager::scanRelations(int id, int nRelations, const char *const relatio
                 bool satisfied = true;
                 for (int i = 0; i < nConditions; ++i)
                 {
-                    if (smManager.debug)
+                    if (smManager.bDebug)
                     {
                         printf("Check condition %d\n", i);
                     }
@@ -322,14 +335,14 @@ void QL_Manager::scanRelations(int id, int nRelations, const char *const relatio
                 }
                 if (!satisfied)
                     continue;
-                if (smManager.debug)
+                if (smManager.bDebug)
                 {
                     printf("It's time to print!\n");
                 }
                 // Print
                 for (int i = 0; i < nSelAttrs; ++i)
                 {
-                    if (smManager.debug)
+                    if (smManager.bDebug)
                     {
                         printf("Select an attr (indexRel = %d, ", indexRelOfPrintAttr[i]);
                         printf("offset = %d): ", offsetOfPrintAttr[i]);
@@ -339,7 +352,7 @@ void QL_Manager::scanRelations(int id, int nRelations, const char *const relatio
 
                     memcpy(buf + printAttrs[i].offset, records[indexRelOfPrintAttr[i]] + offsetOfPrintAttr[i], printAttrs[i].attrLength);
                 }
-                if (smManager.debug)
+                if (smManager.bDebug)
                 {
                     printf("It's printed!\n");
                 }
@@ -421,6 +434,15 @@ RC QL_Manager::Insert(const char *relName,
             {
                 return QL_INSERT_TOO_LONG_STRING;
             }
+        }
+
+        if (bQueryPlans)
+        {
+            cout << "\x1B[32mInsert\033[0m\n";
+            cout << "  relName = " << relName << "\n";
+            cout << "  nValues = " << nValues << "\n";
+            for (int i = 0; i < nValues; i++)
+                cout << "    values[" << i << "]:" << values[i] << "\n";
         }
 
         // Open the RM file
@@ -550,6 +572,15 @@ RC QL_Manager::Delete(const char *relName,
                 throw QL_TYPES_INCOMPATIBLE;
             }
             changedConditions[i].rhsValue.type = lhsType;
+        }
+
+        if (bQueryPlans)
+        {
+            cout << "\x1B[34mDelete\033[0m\n";
+            cout << "  relName = " << relName << "\n";
+            cout << "  nCondtions = " << nConditions << "\n";
+            for (int i = 0; i < nConditions; i++)
+                cout << "    conditions[" << i << "]:" << conditions[i] << "\n";
         }
 
         // Prepare the printer class
@@ -797,6 +828,21 @@ RC QL_Manager::Update(const char *relName,
                 throw QL_TYPES_INCOMPATIBLE;
             }
             changedConditions[i].rhsValue.type = lhsType;
+        }
+
+        if (bQueryPlans)
+        {
+            int i;
+            cout << "\x1B[36mUpdate\033[0m\n";
+            cout << "  relName = " << relName << "\n";
+            cout << "  updAttr:" << updAttr << "\n";
+            if (bIsValue)
+                cout << "  rhs is value: " << rhsValue << "\n";
+            else
+                cout << "  rhs is attribute: " << rhsRelAttr << "\n";
+            cout << "  nConditions = " << nConditions << "\n";
+            for (i = 0; i < nConditions; i++)
+                cout << "    conditions[" << i << "]:" << conditions[i] << "\n";
         }
 
         // Prepare the printer class

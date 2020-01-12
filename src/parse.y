@@ -60,7 +60,7 @@ static NODE *parse_tree;
 
 int bExit;                 // when to return from RBparse
 
-int bQueryPlans;           // When to print the query plans
+int bQueryPlans = 1;           // When to print the query plans
 
 PF_Manager *pPfm;          // PF component manager
 SM_Manager *pSmm;          // SM component manager
@@ -97,6 +97,11 @@ QL_Manager *pQlm;          // QL component manager
       RW_AND
       RW_INTO
       RW_VALUES
+      RW_INT
+      RW_DATE
+      RW_FLOAT
+      RW_VARCHAR
+      RW_DESC
       T_EQ
       T_LT
       T_LE
@@ -137,8 +142,6 @@ QL_Manager *pQlm;          // QL component manager
       load
       set
       help
-      showdatabase
-      showtable
       print
       exit
       query
@@ -227,8 +230,6 @@ utility
    | exit
    | set
    | help
-   | showdatabase
-   | showtable
    | print
    | buffer
    | statistics
@@ -345,26 +346,24 @@ help
    {
       $$ = help_node($2);
    }
-   ;
-
-showdatabase
-   : RW_SHOW RW_DATABASE
+   | RW_SHOW RW_DATABASE
    {
-      $$ = show_database_node();
+       $$ = help_node(nullptr);
+   }
+   | RW_SHOW RW_TABLE T_STRING
+   {
+       $$ = help_node($3);
    }
    ;
-
-showtable
-    : RW_SHOW RW_TABLE T_STRING
-    {
-        $$ = show_table_node($3);
-    }
-    ;
 
 print
    : RW_PRINT T_STRING
    {
       $$ = print_node($2);
+   }
+   | RW_DESC T_STRING
+   {
+       $$ = print_node($2);
    }
    ;
 
@@ -416,9 +415,21 @@ non_mt_attrtype_list
    ;
 
 attrtype
-   : T_STRING T_STRING
-    {
-      $$ = attrtype_node($1, $2);
+   : T_STRING RW_INT
+   {
+      $$ = attrtype_node(INT, $1, 4);
+   }
+   | T_STRING RW_FLOAT
+   {
+       $$ = attrtype_node(FLOAT, $1, 4);
+   }
+   | T_STRING RW_VARCHAR '(' T_INT ')'
+   {
+       $$ = attrtype_node(STRING, $1, $4);
+   }
+   | T_STRING RW_DATE
+   {
+       $$ = attrtype_node(DATE, $1, 10);
    }
    ;
 
@@ -627,7 +638,7 @@ void RBparse(PF_Manager &pfm, SM_Manager &smm, QL_Manager &qlm)
    pSmm  = &smm;
    pQlm  = &qlm;
    bExit = 0;
-   bQueryPlans = 0;
+   bQueryPlans = 1;
 
    /* Do forever */
    while (!bExit) {

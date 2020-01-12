@@ -109,17 +109,6 @@ typedef struct node
             char *relname;
         } DROPTABLE;
 
-        /* show database node */
-        struct
-        {
-        } SHOWDATABASE;
-
-        /* show table node */
-        struct
-        {
-            char *relname;
-        } SHOWTABLE;
-
         /* load node */
         struct
         {
@@ -206,7 +195,8 @@ typedef struct node
         struct
         {
             char *attrname;
-            char *type;
+            AttrType type;
+            int attrLength; // Used only when type = STRING
         } ATTRTYPE;
 
         /* <value, type> pair */
@@ -251,8 +241,6 @@ NODE *drop_table_node(char *relname);
 NODE *load_node(char *relname, char *filename);
 NODE *set_node(char *paramName, char *string);
 NODE *help_node(char *relname);
-NODE *show_database_node();
-NODE *show_table_node(char *relname);
 NODE *print_node(char *relname);
 NODE *query_node(NODE *relattrlist, NODE *rellist, NODE *conditionlist);
 NODE *insert_node(char *relname, NODE *valuelist);
@@ -263,7 +251,7 @@ NODE *relattr_node(char *relname, char *attrname);
 NODE *condition_node(NODE *lhsRelattr, CompOp op, NODE *rhsRelattrOrValue);
 NODE *value_node(AttrType type, void *value);
 NODE *relattr_or_value_node(NODE *relattr, NODE *value);
-NODE *attrtype_node(char *attrname, char *type);
+NODE *attrtype_node(AttrType type, char *attrname, int attrLength);
 NODE *relation_node(char *relname);
 NODE *list_node(NODE *n);
 NODE *prepend(NODE *n, NODE *list);

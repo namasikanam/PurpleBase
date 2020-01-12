@@ -97,16 +97,18 @@ static int get_id(char *s)
         return yylval.ival = RW_INDEX;
     if (!strcmp(string, "load"))
         return yylval.ival = RW_LOAD;
-    if (!strcmp(string, "help"))
-        return yylval.ival = RW_HELP;
+    // if (!strcmp(string, "help"))
+    //     return yylval.ival = RW_HELP;
     if (!strcmp(string, "show"))
         return yylval.ival = RW_SHOW;
     if (!strcmp(string, "exit"))
         return yylval.ival = RW_EXIT;
-    if (!strcmp(string, "print"))
-        return yylval.ival = RW_PRINT;
+    // if (!strcmp(string, "print"))
+    //     return yylval.ival = RW_PRINT;
     if (!strcmp(string, "set"))
         return yylval.ival = RW_SET;
+    if (!strcmp(string, "desc"))
+        return yylval.ival = RW_DESC;
 
     if (!strcmp(string, "and"))
         return yylval.ival = RW_AND;
@@ -115,6 +117,23 @@ static int get_id(char *s)
         return yylval.ival = RW_INTO;
     if (!strcmp(string, "values"))
         return yylval.ival = RW_VALUES;
+
+    // if (!strcmp(string, "null"))
+    //     return yylval.ival = RW_NULL;
+
+    /* Types */
+    if (!strcmp(string, "int"))
+        return yylval.ival = RW_INT;
+    if (!strcmp(string, "date"))
+        return yylval.ival = RW_DATE;
+    if (!strcmp(string, "float"))
+        return yylval.ival = RW_FLOAT;
+    if (!strcmp(string, "decimal"))
+        return yylval.ival = RW_FLOAT;
+    if (!strcmp(string, "varchar"))
+        return yylval.ival = RW_VARCHAR;
+    if (!strcmp(string, "char"))
+        return yylval.ival = RW_VARCHAR;
 
     /*  QL layer lexemes */
     if (!strcmp(string, "select"))

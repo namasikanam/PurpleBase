@@ -356,7 +356,7 @@ RC SM_Manager::DropTable(const char *relName)
                 SM_Try_RM_Or_Close_Scan(rec.GetData(recordData), attrcatFS, SM_DROP_TABLE_ATTR_CAT_SCAN_FAIL, SM_DROP_TABLE_ATTR_CAT_SCAN_FAIL_CLOSE_SCAN_FAIL);
                 SM_AttrcatRecord *acRecord = (SM_AttrcatRecord *)recordData;
 
-                if (debug)
+                if (bDebug)
                 {
                     // printf("When drop table %s,\n", relName);
                     // printf("THe indexNo of attr %s is %d\n", acRecord->attrName, acRecord->indexNo);
@@ -649,7 +649,7 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
         DataAttrInfo attributes[attrCount];
         GetAttrInfo(relName, attrCount, (void *)attributes);
 
-        if (debug)
+        if (bDebug)
         {
         }
 
@@ -700,7 +700,7 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                 switch (attributes[i].attrType)
                 {
                 case INT:
-                    if (debug)
+                    if (bDebug)
                     {
                         // cout << "Load data: stoi(" << dataValue << "),";
                     }
@@ -715,7 +715,7 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                     *(int *)(tupleData + attributes[i].offset) = stoi(dataValue);
                     break;
                 case FLOAT:
-                    if (debug)
+                    if (bDebug)
                     {
                         // cout << "Load data: stof(" << dataValue << ")\n";
                     }
@@ -730,7 +730,7 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                     *(float *)(tupleData + attributes[i].offset) = stof(dataValue);
                     break;
                 case STRING:
-                    if (debug)
+                    if (bDebug)
                     {
                         // cout << "Load data: stoi(" << dataValue << ")\n";
                     }
@@ -815,7 +815,7 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                         throw RC{SM_LOAD_FAIL};
                     }
 
-                    if (debug)
+                    if (bDebug)
                     {
                         // printf("After Insert, the index %d is updated as:\n", relName, fileName, attributes[i].indexNo);
                         // ixIH[i].BPlus_Print(ixIH[i].header.rootPage);
@@ -823,9 +823,9 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
                 }
             }
 
-            if (debug)
+            if (bDebug)
             {
-                cout << "Loaded a line\n";
+                // cout << "Loaded a line\n";
             }
         }
 
@@ -837,7 +837,7 @@ RC SM_Manager::Load(const char *relName, const char *fileName)
         {
             if (attributes[i].indexNo != -1)
             {
-                if (debug)
+                if (bDebug)
                 {
                     // printf("After load %s from the data file %s, the index %d is updated as:\n", relName, fileName, attributes[i].indexNo);
                     // ixIH[i].BPlus_Print(ixIH[i].header.rootPage);
@@ -879,7 +879,7 @@ RC SM_Manager::Help()
         DataAttrInfo attributes[SM_RELCAT_ATTR_COUNT];
         GetAttrInfo("relcat", SM_RELCAT_ATTR_COUNT, (void *)attributes);
 
-        if (debug)
+        if (bDebug)
         {
             // for (int i = 0; i < SM_RELCAT_ATTR_COUNT; ++i)
             // {
@@ -955,7 +955,7 @@ RC SM_Manager::Help(const char *relName)
         }
 
         // Check if the relation exists
-        if (debug)
+        if (bDebug)
         {
             printf("Help %s\n", relName);
         }
@@ -1098,13 +1098,13 @@ RC SM_Manager::Set(const char *paramName, const char *value)
     {
         if (strcmp(value, "TRUE") == 0)
         {
-            debug = true;
+            bDebug = true;
 
             printf("[[debug]] is set true.\n");
         }
         else if (strcmp(value, "FALSE") == 0)
         {
-            debug = false;
+            bDebug = false;
 
             printf("[[debug]] is set false.\n");
         }
@@ -1142,7 +1142,7 @@ void SM_Manager::GetAttrInfo(const char *relName, int attrCount, void *_attribut
     DataAttrInfo *attributes = (DataAttrInfo *)_attributes;
 
     // Start file scan
-    if (debug)
+    if (bDebug)
     {
         // printf("At GetAttrInfo, openscan with %s\n", relName);
     }
@@ -1150,7 +1150,7 @@ void SM_Manager::GetAttrInfo(const char *relName, int attrCount, void *_attribut
     SM_Try_RM(attrcatFS.OpenScan(attrcatRMFH, STRING, MAXNAME, 0, EQ_OP, relName), SM_GET_ALL_ATTR_INFO_SCAN_FAIL);
 
     // Get all the attribute tuples
-    if (debug)
+    if (bDebug)
     {
         // cout << "GetAttrInfo(" << relName << ", " << attrCount << ")\n";
     }
@@ -1166,7 +1166,7 @@ void SM_Manager::GetAttrInfo(const char *relName, int attrCount, void *_attribut
 
         if (rc != RM_EOF)
         {
-            if (debug)
+            if (bDebug)
             {
                 // cout << "GetAttrInfo(" << relName << ", " << attrCount << "): Now attributes[" << i << "]\n";
             }
@@ -1281,7 +1281,7 @@ SM_RelcatRecord SM_Manager::GetRelInfo(const char *relName)
     // Close the scan
     SM_Try_RM(relcatFS.CloseScan(), SM_GET_REL_INFO_FAIL);
 
-    if (debug)
+    if (bDebug)
     {
         // printf("Successfully GetRelInfo!\n");
     }
